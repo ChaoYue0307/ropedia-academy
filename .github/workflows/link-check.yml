@@ -1,0 +1,19 @@
+name: Link check
+
+# Pings every external course link weekly (and on demand) so dead links surface
+# as a failed run. Independent of the deploy workflow — never blocks publishing.
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check external links
+        run: node scripts/check-links.mjs
