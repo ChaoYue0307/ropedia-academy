@@ -19,6 +19,7 @@ export function Dashboard() {
   const last = lastLessonId ? getLesson(lastLessonId) : undefined;
   const firstUnseen = tracks[0].lessons.find((l) => !completed.has(l.id)) ?? tracks[0].lessons[0];
   const accent = Object.fromEntries(tracks.map((tr) => [tr.id, tr.accent])) as Record<string, string>;
+  const accentOf = (tr: string) => accent[tr] ?? "#6366f1"; // LM labs (no curriculum track) → indigo
 
   return (
     <div className="space-y-8">
@@ -184,8 +185,8 @@ export function Dashboard() {
               <span
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-base font-bold text-white transition group-hover:scale-105"
                 style={{
-                  backgroundImage: `linear-gradient(135deg, ${accent[lab.track]}, ${accent[lab.track]}c0)`,
-                  boxShadow: `0 8px 20px -8px ${accent[lab.track]}`,
+                  backgroundImage: `linear-gradient(135deg, ${accentOf(lab.track)}, ${accentOf(lab.track)}c0)`,
+                  boxShadow: `0 8px 20px -8px ${accentOf(lab.track)}`,
                 }}
               >
                 {lab.track}
@@ -236,8 +237,8 @@ export function Dashboard() {
               <span
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-base font-bold text-white transition group-hover:scale-105"
                 style={{
-                  backgroundImage: `linear-gradient(135deg, ${accent[lab.track]}, ${accent[lab.track]}c0)`,
-                  boxShadow: `0 8px 20px -8px ${accent[lab.track]}`,
+                  backgroundImage: `linear-gradient(135deg, ${accentOf(lab.track)}, ${accentOf(lab.track)}c0)`,
+                  boxShadow: `0 8px 20px -8px ${accentOf(lab.track)}`,
                 }}
               >
                 {lab.track}
@@ -269,6 +270,7 @@ const LABS = [
   { file: "C_videomae_finetune.ipynb", track: "C", title: { en: "Fine-tune VideoMAE", zh: "微调 VideoMAE" }, foundation: true },
   { file: "C_dinov2_features_probe.ipynb", track: "C", title: { en: "DINOv2 features + probe", zh: "DINOv2 特征 + 探针" }, foundation: true },
   { file: "D_world_model.ipynb", track: "D", title: { en: "World model + planning", zh: "世界模型 + 规划" }, foundation: false },
+  { file: "LM_nanogpt_pretrain.ipynb", track: "LM", title: { en: "Train a GPT from scratch (nanoGPT)", zh: "从零训练 GPT（nanoGPT）" }, foundation: false },
 ];
 
 const ADV_COLAB = "https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/";
@@ -281,4 +283,8 @@ const ADV_LABS = [
   { file: "C_sam2_video_segmentation.ipynb", track: "C", title: { en: "SAM 2 — video segmentation", zh: "SAM 2 — 视频分割" }, tag: { en: "Inference", zh: "推理" }, repo: "facebookresearch/sam2" },
   { file: "D_splatam_slam.ipynb", track: "D", title: { en: "SplaTAM — Gaussian SLAM", zh: "SplaTAM — 高斯 SLAM" }, tag: { en: "Reconstruct", zh: "重建" }, repo: "spla-tam/SplaTAM" },
   { file: "D_dreamerv3_world_model.ipynb", track: "D", title: { en: "DreamerV3 — world model", zh: "DreamerV3 — 世界模型" }, tag: { en: "Train", zh: "训练" }, repo: "danijar/dreamerv3" },
+  { file: "LM_qlora_finetune_llm.ipynb", track: "LM", title: { en: "QLoRA — fine-tune an LLM", zh: "QLoRA — 微调大语言模型" }, tag: { en: "Fine-tune", zh: "微调" }, repo: "TRL + PEFT" },
+  { file: "LM_dpo_alignment.ipynb", track: "LM", title: { en: "DPO — align an LLM", zh: "DPO — 偏好对齐" }, tag: { en: "Align", zh: "对齐" }, repo: "TRL DPOTrainer" },
+  { file: "LM_vlm_finetune.ipynb", track: "LM", title: { en: "Fine-tune a VLM", zh: "微调视觉语言模型" }, tag: { en: "Fine-tune", zh: "微调" }, repo: "TRL + SmolVLM" },
+  { file: "LM_videolm_qwen2vl.ipynb", track: "LM", title: { en: "Video-LM (Qwen2-VL)", zh: "视频语言模型（Qwen2-VL）" }, tag: { en: "Video QA", zh: "视频问答" }, repo: "QwenLM/Qwen2-VL" },
 ];

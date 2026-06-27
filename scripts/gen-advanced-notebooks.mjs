@@ -288,7 +288,164 @@ const dreamer = {
 };
 
 // ===========================================================================
-const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer];
+// LANGUAGE & MULTIMODAL MODELS — LLM / VLM / Video-LM
+// ===========================================================================
+const qlora = {
+  file: "LM_qlora_finetune_llm.ipynb", title: "QLoRA — fine-tune an LLM", track: "LM", tag: "Fine-tune",
+  what: "Instruction-tune a small LLM on your own data with 4-bit QLoRA (LoRA + bitsandbytes).",
+  cells: [
+    md(`# 🔥 Advanced · QLoRA — fine-tune an LLM\n\n${banner("Fine-tune a pretrained instruct LLM on your data, cheaply, with 4-bit QLoRA.", "T4 GPU", "20–40 min", "TRL + PEFT + bitsandbytes", "https://github.com/huggingface/trl")}\n\nThe practical counterpart to the from-scratch **nanoGPT** lab: instead of pretraining, you adapt a pretrained model by training tiny LoRA adapters on top of a 4-bit-quantized base — fits on a free T4.`),
+    code(`!nvidia-smi -L
+!pip install -q -U transformers datasets accelerate peft trl bitsandbytes`),
+    md(`## 1 · Load a small instruct model in 4-bit`),
+    code(`import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+base = "Qwen/Qwen2.5-0.5B-Instruct"   # swap for Llama-3.2-1B-Instruct, etc.
+bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                         bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
+tok = AutoTokenizer.from_pretrained(base)
+model = AutoModelForCausalLM.from_pretrained(base, quantization_config=bnb, device_map="auto")`),
+    md(`## 2 · Data — a small instruction dataset\nReplace with your own \`{"text": "...chat-formatted..."}\` records to teach your task.`),
+    code(`from datasets import load_dataset
+ds = load_dataset("mlabonne/guanaco-llama2-1k", split="train")   # ~1k chat samples, 'text' field
+print(ds, "\\n---\\n", ds[0]["text"][:300])`),
+    md(`## 3 · Attach LoRA adapters and train (TRL SFTTrainer)`),
+    code(`from trl import SFTConfig, SFTTrainer
+from peft import LoraConfig
+peft_cfg = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, bias="none",
+                      task_type="CAUSAL_LM", target_modules="all-linear")
+args = SFTConfig(output_dir="qlora-out", per_device_train_batch_size=2, gradient_accumulation_steps=4,
+                 max_steps=200, learning_rate=2e-4, logging_steps=20, bf16=True,
+                 max_seq_length=512, dataset_text_field="text", report_to="none")
+trainer = SFTTrainer(model=model, args=args, train_dataset=ds, peft_config=peft_cfg, processing_class=tok)
+trainer.train()`),
+    md(`## 4 · Try it, then save the adapter`),
+    code(`def chat(msg, n=200):
+    ids = tok.apply_chat_template([{"role": "user", "content": msg}], add_generation_prompt=True, return_tensors="pt").to(model.device)
+    out = model.generate(ids, max_new_tokens=n, do_sample=True, temperature=0.7)
+    print(tok.decode(out[0][ids.shape[1]:], skip_special_tokens=True))
+chat("Explain LoRA fine-tuning in one paragraph.")
+trainer.save_model("qlora-adapter")   # tiny — just the adapters`),
+    md(`## Troubleshooting & next steps\n- **TRL API drift**: newer TRL uses \`SFTConfig\`/\`processing_class\`; older uses \`tokenizer=\` and \`dataset_text_field\` on the trainer. Match your installed version (\`pip show trl\`).\n- Merge adapters for deployment: \`model.merge_and_unload()\`.\n- Then **align** the model with preferences → the DPO lab. For a much faster path, try **Unsloth**.`),
+  ],
+};
+
+const dpo = {
+  file: "LM_dpo_alignment.ipynb", title: "DPO — align an LLM with preferences", track: "LM", tag: "Align",
+  what: "Align an LLM to preferred answers with Direct Preference Optimization.",
+  cells: [
+    md(`# 🔥 Advanced · DPO — preference alignment\n\n${banner("Teach an LLM which answers people prefer, using chosen/rejected pairs (DPO — the RLHF-free recipe).", "T4 GPU", "20–40 min", "TRL DPOTrainer", "https://huggingface.co/docs/trl/dpo_trainer")}\n\nRun this *after* SFT (the QLoRA lab) — alignment is the second stage of the modern LLM pipeline.`),
+    code(`!nvidia-smi -L
+!pip install -q -U transformers datasets accelerate peft trl bitsandbytes`),
+    md(`## 1 · Load the (SFT) model in 4-bit`),
+    code(`import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+base = "Qwen/Qwen2.5-0.5B-Instruct"
+bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16)
+tok = AutoTokenizer.from_pretrained(base)
+model = AutoModelForCausalLM.from_pretrained(base, quantization_config=bnb, device_map="auto")`),
+    md(`## 2 · Preference data — prompt + chosen + rejected`),
+    code(`from datasets import load_dataset
+ds = load_dataset("trl-lib/ultrafeedback_binarized", split="train[:2000]")
+print(ds.column_names)`),
+    md(`## 3 · Train with DPO (LoRA adapters, no separate reward model)`),
+    code(`from trl import DPOConfig, DPOTrainer
+from peft import LoraConfig
+args = DPOConfig(output_dir="dpo-out", per_device_train_batch_size=2, gradient_accumulation_steps=4,
+                 max_steps=200, learning_rate=5e-6, logging_steps=20, bf16=True, beta=0.1, report_to="none")
+trainer = DPOTrainer(model=model, args=args, train_dataset=ds, processing_class=tok,
+                     peft_config=LoraConfig(r=16, lora_alpha=32, task_type="CAUSAL_LM", target_modules="all-linear"))
+trainer.train()`),
+    md(`## 4 · Inspect\nWatch \`rewards/chosen\` rise above \`rewards/rejected\` and the \`rewards/accuracies\` climb in the logs — that's the model learning the preference. Save:`),
+    code(`trainer.save_model("dpo-adapter")`),
+    md(`## Notes & next steps\n- DPO needs an SFT'd base; using a raw base model gives weak results.\n- Variants: **IPO**, **KTO**, **ORPO** (one-stage) — all in TRL.\n- Lower \`beta\` = trust the data more; raise it = stay closer to the reference model.`),
+  ],
+};
+
+const vlm = {
+  file: "LM_vlm_finetune.ipynb", title: "Fine-tune a VLM (vision-language)", track: "LM", tag: "Fine-tune",
+  what: "LoRA-fine-tune a vision-language model on image question-answering.",
+  cells: [
+    md(`# 🔥 Advanced · Fine-tune a VLM\n\n${banner("Adapt a vision-language model (SmolVLM) to answer questions about images.", "T4 GPU", "30–60 min", "TRL + SmolVLM", "https://huggingface.co/docs/trl/en/sft_trainer#vision-language-models")}\n\nA VLM = a vision encoder feeding image tokens into an LLM (track-C/D themes: grounding language in pixels). Here we LoRA-fine-tune one on a VQA dataset.`),
+    code(`!nvidia-smi -L
+!pip install -q -U transformers datasets accelerate peft trl bitsandbytes`),
+    md(`## 1 · Load SmolVLM + processor (4-bit)`),
+    code(`import torch
+from transformers import AutoProcessor, AutoModelForVision2Seq, BitsAndBytesConfig
+ckpt = "HuggingFaceTB/SmolVLM-Instruct"
+bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16)
+processor = AutoProcessor.from_pretrained(ckpt)
+model = AutoModelForVision2Seq.from_pretrained(ckpt, quantization_config=bnb, device_map="auto")`),
+    md(`## 2 · A small image-QA dataset`),
+    code(`from datasets import load_dataset
+ds = load_dataset("HuggingFaceM4/ChartQA", split="train[:500]")
+print(ds, "\\n", ds[0].keys())`),
+    md(`## 3 · Collator — build chat messages with the image, then train`),
+    code(`from trl import SFTConfig, SFTTrainer
+from peft import LoraConfig
+def collate(examples):
+    texts, images = [], []
+    for ex in examples:
+        msg = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": ex["query"]}]},
+               {"role": "assistant", "content": [{"type": "text", "text": ex["label"][0]}]}]
+        texts.append(processor.apply_chat_template(msg, tokenize=False))
+        images.append([ex["image"]])
+    batch = processor(text=texts, images=images, return_tensors="pt", padding=True)
+    labels = batch["input_ids"].clone(); labels[labels == processor.tokenizer.pad_token_id] = -100
+    batch["labels"] = labels
+    return batch
+args = SFTConfig(output_dir="vlm-out", per_device_train_batch_size=2, gradient_accumulation_steps=4,
+                 max_steps=200, learning_rate=2e-4, logging_steps=20, bf16=True,
+                 remove_unused_columns=False, dataset_kwargs={"skip_prepare_dataset": True}, report_to="none")
+trainer = SFTTrainer(model=model, args=args, train_dataset=ds, data_collator=collate,
+                     peft_config=LoraConfig(r=8, lora_alpha=16, task_type="CAUSAL_LM", target_modules="all-linear"))
+trainer.train()`),
+    md(`## 4 · Ask the fine-tuned model about a chart`),
+    code(`msg = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": "What is the highest value in this chart?"}]}]
+prompt = processor.apply_chat_template(msg, add_generation_prompt=True)
+inp = processor(text=prompt, images=[ds[0]["image"]], return_tensors="pt").to(model.device)
+out = model.generate(**inp, max_new_tokens=64)
+print(processor.decode(out[0], skip_special_tokens=True))`),
+    md(`## Troubleshooting & next steps\n- VLM collators are model-specific — SmolVLM/Idefics3, PaliGemma, Qwen2-VL each differ; follow the matching TRL example.\n- Image-token handling changes across \`transformers\` versions; pin if generation misaligns.\n- Bigger options: **Qwen2-VL-2B**, **PaliGemma-3B**, **LLaVA-1.6**.`),
+  ],
+};
+
+const videolm = {
+  file: "LM_videolm_qwen2vl.ipynb", title: "Video-LM — Qwen2-VL on video", track: "LM", tag: "Inference + LoRA",
+  what: "Ask a video-language model questions about a clip; plus how to LoRA-fine-tune it.",
+  cells: [
+    md(`# 🔥 Advanced · Video-LM (Qwen2-VL)\n\n${banner("Reason over a video with a video-language model (frames → tokens → LLM).", "T4 GPU", "15–30 min (2B model)", "Qwen2-VL", "https://github.com/QwenLM/Qwen2-VL")}\n\nDirectly relevant to **egocentric video understanding** (track C): natural-language Q&A over first-person clips.`),
+    code(`!nvidia-smi -L
+!pip install -q -U "transformers>=4.45" accelerate "qwen-vl-utils[decord]"`),
+    md(`## 1 · Load Qwen2-VL-2B-Instruct`),
+    code(`import torch
+from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
+ckpt = "Qwen/Qwen2-VL-2B-Instruct"
+model = Qwen2VLForConditionalGeneration.from_pretrained(ckpt, torch_dtype=torch.bfloat16, device_map="auto")
+processor = AutoProcessor.from_pretrained(ckpt)`),
+    md(`## 2 · Ask a question about your video\nUpload \`clip.mp4\` (e.g. an egocentric cooking clip).`),
+    code(`from qwen_vl_utils import process_vision_info
+messages = [{"role": "user", "content": [
+    {"type": "video", "video": "clip.mp4", "max_pixels": 360*420, "fps": 1.0},
+    {"type": "text", "text": "What is the person doing, step by step?"}]}]
+text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+image_inputs, video_inputs = process_vision_info(messages)
+inp = processor(text=[text], images=image_inputs, videos=video_inputs, padding=True, return_tensors="pt").to(model.device)
+out = model.generate(**inp, max_new_tokens=256)
+trimmed = [o[len(i):] for i, o in zip(inp.input_ids, out)]
+print(processor.batch_decode(trimmed, skip_special_tokens=True)[0])`),
+    md(`## 3 · Fine-tune on video instructions (LoRA) — sketch\nWrap the model with PEFT LoRA and train on a video-instruction dataset (e.g. \`lmms-lab/VideoChatGPT\`), using a collator that runs \`process_vision_info\` per sample — same SFT loop as the VLM lab, with video inputs.`),
+    code(`from peft import LoraConfig, get_peft_model
+model = get_peft_model(model, LoraConfig(r=8, lora_alpha=16, target_modules="all-linear", task_type="CAUSAL_LM"))
+model.print_trainable_parameters()
+# then: build a Dataset of {video, question, answer}, a collator calling process_vision_info,
+# and a transformers/TRL Trainer exactly like the VLM lab. (Heavy — needs the video dataset.)`),
+    md(`## Notes & next steps\n- **Frames/fps & max_pixels** trade quality vs. memory — lower them if you OOM on a T4.\n- Other video-LMs: **Video-LLaVA**, **VideoLLaMA-2**, **LLaVA-NeXT-Video**.\n- Pair with the **VideoMAE** and **SAM 2** labs for a full egocentric-video stack.`),
+  ],
+};
+
+// ===========================================================================
+const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer, qlora, dpo, vlm, videolm];
 
 function splitLines(s) {
   const lines = s.split("\n");
@@ -318,7 +475,7 @@ for (const lab of labs) {
 
 const badge = (f) =>
   `[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/${REPO}/blob/main/notebooks/advanced/${f})`;
-const trackName = { A: "A · Human", B: "B · 3D / rendering", C: "C · Egocentric", D: "D · Scene / world" };
+const trackName = { A: "A · Human", B: "B · 3D / rendering", C: "C · Egocentric", D: "D · Scene / world", LM: "LM · Language & multimodal" };
 const readme = `# Advanced labs · heavy GPU pipelines
 
 Real research-repo pipelines — **training, fine-tuning, and inference on actual foundation models** — two per track. Unlike the [Training labs](../training/), these clone official repos, download large checkpoints/datasets, and **require a GPU**.

@@ -40,7 +40,7 @@ spaced repetition. Runs entirely in the browser — no account required.
 ## Training labs
 
 Beyond the per-lesson snippets, [`notebooks/training/`](notebooks/training/) holds
-**nine real, multi-cell Colab notebooks you can actually train** — split into clear
+**ten real, multi-cell Colab notebooks you can actually train** — split into clear
 blocks (data · model · train · compare) so you can step through and watch each
 stage. Every track gets both a *from-scratch* and a *foundation-model* pipeline:
 
@@ -50,8 +50,9 @@ stage. Every track gets both a *from-scratch* and a *foundation-model* pipeline:
 | **B · 3D / rendering** | NeRF (`tiny_nerf`) · neural SDF · 2D Gaussian Splatting | — |
 | **C · Egocentric** | — | CLIP probe · fine-tune VideoMAE · DINOv2 features |
 | **D · Scene / world** | world model + planning (MPC) | — |
+| **LM · Language** | a GPT from scratch (nanoGPT) | — |
 
-The six self-contained PyTorch labs are **verified to train** (loss decreases /
+The seven self-contained PyTorch labs are **verified to train** (loss decreases /
 PSNR climbs); the three foundation labs follow the official APIs and run on a
 Colab GPU. Open them from the dashboard's **Training labs** section, or see
 [`notebooks/training/README.md`](notebooks/training/README.md) for one-click Colab
@@ -59,9 +60,8 @@ badges. Set **Runtime → T4 GPU** first.
 
 ### Advanced labs (heavy · real repos · GPU)
 
-[`notebooks/advanced/`](notebooks/advanced/) adds **eight heavy GPU pipelines** on
-real research repos — two per track — for when you want the production tools, not a
-teaching toy:
+[`notebooks/advanced/`](notebooks/advanced/) adds **twelve heavy GPU pipelines** on
+real research repos for when you want the production tools, not a teaching toy:
 
 | Track | Advanced pipelines |
 |---|---|
@@ -69,6 +69,7 @@ teaching toy:
 | **B · 3D / rendering** | 3D Gaussian Splatting (CUDA) · Nerfstudio nerfacto |
 | **C · Egocentric** | VideoMAE fine-tune on EPIC/Ego4D · SAM 2 video segmentation |
 | **D · Scene / world** | SplaTAM (Gaussian SLAM) · DreamerV3 world model |
+| **LM · Language & multimodal** | QLoRA LLM fine-tune · DPO alignment · VLM fine-tune · Video-LM (Qwen2-VL) |
 
 These clone official repos, download multi-GB checkpoints/datasets, and **require a
 GPU** — they're authored to each project's documented recipe and are **not

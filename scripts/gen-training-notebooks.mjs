@@ -655,7 +655,97 @@ plt.tight_layout(); plt.show()`),
 };
 
 // ---------------------------------------------------------------------------
-const labs = [smplify, motion, nerf, sdf, gsplat, clip, videomae, dinov2, worldmodel];
+// LAB 10 — Train a GPT from scratch (nanoGPT-style language model)
+// ---------------------------------------------------------------------------
+const nanogpt = {
+  file: "LM_nanogpt_pretrain.ipynb",
+  title: "Train a tiny GPT from scratch (nanoGPT)",
+  track: "LM · Language models",
+  tag: "PyTorch",
+  what: "a character-level GPT (decoder-only transformer) by next-token prediction",
+  cells: [
+    md(`# Train a GPT from scratch — nanoGPT\n\n**Language models** · the engine behind every LLM, VLM and Video-LM.\n\nWe build a small **decoder-only transformer** (token + positional embeddings → causal self-attention blocks → next-token head) and train it character-by-character on Shakespeare. This is exactly the GPT recipe, just tiny — so it trains in a minute and you can read what it learns.\n\n> CPU is fine; a GPU is faster. The fine-tuning of *pretrained* LLMs/VLMs lives in the Advanced labs.`),
+    code(`import os, urllib.request, torch, torch.nn as nn
+from torch.nn import functional as F
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 3000))
+block_size, n_embd, n_head, n_layer, batch_size, dropout = 64, 128, 4, 4, 32, 0.1
+print("device:", device, "| steps:", STEPS)`),
+    md(`## 1 · Data — Tiny Shakespeare, tokenised by character`),
+    code(`if not os.path.exists("input.txt"):
+    urllib.request.urlretrieve("https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt", "input.txt")
+text = open("input.txt").read()
+chars = sorted(set(text)); vocab = len(chars)
+stoi = {c: i for i, c in enumerate(chars)}; itos = {i: c for c, i in stoi.items()}
+encode = lambda s: [stoi[c] for c in s]
+decode = lambda l: "".join(itos[i] for i in l)
+data = torch.tensor(encode(text), dtype=torch.long)
+n = int(0.9 * len(data)); train_data, val_data = data[:n], data[n:]
+def get_batch(split):
+    d = train_data if split == "train" else val_data
+    ix = torch.randint(len(d) - block_size, (batch_size,))
+    x = torch.stack([d[i:i+block_size] for i in ix]); y = torch.stack([d[i+1:i+block_size+1] for i in ix])
+    return x.to(device), y.to(device)
+print("vocab:", vocab, "chars |  corpus:", len(text), "chars")`),
+    md(`## 2 · Model — causal self-attention transformer`),
+    code(`class Head(nn.Module):
+    def __init__(self, hs):
+        super().__init__()
+        self.k = nn.Linear(n_embd, hs, bias=False); self.q = nn.Linear(n_embd, hs, bias=False); self.v = nn.Linear(n_embd, hs, bias=False)
+        self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size))); self.drop = nn.Dropout(dropout)
+    def forward(self, x):
+        B, T, C = x.shape; k, q = self.k(x), self.q(x)
+        att = (q @ k.transpose(-2, -1)) * k.shape[-1] ** -0.5
+        att = att.masked_fill(self.tril[:T, :T] == 0, float("-inf"))
+        att = self.drop(F.softmax(att, -1))
+        return att @ self.v(x)
+class MHA(nn.Module):
+    def __init__(self, nh, hs):
+        super().__init__(); self.heads = nn.ModuleList([Head(hs) for _ in range(nh)])
+        self.proj = nn.Linear(n_embd, n_embd); self.drop = nn.Dropout(dropout)
+    def forward(self, x): return self.drop(self.proj(torch.cat([h(x) for h in self.heads], -1)))
+class Block(nn.Module):
+    def __init__(self):
+        super().__init__(); self.sa = MHA(n_head, n_embd // n_head)
+        self.ff = nn.Sequential(nn.Linear(n_embd, 4*n_embd), nn.GELU(), nn.Linear(4*n_embd, n_embd), nn.Dropout(dropout))
+        self.l1 = nn.LayerNorm(n_embd); self.l2 = nn.LayerNorm(n_embd)
+    def forward(self, x): x = x + self.sa(self.l1(x)); return x + self.ff(self.l2(x))
+class GPT(nn.Module):
+    def __init__(self):
+        super().__init__(); self.tok = nn.Embedding(vocab, n_embd); self.pos = nn.Embedding(block_size, n_embd)
+        self.blocks = nn.Sequential(*[Block() for _ in range(n_layer)]); self.lnf = nn.LayerNorm(n_embd); self.head = nn.Linear(n_embd, vocab)
+    def forward(self, idx, targets=None):
+        B, T = idx.shape
+        x = self.tok(idx) + self.pos(torch.arange(T, device=device))
+        logits = self.head(self.lnf(self.blocks(x)))
+        loss = None if targets is None else F.cross_entropy(logits.view(-1, vocab), targets.view(-1))
+        return logits, loss
+    @torch.no_grad()
+    def generate(self, idx, n_new):
+        for _ in range(n_new):
+            logits, _ = self(idx[:, -block_size:])
+            idx = torch.cat([idx, torch.multinomial(F.softmax(logits[:, -1, :], -1), 1)], 1)
+        return idx`),
+    md(`## 3 · Train — next-token cross-entropy (watch train & val fall)`),
+    code(`model = GPT().to(device); opt = torch.optim.AdamW(model.parameters(), 3e-4)
+print("parameters:", round(sum(p.numel() for p in model.parameters()) / 1e6, 2), "M")
+for step in range(STEPS + 1):
+    xb, yb = get_batch("train"); _, loss = model(xb, yb)
+    opt.zero_grad(); loss.backward(); opt.step()
+    if step % max(1, STEPS // 10) == 0:
+        model.eval()
+        with torch.no_grad(): _, vl = model(*get_batch("val"))
+        model.train()
+        print(f"step {step:5d}  train {loss.item():.3f}  val {vl.item():.3f}")`),
+    md(`## 4 · Generate — sample text from the trained model`),
+    code(`ctx = torch.zeros((1, 1), dtype=torch.long, device=device)
+print(decode(model.generate(ctx, 500)[0].tolist()))`),
+    md(`### Where to go next\n- Swap the character tokenizer for **BPE** (tiktoken) and scale width/depth/data → GPT-2 and beyond.\n- Don't pretrain from zero for real tasks — **fine-tune a pretrained LLM** efficiently with **QLoRA** (see the Advanced labs), then align it with **DPO**.\n- The same transformer, fed image/video tokens, becomes a **VLM / Video-LM** (Advanced labs).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+const labs = [smplify, motion, nerf, sdf, gsplat, clip, videomae, dinov2, worldmodel, nanogpt];
 
 function toNotebook(lab) {
   const cells = lab.cells.map((c) =>
