@@ -110,6 +110,15 @@ html.dark .md strong {
 html.dark .md a {
   @apply text-brand-300;
 }
+/* auto-linked terms: subtler dotted underline, solid on hover */
+.md a.autolink {
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.md a.autolink:hover {
+  text-decoration-style: solid;
+}
 .md blockquote {
   @apply border-l-2 border-brand-300 pl-4 italic text-ink/70;
 }
