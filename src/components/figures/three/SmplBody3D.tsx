@@ -109,7 +109,7 @@ export default function SmplBody3D() {
         setLeg(18);
       }}
     >
-      <div className="h-64 overflow-hidden rounded-xl bg-gradient-to-b from-[#0c0b16] to-[#1c1a30]">
+      <div role="img" aria-label="Interactive 3D human body mesh (SMPL), orbitable" className="h-64 overflow-hidden rounded-xl bg-gradient-to-b from-[#0c0b16] to-[#1c1a30]">
         <Canvas camera={{ position: [0, 0.3, 2.6], fov: 45 }} dpr={[1, 2]}>
           <ambientLight intensity={0.7} />
           <directionalLight position={[3, 5, 4]} intensity={1.1} />

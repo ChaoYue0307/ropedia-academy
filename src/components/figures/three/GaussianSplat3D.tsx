@@ -73,7 +73,7 @@ export default function GaussianSplat3D() {
         setOpacity(0.55);
       }}
     >
-      <div className="h-64 overflow-hidden rounded-xl bg-gradient-to-b from-[#0b0a14] to-[#1a1830]">
+      <div role="img" aria-label="Interactive 3D Gaussian-splatting scene, orbitable" className="h-64 overflow-hidden rounded-xl bg-gradient-to-b from-[#0b0a14] to-[#1a1830]">
         <Canvas camera={{ position: [0, 1.2, 3.4], fov: 45 }} dpr={[1, 2]}>
           <Splats count={count} size={size} opacity={opacity} />
           <OrbitControls enablePan={false} autoRotate={!reduce} autoRotateSpeed={0.8} minDistance={2} maxDistance={6} />

@@ -84,7 +84,7 @@ export default function NerfVolume3D() {
       }}
       onReset={() => setDensity(2.4)}
     >
-      <div className="h-64 overflow-hidden rounded-xl">
+      <div role="img" aria-label="Interactive 3D NeRF volume render, orbitable" className="h-64 overflow-hidden rounded-xl">
         <Canvas camera={{ position: [0, 0.3, 3.0], fov: 45 }} dpr={[1, 2]}>
           <color attach="background" args={["#0d0b16"]} />
           <Volume density={density} />

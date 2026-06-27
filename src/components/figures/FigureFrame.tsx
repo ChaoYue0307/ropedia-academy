@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Children, cloneElement, isValidElement, type ReactNode } from "react";
 import type { Bilingual } from "../../lib/types";
 import { useStore } from "../../lib/store";
 import { pick } from "../../lib/i18n";
@@ -15,6 +15,14 @@ export function FigureFrame({
   onReset?: () => void;
 }) {
   const mode = useStore((s) => s.lang);
+  // Make the chart legible to screen readers: label the SVG as a single image
+  // using the (rich, bilingual) caption. Interactive controls are left untouched.
+  const desc = pick(caption, mode);
+  const a11yChildren = Children.map(children, (child) =>
+    isValidElement(child) && child.type === "svg"
+      ? cloneElement(child as any, { role: "img", "aria-label": desc })
+      : child,
+  );
   return (
     <figure className="overflow-hidden rounded-2xl border border-stone-200/70 bg-white/80 shadow-card backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.04]">
       <div className="flex items-center justify-between gap-3 border-b border-stone-200/60 px-4 py-2.5 dark:border-white/[0.06]">
@@ -35,7 +43,7 @@ export function FigureFrame({
           </button>
         )}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-4">{a11yChildren}</div>
       <figcaption className="border-t border-stone-200/60 bg-stone-50/50 px-4 py-2.5 text-xs leading-relaxed text-ink/55 dark:border-white/[0.06] dark:bg-white/[0.02] dark:text-stone-400">
         {pick(caption, mode)}
       </figcaption>
