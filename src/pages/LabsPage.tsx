@@ -6,7 +6,7 @@ import {
   type LabLevel, type LabTrack,
 } from "../lib/labs";
 
-const TRACKS: LabTrack[] = ["A", "B", "C", "D", "LM"];
+const TRACKS: LabTrack[] = ["A", "B", "C", "D", "LM", "AG"];
 const LEVELS: LabLevel[] = ["scratch", "foundation", "advanced"];
 
 export function LabsPage() {

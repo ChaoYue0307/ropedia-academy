@@ -40,19 +40,20 @@ spaced repetition. Runs entirely in the browser — no account required.
 ## Training labs
 
 Beyond the per-lesson snippets, [`notebooks/training/`](notebooks/training/) holds
-**seventeen real, multi-cell Colab notebooks you can actually train** — split into
+**twenty-three real, multi-cell Colab notebooks you can actually train** — split into
 clear blocks (data · model · train · compare) so you can step through and watch
 each stage:
 
 | Track | From scratch (PyTorch) | Foundation model |
 |---|---|---|
 | **A · Human** | SMPLify body fit · motion diffusion (DDPM) · 2D pose (heatmap) · 6D vs Euler rotation | — |
-| **B · 3D / rendering** | NeRF (`tiny_nerf`) · neural SDF · 2D Gaussian Splatting · hash grid (Instant-NGP) · ICP registration | — |
-| **C · Egocentric** | action anticipation (LSTM) | CLIP probe · fine-tune VideoMAE · DINOv2 features |
+| **B · 3D / rendering** | NeRF (`tiny_nerf`) · neural SDF · 2D Gaussian Splatting · hash grid (Instant-NGP) · ICP registration · MAE pretraining | — |
+| **C · Egocentric** | action anticipation (LSTM) · SimCLR self-supervised pretraining | CLIP probe · fine-tune VideoMAE · DINOv2 features |
 | **D · Scene / world** | world model + planning (MPC) · TSDF fusion → mesh · Bayesian semantic mapping | — |
-| **LM · Language** | a GPT from scratch (nanoGPT) | — |
+| **LM · Language** | a GPT from scratch (nanoGPT) · knowledge distillation | — |
+| **AG · Agents & RL** | REINFORCE policy gradient · behavior cloning · agent + tool-use harness | — |
 
-The fourteen self-contained PyTorch labs are **verified to train** (each was run
+The twenty self-contained PyTorch labs are **verified to train** (each was run
 to confirm loss drops / PSNR climbs / metrics beat chance); the three foundation
 labs follow the official APIs and run on a Colab GPU. Every lab records its
 checkpoint + loss/eval history + figures to a downloadable `outputs/<lab>/`. Open them from the dashboard's **Training labs** section, or see
@@ -61,16 +62,23 @@ badges. Set **Runtime → T4 GPU** first.
 
 ### Advanced labs (heavy · real repos · GPU)
 
-[`notebooks/advanced/`](notebooks/advanced/) adds **fifteen heavy GPU pipelines** on
+[`notebooks/advanced/`](notebooks/advanced/) adds **twenty-two heavy GPU pipelines** on
 real research repos for when you want the production tools, not a teaching toy:
 
 | Track | Advanced pipelines |
 |---|---|
 | **A · Human** | MDM text-to-motion · 4D-Humans (HMR 2.0) mesh-from-video |
 | **B · 3D / rendering** | 3D Gaussian Splatting (CUDA) · Nerfstudio nerfacto |
-| **C · Egocentric** | VideoMAE fine-tune on EPIC/Ego4D · SAM 2 video segmentation |
+| **C · Egocentric** | VideoMAE fine-tune on EPIC/Ego4D · SAM 2 video segmentation · Whisper ASR fine-tune |
 | **D · Scene / world** | SplaTAM (Gaussian SLAM) · DreamerV3 world model |
-| **LM · Language & multimodal** | QLoRA fine-tune · DPO alignment · VLM fine-tune · Video-LM (Qwen2-VL) · RAG · LLM eval (lm-eval-harness) · Unsloth fast fine-tune |
+| **LM · Language & multimodal** | QLoRA · DPO · VLM fine-tune · Video-LM · RAG · LLM eval · Unsloth · RLHF (PPO) · Stable Diffusion LoRA · ControlNet · vLLM serving |
+| **AG · Agents & RL** | LLM agent (tool use / ReAct) · Habitat embodied navigation |
+
+The verified self-contained labs were each run to confirm real results; the
+advanced labs follow each project's official recipe and run on a Colab GPU (some
+need gated data), so they are flagged as **not pre-executed**. Every lab records
+its checkpoints / loss-eval history / outputs to a downloadable folder, and the
+language/multimodal & agent labs cross-link back to tracks A–D.
 
 These clone official repos, download multi-GB checkpoints/datasets, and **require a
 GPU** — they're authored to each project's documented recipe and are **not

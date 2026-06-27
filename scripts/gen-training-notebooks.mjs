@@ -1134,7 +1134,334 @@ plt.tight_layout(); plt.show()`),
 };
 
 // ---------------------------------------------------------------------------
-const labs = [smplify, motion, pose, rot6d, nerf, sdf, gsplat, hashgrid, icp, clip, videomae, dinov2, anticip, worldmodel, tsdf, semmap, nanogpt];
+// LAB 18 — REINFORCE policy gradient on a gridworld (Agents & RL)
+// ---------------------------------------------------------------------------
+const reinforce = {
+  file: "AG_reinforce_gridworld.ipynb", title: "REINFORCE policy gradient", track: "AG · Agents & RL", tag: "PyTorch",
+  what: "train an agent to reach a goal with the REINFORCE policy-gradient algorithm",
+  cells: [
+    md(`# REINFORCE — learn a policy by trial and error\n\n**Agents & RL** · the simplest policy-gradient method (the root of PPO, used in RLHF).\n\nAn agent explores a gridworld; we reward reaching the goal and push up the probability of actions that led to high return. Self-contained — no gym needed.\n\n> CPU is fine.`),
+    code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 600)); N = 5; GOAL = (N - 1, N - 1); GAMMA = 0.95`),
+    md(`## 1 · The environment (a ${"N×N"} gridworld)`),
+    code(`MOVES = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+def step(pos, a):
+    x = min(max(pos[0] + MOVES[a][0], 0), N - 1); y = min(max(pos[1] + MOVES[a][1], 0), N - 1)
+    done = (x, y) == GOAL
+    return (x, y), (5.0 if done else -0.1), done
+def feat(pos):
+    v = torch.zeros(2 * N, device=device); v[pos[0]] = 1.0; v[N + pos[1]] = 1.0; return v`),
+    md(`## 2 · Policy network + REINFORCE update`),
+    code(`policy = nn.Sequential(nn.Linear(2 * N, 64), nn.ReLU(), nn.Linear(64, 4)).to(device)
+opt = torch.optim.Adam(policy.parameters(), 1e-3)
+def episode():
+    pos = (torch.randint(0, N, (1,)).item(), torch.randint(0, N, (1,)).item())
+    logps, rews = [], []
+    for _ in range(40):
+        if pos == GOAL: break
+        d = torch.distributions.Categorical(logits=policy(feat(pos))); a = d.sample()
+        logps.append(d.log_prob(a)); pos, r, done = step(pos, a.item()); rews.append(r)
+        if done: break
+    return logps, rews`),
+    md(`## 3 · Train — push up high-return actions`),
+    code(`hist = []
+for step_i in range(STEPS + 1):
+    batch_loss, rets = [], []
+    for _ in range(16):
+        logps, rews = episode()
+        if not logps: continue
+        G = 0; returns = []
+        for r in reversed(rews): G = r + GAMMA * G; returns.insert(0, G)
+        returns = torch.tensor(returns, device=device); returns = (returns - returns.mean()) / (returns.std(unbiased=False) + 1e-6)
+        batch_loss.append(-(torch.stack(logps) * returns).sum()); rets.append(sum(rews))
+    loss = torch.stack(batch_loss).mean(); opt.zero_grad(); loss.backward()
+    torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0); opt.step()
+    if step_i % max(1, STEPS // 10) == 0:
+        ar = sum(rets) / len(rets); hist.append((step_i, round(ar, 2))); print(f"step {step_i:4d}  avg return {ar:6.2f}")`),
+    md(`## 4 · Compare — return climbs as the policy learns`),
+    code(`fig, ax = plt.subplots(figsize=(6, 3.6))
+ax.plot(*zip(*hist), "-o"); ax.set_xlabel("update"); ax.set_ylabel("avg episode return"); ax.grid(alpha=.3); ax.set_title("REINFORCE learns to reach the goal")
+plt.show()`),
+    md(`### Where to go next\n- Add a value baseline → **Actor-Critic**, then clipped updates → **PPO** (the algorithm behind RLHF).\n- Swap the gridworld for a Gym/MuJoCo task; learn from pixels with a world model (track D).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 19 — Behavior cloning / imitation learning (Agents & RL)
+// ---------------------------------------------------------------------------
+const bc = {
+  file: "AG_behavior_cloning.ipynb", title: "Behavior cloning (imitation)", track: "AG · Agents & RL", tag: "PyTorch",
+  what: "learn a policy by supervised imitation of expert demonstrations",
+  cells: [
+    md(`# Behavior cloning — imitate an expert\n\n**Agents & RL** · the simplest imitation-learning recipe (how many robot/driving policies start).\n\nWe collect (state → expert action) demonstrations and train a network to copy them — pure supervised learning — then roll out the learned policy and measure success.\n\n> CPU is fine.`),
+    code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 800)); N = 6; GOAL = (N - 1, N - 1)
+MOVES = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+def feat(p): v = torch.zeros(2 * N); v[p[0]] = 1.0; v[N + p[1]] = 1.0; return v
+def expert(p):                                   # greedy: reduce Manhattan distance to goal
+    if p[0] < GOAL[0]: return 1
+    if p[1] < GOAL[1]: return 3
+    return 0`),
+    md(`## 1 · Collect demonstrations from the expert`),
+    code(`X, Y = [], []
+for _ in range(2000):
+    p = (torch.randint(0, N, (1,)).item(), torch.randint(0, N, (1,)).item())
+    if p == GOAL: continue
+    X.append(feat(p)); Y.append(expert(p))
+X = torch.stack(X).to(device); Y = torch.tensor(Y, device=device)
+print("demonstrations:", X.shape[0])`),
+    md(`## 2 · Train the policy to copy the expert`),
+    code(`policy = nn.Sequential(nn.Linear(2 * N, 64), nn.ReLU(), nn.Linear(64, 4)).to(device)
+opt = torch.optim.Adam(policy.parameters(), 3e-3); hist = []
+for step in range(STEPS + 1):
+    loss = nn.functional.cross_entropy(policy(X), Y)
+    opt.zero_grad(); loss.backward(); opt.step()
+    if step % max(1, STEPS // 10) == 0:
+        acc = (policy(X).argmax(1) == Y).float().mean().item(); hist.append((step, round(acc, 3))); print(f"step {step:4d}  imitation acc {acc:.3f}")`),
+    md(`## 3 · Roll out the learned policy — does it reach the goal?`),
+    code(`@torch.no_grad()
+def rollout(p):
+    for _ in range(2 * N):
+        if p == GOAL: return True
+        a = policy(feat(p).to(device)).argmax().item()
+        p = (min(max(p[0] + MOVES[a][0], 0), N - 1), min(max(p[1] + MOVES[a][1], 0), N - 1))
+    return p == GOAL
+succ = sum(rollout((i // N, i % N)) for i in range(N * N) if (i // N, i % N) != GOAL) / (N * N - 1)
+print(f"success rate from every start cell: {succ:.3f}")`),
+    md(`## 4 · Compare — imitation accuracy over training`),
+    code(`fig, ax = plt.subplots(figsize=(6, 3.6))
+ax.plot(*zip(*hist), "-o"); ax.set_xlabel("step"); ax.set_ylabel("imitation accuracy"); ax.grid(alpha=.3); ax.set_title(f"behavior cloning — rollout success {succ:.0%}")
+plt.show()`),
+    md(`### Where to go next\n- BC suffers from **distribution shift**; fix it with **DAgger** (query the expert on the policy's own states).\n- Imitate from images with a CNN encoder; combine with RL fine-tuning (track AG).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 20 — Agent + tool-use harness (Agents & RL)
+// ---------------------------------------------------------------------------
+const agentharness = {
+  file: "AG_agent_harness.ipynb", title: "Agent + tool-use harness", track: "AG · Agents & RL", tag: "PyTorch",
+  what: "a reusable harness: tools, a tool-using agent loop, a task suite, and scoring",
+  cells: [
+    md(`# Design an agent + evaluation harness\n\n**Agents & RL** · harness design — the scaffolding every agent project needs.\n\nWe build the reusable pieces: a **tool** registry, a **reasoning loop** that picks and calls tools, a **task suite**, and an **evaluator** that runs the agent over the suite and scores it. The agent here is rule-based so it is self-contained and verifiable — swap in an LLM policy and the harness is unchanged.\n\n> CPU is fine. No LLM/network needed.`),
+    code(`import os, re, json, math, matplotlib.pyplot as plt`),
+    md(`## 1 · Tools (a registry the agent can call)`),
+    code(`TOOLS = {
+    "calc": lambda expr: eval(expr, {"__builtins__": {}}, {"sqrt": math.sqrt}),
+    "len":  lambda s: len(s),
+    "rev":  lambda s: s[::-1],
+}`),
+    md(`## 2 · A tool-using agent (a ReAct-style loop)\nParse the task, decide which tool to call, return the answer. (Replace this function body with an LLM call and the rest of the harness is identical.)`),
+    code(`def agent(task):
+    log = []
+    m = re.match(r"compute (.+)", task)
+    if m: tool, arg = "calc", m.group(1)
+    elif task.startswith("length of "): tool, arg = "len", task[len("length of "):]
+    elif task.startswith("reverse "): tool, arg = "rev", task[len("reverse "):]
+    else: return None, [("noop", task)]
+    log.append(("call", tool, arg)); out = TOOLS[tool](arg); log.append(("obs", out))
+    return out, log`),
+    md(`## 3 · A task suite with ground-truth answers`),
+    code(`SUITE = [
+    {"task": "compute 2*(3+4)", "answer": 14},
+    {"task": "compute sqrt(144)", "answer": 12.0},
+    {"task": "length of robotics", "answer": 8},
+    {"task": "reverse agent", "answer": "tnega"},
+    {"task": "compute 10*10-1", "answer": 99},
+]`),
+    md(`## 4 · The evaluator — run the agent over the suite and score`),
+    code(`def evaluate(agent_fn, suite):
+    results = []
+    for t in suite:
+        try: pred, log = agent_fn(t["task"])
+        except Exception as e: pred, log = f"error:{e}", []
+        ok = (pred == t["answer"])
+        results.append({"task": t["task"], "pred": pred, "gold": t["answer"], "ok": bool(ok), "trace": log})
+    acc = sum(r["ok"] for r in results) / len(results)
+    return acc, results
+acc, results = evaluate(agent, SUITE)
+print(f"success rate: {acc:.2f}\\n")
+for r in results: print(("PASS" if r["ok"] else "FAIL"), "|", r["task"], "->", r["pred"])`),
+    md(`## 5 · Report`),
+    code(`fig, ax = plt.subplots(figsize=(6, 3))
+ax.barh([r["task"] for r in results], [1 if r["ok"] else 0 for r in results], color=["#5aa86a" if r["ok"] else "#e0796b" for r in results])
+ax.set_xlim(0, 1); ax.set_title(f"agent harness — {acc:.0%} pass"); ax.set_xticks([])
+plt.tight_layout(); plt.show()`),
+    md(`### Where to go next\n- Replace \`agent()\` with an **LLM** that emits tool calls (function calling / ReAct) — see the advanced *LLM agent* lab.\n- Add multi-step planning, memory, and a larger graded suite; log full traces for failure analysis (lesson C9).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 21 — SimCLR self-supervised pretraining (foundation-model recipe)
+// ---------------------------------------------------------------------------
+const simclr = {
+  file: "C_simclr_pretrain.ipynb", title: "SimCLR self-supervised pretraining", track: "C · Egocentric Vision", tag: "PyTorch",
+  what: "contrastive self-supervised pretraining, then a linear probe (how CLIP/DINO are made)",
+  cells: [
+    md(`# SimCLR — learn features with no labels\n\n**Foundation-model recipe** (supports track C and lesson on self-supervision).\n\nSelf-supervised contrastive learning is how backbones like SimCLR/DINO/CLIP are pretrained: pull two augmentations of the same image together, push different images apart (**NT-Xent**). We then freeze the encoder and train a **linear probe** to show the features became useful — beating a random-init encoder.\n\n> CPU is fine (small synthetic images).`),
+    code(`import os, torch, torch.nn as nn, torch.nn.functional as F, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 800)); C = 6; S = 20`),
+    md(`## 1 · Synthetic images — 6 shape classes at random position/scale (hard for raw features)`),
+    code(`def gen(n):
+    x = torch.zeros(n, 1, S, S); y = torch.randint(0, C, (n,))
+    base = torch.linspace(-1, 1, S)
+    for i in range(n):
+        cls = y[i].item(); cx, cy = (torch.rand(2) - 0.5) * 0.7; r = (0.25 + 0.3 * torch.rand(1)).item()
+        gx, gy = torch.meshgrid(base - cx, base - cy, indexing="ij")
+        if cls == 0: m = (gx ** 2 + gy ** 2) < r ** 2                                  # disc
+        elif cls == 1: m = (gx.abs() < r) & (gy.abs() < r)                              # square
+        elif cls == 2: m = (gx.abs() + gy.abs()) < r                                    # diamond
+        elif cls == 3: m = ((gx ** 2 + gy ** 2) < r ** 2) & ((gx ** 2 + gy ** 2) > (0.55 * r) ** 2)  # ring
+        elif cls == 4: m = (gx.abs() < 0.22 * r) | (gy.abs() < 0.22 * r)               # cross
+        else: m = (gx.abs() < 0.18 * r)                                                 # bar
+        x[i, 0] = m.float()
+    x = (x + 0.1 * torch.randn_like(x)).clamp(0, 1)
+    return x, y
+def augment(x):
+    x = x + 0.15 * torch.randn_like(x)
+    if torch.rand(1) < 0.5: x = x.flip(-1)
+    return (x * (0.6 + 0.8 * torch.rand(1))).clamp(0, 1)
+xb, yb = gen(6)
+plt.imshow(torch.cat([xb[i, 0] for i in range(6)], 1)); plt.title("synthetic shapes"); plt.axis("off"); plt.show()`),
+    md(`## 2 · Encoder + projection head; NT-Xent contrastive loss`),
+    code(`def make_enc():
+    return nn.Sequential(nn.Conv2d(1, 16, 3, 2, 1), nn.ReLU(), nn.Conv2d(16, 32, 3, 2, 1), nn.ReLU(),
+                         nn.AdaptiveAvgPool2d(1), nn.Flatten()).to(device)   # -> 32-d feature
+enc = make_enc(); proj = nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Linear(32, 16)).to(device)
+def nt_xent(z, tau=0.5):
+    z = F.normalize(z, dim=1); B = z.shape[0] // 2
+    sim = z @ z.T / tau; sim.fill_diagonal_(-9e9)
+    targets = torch.arange(2 * B, device=device); targets = (targets + B) % (2 * B)
+    return F.cross_entropy(sim, targets)`),
+    md(`## 3 · Pretrain — contrastive, no labels`),
+    code(`opt = torch.optim.Adam([*enc.parameters(), *proj.parameters()], 1e-3); hist = []
+for step in range(STEPS + 1):
+    x, _ = gen(64); v1 = augment(x).to(device); v2 = augment(x).to(device)
+    z = proj(torch.cat([enc(v1), enc(v2)], 0)); loss = nt_xent(z)
+    opt.zero_grad(); loss.backward(); opt.step()
+    if step % max(1, STEPS // 10) == 0: hist.append((step, round(loss.item(), 3))); print(f"step {step:4d}  NT-Xent {loss.item():.3f}")`),
+    md(`## 4 · Linear probe — SimCLR features vs. a random encoder`),
+    code(`def probe(encoder, ntr=40):                       # few-shot probe: where self-supervision wins
+    encoder.eval(); xtr, ytr = gen(ntr); xte, yte = gen(600)
+    with torch.no_grad(): ftr = encoder(xtr.to(device)); fte = encoder(xte.to(device))
+    clf = nn.Linear(32, C).to(device); o = torch.optim.Adam(clf.parameters(), 1e-2)
+    for _ in range(300): o.zero_grad(); F.cross_entropy(clf(ftr), ytr.to(device)).backward(); o.step()
+    return (clf(fte).argmax(1).cpu() == yte).float().mean().item()
+simclr_acc = probe(enc); rand_acc = probe(make_enc())
+print(f"linear-probe accuracy — SimCLR {simclr_acc:.3f}  vs  random encoder {rand_acc:.3f}")
+fig, ax = plt.subplots(figsize=(5, 3.4)); ax.bar(["random", "SimCLR"], [rand_acc, simclr_acc], color=["C7", "C0"])
+ax.set_ylim(0, 1); ax.set_ylabel("probe accuracy"); ax.set_title("self-supervision learns useful features"); plt.show()`),
+    md(`### Where to go next\n- This is the recipe behind **SimCLR / MoCo / DINO**; CLIP adds text as the other view.\n- Pretrain on real (unlabeled) egocentric frames, then probe/fine-tune for actions (track C).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 22 — Masked Autoencoder pretraining (foundation-model recipe)
+// ---------------------------------------------------------------------------
+const mae = {
+  file: "B_mae_pretrain.ipynb", title: "Masked Autoencoder (MAE) pretraining", track: "B · 3D & Neural Rendering", tag: "PyTorch",
+  what: "mask image patches and reconstruct them — the MAE / VideoMAE pretraining objective",
+  cells: [
+    md(`# Masked Autoencoder — reconstruct what's hidden\n\n**Foundation-model recipe** (the objective behind **MAE** and **VideoMAE**, lesson C3).\n\nHide most of an image's patches and train an encoder–decoder to reconstruct them. The model must learn structure to fill the gaps — a powerful self-supervised signal.\n\n> CPU is fine.`),
+    code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 1000)); S, P = 24, 4; NP = (S // P) ** 2; MASK = 0.6`),
+    md(`## 1 · Synthetic images + patchify`),
+    code(`def gen(n):
+    gx, gy = torch.meshgrid(torch.linspace(-1, 1, S), torch.linspace(-1, 1, S), indexing="ij")
+    imgs = []
+    for _ in range(n):
+        cx, cy, r = torch.rand(1) - .5, torch.rand(1) - .5, 0.3 + 0.3 * torch.rand(1)
+        imgs.append((((gx - cx) ** 2 + (gy - cy) ** 2) < r ** 2).float())
+    return torch.stack(imgs).unsqueeze(1)
+def patchify(x): return x.unfold(2, P, P).unfold(3, P, P).reshape(x.shape[0], NP, P * P)
+def unpatchify(p):
+    g = S // P
+    return p.reshape(p.shape[0], g, g, P, P).permute(0, 1, 3, 2, 4).reshape(p.shape[0], 1, S, S)`),
+    md(`## 2 · Encoder–decoder over patch tokens`),
+    code(`class MAE(nn.Module):
+    def __init__(self, d=64):
+        super().__init__(); self.emb = nn.Linear(P * P, d); self.pos = nn.Parameter(torch.randn(1, NP, d))
+        self.enc = nn.TransformerEncoder(nn.TransformerEncoderLayer(d, 4, 128, batch_first=True), 2)
+        self.dec = nn.Sequential(nn.Linear(d, d), nn.ReLU(), nn.Linear(d, P * P))
+    def forward(self, patches, mask):
+        tok = self.emb(patches) + self.pos
+        tok = tok * (~mask).unsqueeze(-1)                       # zero out masked tokens
+        return self.dec(self.enc(tok))
+model = MAE().to(device); opt = torch.optim.Adam(model.parameters(), 1e-3)`),
+    md(`## 3 · Pretrain — reconstruct the masked patches`),
+    code(`hist = []
+for step in range(STEPS + 1):
+    x = gen(64).to(device); p = patchify(x)
+    mask = torch.rand(x.shape[0], NP, device=device) < MASK
+    pred = model(p, mask); loss = (((pred - p) ** 2) * mask.unsqueeze(-1)).sum() / mask.sum() / (P * P)
+    opt.zero_grad(); loss.backward(); opt.step()
+    if step % max(1, STEPS // 10) == 0: hist.append((step, round(loss.item(), 4))); print(f"step {step:4d}  masked recon MSE {loss.item():.4f}")`),
+    md(`## 4 · Compare — input · masked · reconstruction`),
+    code(`x = gen(1).to(device); p = patchify(x); mask = torch.rand(1, NP, device=device) < MASK
+with torch.no_grad(): pred = model(p, mask)
+masked_in = unpatchify(p * (~mask).unsqueeze(-1)); recon = unpatchify(torch.where(mask.unsqueeze(-1), pred, p))
+fig, ax = plt.subplots(1, 4, figsize=(11, 3))
+for a, im, ttl in zip(ax, [x, masked_in, unpatchify(pred), recon], ["input", "masked", "decoded", "filled-in"]):
+    a.imshow(im[0, 0].cpu().clamp(0, 1)); a.set_title(ttl); a.axis("off")
+ax = plt.gcf().axes; plt.show()`),
+    md(`### Where to go next\n- Extend masking across time → **VideoMAE** (tube masking, lesson C3).\n- After pretraining, keep the encoder and fine-tune it for a downstream task.`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 23 — Knowledge distillation (model compression)
+// ---------------------------------------------------------------------------
+const distill = {
+  file: "LM_distillation.ipynb", title: "Knowledge distillation", track: "LM · Language models", tag: "PyTorch",
+  what: "train a small student to match a large teacher's soft predictions",
+  cells: [
+    md(`# Knowledge distillation — small student, big teacher\n\n**Model compression** (applies to every track's foundation models).\n\nA small **student** learns from a larger **teacher**'s *soft* probabilities (richer than hard labels). We show the distilled student beats an identical student trained on labels alone.\n\n> CPU is fine.`),
+    code(`import os, math, torch, torch.nn as nn, torch.nn.functional as F, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 1500)); C = 2`),
+    md(`## 1 · A hard nonlinear problem (two interleaved spirals)\nA tiny student underfits this on hard labels — exactly where the teacher's soft targets help.`),
+    code(`def gen(n):
+    m = n // 2; t = torch.linspace(0.3, 2.6 * math.pi, m); r = t / (2.6 * math.pi)
+    a = torch.stack([r * torch.cos(t), r * torch.sin(t)], 1)
+    b = torch.stack([r * torch.cos(t + math.pi), r * torch.sin(t + math.pi)], 1)
+    X = torch.cat([a, b]) + 0.03 * torch.randn(2 * m, 2)
+    Y = torch.cat([torch.zeros(m), torch.ones(m)]).long(); p = torch.randperm(2 * m)
+    return X[p].to(device), Y[p].to(device)
+Xtr, Ytr = gen(2000); Xte, Yte = gen(1000)`),
+    md(`## 2 · Train a big teacher`),
+    code(`teacher = nn.Sequential(nn.Linear(2, 128), nn.ReLU(), nn.Linear(128, 128), nn.ReLU(), nn.Linear(128, C)).to(device)
+o = torch.optim.Adam(teacher.parameters(), 3e-3)
+for _ in range(1500): o.zero_grad(); F.cross_entropy(teacher(Xtr), Ytr).backward(); o.step()
+teacher_acc = (teacher(Xte).argmax(1) == Yte).float().mean().item(); print(f"teacher acc {teacher_acc:.3f}")`),
+    md(`## 3 · A tiny student: a few hard labels vs. distillation over all data\nThe student only sees **80 labels**. Distillation instead trains it on the teacher's *soft* predictions across **all** data — transferring "dark knowledge" the hard labels don't carry.`),
+    code(`def small(): return nn.Sequential(nn.Linear(2, 16), nn.ReLU(), nn.Linear(16, C)).to(device)
+Xsmall, Ysmall = Xtr[:80], Ytr[:80]
+with torch.no_grad(): soft = F.softmax(teacher(Xtr) / 4.0, 1)        # teacher's dark knowledge over ALL data
+def train_student(distill):
+    s = small(); o = torch.optim.Adam(s.parameters(), 5e-3); h = []
+    for step in range(STEPS + 1):
+        loss = (16.0 * F.kl_div(F.log_softmax(s(Xtr) / 4.0, 1), soft, reduction="batchmean")
+                if distill else F.cross_entropy(s(Xsmall), Ysmall))
+        o.zero_grad(); loss.backward(); o.step()
+        if step % max(1, STEPS // 10) == 0: h.append((step, (s(Xte).argmax(1) == Yte).float().mean().item()))
+    return s, h
+_, h_plain = train_student(False); _, h_distill = train_student(True)
+print(f"student acc — 80 labels {h_plain[-1][1]:.3f}  vs  distilled (teacher over all data) {h_distill[-1][1]:.3f}")`),
+    md(`## 4 · Compare`),
+    code(`fig, ax = plt.subplots(figsize=(6, 3.6))
+ax.plot(*zip(*h_plain), label="80 labels"); ax.plot(*zip(*h_distill), label="distilled (all data)")
+ax.axhline(teacher_acc, ls="--", c="C7", label="teacher"); ax.set_xlabel("step"); ax.set_ylabel("student test acc"); ax.legend(); ax.grid(alpha=.3)
+plt.show()`),
+    md(`### Where to go next\n- Distill a large fine-tuned LLM into a small one for cheap deployment; combine with **quantization** (the serving lab).\n- Feature/attention distillation transfers more than just logits.`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+const labs = [smplify, motion, pose, rot6d, nerf, sdf, gsplat, hashgrid, icp, mae, clip, simclr, videomae, dinov2, anticip, worldmodel, tsdf, semmap, reinforce, bc, agentharness, nanogpt, distill];
 
 // Per-lab artifact saving (checkpoint + metrics), spliced before the last cell.
 const SAVE = {
@@ -1154,6 +1481,12 @@ const SAVE = {
   C_action_anticipation_lstm: [`torch.save(model.state_dict(), f"{run}/lstm.pt")`, `json.dump({"top1": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
   D_tsdf_fusion: [`torch.save({"verts": torch.tensor(verts.copy()), "faces": torch.tensor(faces.copy())}, f"{run}/mesh.pt")`, `json.dump({"verts": int(verts.shape[0]), "faces": int(faces.shape[0])}, open(f"{run}/metrics.json", "w"), indent=2)`],
   D_semantic_mapping: [`json.dump({"history": hist}, open(f"{run}/metrics.json", "w"), indent=2)`, `np.save(f"{run}/occ.npy", (logodds > 0)); np.save(f"{run}/labels.npy", counts.argmax(-1))`],
+  AG_reinforce_gridworld: [`torch.save(policy.state_dict(), f"{run}/policy.pt")`, `json.dump({"return": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  AG_behavior_cloning: [`torch.save(policy.state_dict(), f"{run}/policy.pt")`, `json.dump({"imitation_acc": hist, "rollout_success": succ}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  AG_agent_harness: [`json.dump({"success_rate": acc, "results": [{"task": r["task"], "pred": str(r["pred"]), "ok": r["ok"]} for r in results]}, open(f"{run}/results.json", "w"), indent=2)`],
+  C_simclr_pretrain: [`torch.save(enc.state_dict(), f"{run}/encoder.pt")`, `json.dump({"nt_xent": hist, "probe_simclr": simclr_acc, "probe_random": rand_acc}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  B_mae_pretrain: [`torch.save(model.state_dict(), f"{run}/mae.pt")`, `json.dump({"recon_mse": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  LM_distillation: [`torch.save(teacher.state_dict(), f"{run}/teacher.pt")`, `json.dump({"teacher": teacher_acc, "student_plain": h_plain, "student_distill": h_distill}, open(f"{run}/metrics.json", "w"), indent=2)`],
 };
 const VIDEOMAE_NOTE = md(`## Save & persist\nThe 🤗 Trainer already writes checkpoints, \`trainer_state.json\` (the full loss/eval history) and logs to its \`output_dir\` ("videomae-ucf101"). Also call \`trainer.save_model("videomae-final")\` (and optionally \`trainer.push_to_hub()\`). Colab is ephemeral, so zip + download the folder or mount Google Drive to keep it.`);
 for (const lab of labs) {

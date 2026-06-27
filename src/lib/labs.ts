@@ -6,7 +6,7 @@ import type { Bilingual } from "./types";
 //           "foundation" = applies a pretrained model on a Colab GPU
 //           "advanced"   = heavy real-repo pipeline (GPU, not pre-executed)
 export type LabLevel = "scratch" | "foundation" | "advanced";
-export type LabTrack = "A" | "B" | "C" | "D" | "LM";
+export type LabTrack = "A" | "B" | "C" | "D" | "LM" | "AG";
 
 export interface Lab {
   file: string;
@@ -41,6 +41,7 @@ export const LABS: Lab[] = [
   { file: "B_gaussian_splatting_2d.ipynb", dir: "training", track: "B", level: "scratch", title: T("2D Gaussian Splatting", "2D 高斯泼溅"), action: T("Train", "训练") },
   { file: "B_hashgrid_instngp.ipynb", dir: "training", track: "B", level: "scratch", title: T("Multiresolution hash grid (Instant-NGP)", "多分辨率哈希网格（Instant-NGP）"), action: T("Train", "训练") },
   { file: "B_icp_registration.ipynb", dir: "training", track: "B", level: "scratch", title: T("ICP point-cloud registration", "ICP 点云配准"), action: T("Optimize", "优化") },
+  { file: "B_mae_pretrain.ipynb", dir: "training", track: "B", level: "scratch", title: T("Masked Autoencoder (MAE) pretraining", "掩码自编码（MAE）预训练"), action: T("Pretrain", "预训练"), links: ["C", "D"] },
   { file: "B_gaussian_splatting_3d.ipynb", dir: "advanced", track: "B", level: "advanced", title: T("3D Gaussian Splatting", "3D 高斯泼溅"), action: T("Train", "训练"), note: "graphdeco-inria/gaussian-splatting" },
   { file: "B_nerfstudio_nerfacto.ipynb", dir: "advanced", track: "B", level: "advanced", title: T("Nerfstudio nerfacto", "Nerfstudio nerfacto"), action: T("Train", "训练"), note: "nerfstudio" },
   // ── Track C · Egocentric ──────────────────────────────────────────
@@ -48,6 +49,7 @@ export const LABS: Lab[] = [
   { file: "C_videomae_finetune.ipynb", dir: "training", track: "C", level: "foundation", title: T("Fine-tune VideoMAE", "微调 VideoMAE"), action: T("Fine-tune", "微调") },
   { file: "C_dinov2_features_probe.ipynb", dir: "training", track: "C", level: "foundation", title: T("DINOv2 features + probe", "DINOv2 特征 + 探针"), action: T("Fine-tune", "微调") },
   { file: "C_action_anticipation_lstm.ipynb", dir: "training", track: "C", level: "scratch", title: T("Action anticipation (LSTM)", "动作预判（LSTM）"), action: T("Train", "训练") },
+  { file: "C_simclr_pretrain.ipynb", dir: "training", track: "C", level: "scratch", title: T("SimCLR self-supervised pretraining", "SimCLR 自监督预训练"), action: T("Pretrain", "预训练"), links: ["B", "D"] },
   { file: "C_videomae_egocentric.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("VideoMAE on EPIC/Ego4D", "VideoMAE 第一视角微调"), action: T("Fine-tune", "微调"), note: "EPIC-Kitchens / Ego4D" },
   { file: "C_sam2_video_segmentation.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("SAM 2 — video segmentation", "SAM 2 — 视频分割"), action: T("Inference", "推理"), note: "facebookresearch/sam2" },
   // ── Track D · Scene / world ───────────────────────────────────────
@@ -58,6 +60,11 @@ export const LABS: Lab[] = [
   { file: "D_dreamerv3_world_model.ipynb", dir: "advanced", track: "D", level: "advanced", title: T("DreamerV3 — world model", "DreamerV3 — 世界模型"), action: T("Train", "训练"), note: "danijar/dreamerv3" },
   // ── LM · Language & multimodal ────────────────────────────────────
   { file: "LM_nanogpt_pretrain.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Train a GPT from scratch (nanoGPT)", "从零训练 GPT（nanoGPT）"), action: T("Pretrain", "预训练"), links: ["A", "B", "C", "D"] },
+  { file: "LM_distillation.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Knowledge distillation", "知识蒸馏"), action: T("Distill", "蒸馏"), links: ["A", "B", "C", "D"] },
+  // — Agents & RL —
+  { file: "AG_reinforce_gridworld.ipynb", dir: "training", track: "AG", level: "scratch", title: T("REINFORCE policy gradient", "REINFORCE 策略梯度"), action: T("Train", "训练"), links: ["D"] },
+  { file: "AG_behavior_cloning.ipynb", dir: "training", track: "AG", level: "scratch", title: T("Behavior cloning (imitation)", "行为克隆（模仿学习）"), action: T("Train", "训练"), links: ["A", "D"] },
+  { file: "AG_agent_harness.ipynb", dir: "training", track: "AG", level: "scratch", title: T("Agent + tool-use harness", "智能体 + 工具调用框架"), action: T("Harness", "框架"), links: ["C", "D", "LM"] },
   { file: "LM_qlora_finetune_llm.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("QLoRA — fine-tune an LLM", "QLoRA — 微调大语言模型"), action: T("Fine-tune", "微调"), note: "TRL + PEFT", links: ["A", "B", "C", "D"] },
   { file: "LM_dpo_alignment.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("DPO — align an LLM", "DPO — 偏好对齐"), action: T("Align", "对齐"), note: "TRL DPOTrainer", links: ["A", "D"] },
   { file: "LM_vlm_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Fine-tune a VLM", "微调视觉语言模型"), action: T("Fine-tune", "微调"), note: "TRL + SmolVLM", links: ["C", "D"] },
@@ -65,6 +72,13 @@ export const LABS: Lab[] = [
   { file: "LM_rag_pipeline.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("RAG — retrieval-augmented generation", "RAG — 检索增强生成"), action: T("Retrieve + Generate", "检索 + 生成"), note: "sentence-transformers + FAISS", links: ["C", "D"] },
   { file: "LM_eval_harness.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Evaluate an LLM (lm-eval-harness)", "评测大模型（lm-eval-harness）"), action: T("Evaluate", "评测"), note: "EleutherAI/lm-evaluation-harness", links: ["A", "B", "C", "D"] },
   { file: "LM_unsloth_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Unsloth — fast LLM fine-tune", "Unsloth — 快速微调大模型"), action: T("Fine-tune (fast)", "快速微调"), note: "unslothai/unsloth", links: ["A", "B", "C", "D"] },
+  { file: "LM_rlhf_ppo.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("RLHF — PPO fine-tuning", "RLHF — PPO 微调"), action: T("RL fine-tune", "强化微调"), note: "TRL PPOTrainer", links: ["A", "D"] },
+  { file: "LM_stable_diffusion_lora.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Stable Diffusion — LoRA / DreamBooth", "Stable Diffusion — LoRA / DreamBooth"), action: T("Fine-tune", "微调"), note: "diffusers", links: ["A", "B"] },
+  { file: "LM_controlnet.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("ControlNet — conditional diffusion", "ControlNet — 条件扩散"), action: T("Generate", "生成"), note: "diffusers", links: ["A", "B"] },
+  { file: "LM_vllm_serving.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Serve an LLM (vLLM)", "部署大模型（vLLM）"), action: T("Serve", "部署"), note: "vLLM", links: ["A", "B", "C", "D"] },
+  { file: "C_whisper_finetune.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("Whisper — fine-tune ASR", "Whisper — 微调语音识别"), action: T("Fine-tune", "微调"), note: "transformers / Whisper" },
+  { file: "AG_llm_agent_tooluse.ipynb", dir: "advanced", track: "AG", level: "advanced", title: T("LLM agent — tool use (ReAct)", "LLM 智能体 — 工具调用（ReAct）"), action: T("Agent", "智能体"), note: "transformers", links: ["C", "D", "LM"] },
+  { file: "AG_habitat_navigation.ipynb", dir: "advanced", track: "AG", level: "advanced", title: T("Habitat — embodied navigation", "Habitat — 具身导航"), action: T("Embodied RL", "具身强化"), note: "habitat-lab", links: ["D"] },
 ];
 
 export const TRACK_LABEL: Record<LabTrack, Bilingual> = {
@@ -73,9 +87,10 @@ export const TRACK_LABEL: Record<LabTrack, Bilingual> = {
   C: T("C · Egocentric", "C · 第一视角"),
   D: T("D · Scene / world", "D · 场景 / 世界"),
   LM: T("LM · Language", "LM · 语言"),
+  AG: T("AG · Agents & RL", "AG · 智能体 & 强化学习"),
 };
 export const TRACK_ACCENT: Record<LabTrack, string> = {
-  A: "#e0796b", B: "#5a8bd6", C: "#5aa86a", D: "#a878d0", LM: "#6366f1",
+  A: "#e0796b", B: "#5a8bd6", C: "#5aa86a", D: "#a878d0", LM: "#6366f1", AG: "#0ea5a0",
 };
 export const LEVEL_LABEL: Record<LabLevel, Bilingual> = {
   scratch: T("From scratch · verified", "从零 · 已验证"),

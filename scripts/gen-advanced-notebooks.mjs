@@ -542,8 +542,208 @@ model.save_pretrained("unsloth-lora"); tok.save_pretrained("unsloth-lora")
   ],
 };
 
+const rlhf = {
+  file: "LM_rlhf_ppo.ipynb", title: "RLHF — PPO fine-tuning", track: "LM", tag: "RL fine-tune",
+  what: "Optimize an LLM against a reward model with PPO (the RL stage of RLHF).",
+  cells: [
+    md(`# 🔥 Advanced · RLHF with PPO\n\n${banner("Fine-tune an LLM with reinforcement learning against a reward model — the classic RLHF recipe.", "T4 GPU", "20–40 min", "TRL PPOTrainer", "https://huggingface.co/docs/trl/ppo_trainer")}\n\nThe scaled-up cousin of the REINFORCE lab (track AG): here the policy is a language model and the reward comes from a learned model. DPO (other lab) is the RL-free alternative.`),
+    code(`!nvidia-smi -L
+!pip install -q "trl<0.12" transformers datasets`),
+    md(`## 1 · Policy (with a value head) + a reward model\nClassic demo: steer GPT-2 toward **positive sentiment**, scored by a sentiment classifier.`),
+    code(`import torch
+from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
+from transformers import AutoTokenizer, pipeline
+base = "lvwerra/gpt2-imdb"
+tok = AutoTokenizer.from_pretrained(base); tok.pad_token = tok.eos_token
+model = AutoModelForCausalLMWithValueHead.from_pretrained(base)
+ref = AutoModelForCausalLMWithValueHead.from_pretrained(base)
+reward_fn = pipeline("sentiment-analysis", model="lvwerra/distilbert-imdb", device=0 if torch.cuda.is_available() else -1)`),
+    md(`## 2 · PPO loop — generate, score, update`),
+    code(`from datasets import load_dataset
+ds = load_dataset("imdb", split="train").shuffle(seed=0).select(range(200))
+ppo = PPOTrainer(PPOConfig(batch_size=16, mini_batch_size=4, learning_rate=1.4e-5), model, ref, tok)
+gen_kw = dict(max_new_tokens=24, do_sample=True, top_k=0, top_p=1.0, pad_token_id=tok.eos_token_id)
+for batch in [ds[i:i+16] for i in range(0, 64, 16)]:
+    queries = [tok(t[:40], return_tensors="pt").input_ids[0] for t in batch["text"]]
+    responses = [ppo.generate(q, **gen_kw).squeeze()[len(q):] for q in queries]
+    texts = [tok.decode(r) for r in responses]
+    rewards = [torch.tensor(s["score"] if s["label"] == "POSITIVE" else 1 - s["score"]) for s in reward_fn(texts)]
+    stats = ppo.step(queries, responses, rewards)
+    print("mean reward:", round(float(torch.stack(rewards).mean()), 3))`),
+    md(`## Troubleshooting & next steps\n- **TRL version**: the PPO API changed across releases; pin (\`trl<0.12\`) to match this script, or follow the example for your installed version.\n- Train a **reward model** from preference data first, then PPO against it → full RLHF.\n- Compare with **DPO** (simpler, no reward model / rollouts) — the other LM lab.`),
+  ],
+};
+
+const sdlora = {
+  file: "LM_stable_diffusion_lora.ipynb", title: "Stable Diffusion — LoRA / DreamBooth", track: "LM", tag: "Fine-tune",
+  what: "Teach Stable Diffusion a new concept with LoRA / DreamBooth, then generate.",
+  cells: [
+    md(`# 🔥 Advanced · Stable Diffusion LoRA / DreamBooth\n\n${banner("Fine-tune a text-to-image diffusion model on a handful of your own images, then generate new ones.", "T4 GPU", "20–40 min", "diffusers (DreamBooth LoRA)", "https://huggingface.co/docs/diffusers/training/dreambooth")}\n\nA generative foundation model; the image counterpart to the LLM fine-tuning labs.`),
+    code(`!nvidia-smi -L
+!pip install -q diffusers accelerate transformers peft bitsandbytes
+!git clone https://github.com/huggingface/diffusers; %cd diffusers/examples/dreambooth
+!pip install -q -r requirements.txt`),
+    md(`## 1 · A few instance images\nPut 5–10 photos of your subject in \`data/instance/\` (e.g. a specific object or person).`),
+    md(`## 2 · Train a LoRA adapter (DreamBooth)`),
+    code(`!accelerate launch train_dreambooth_lora.py \\
+  --pretrained_model_name_or_path="runwayml/stable-diffusion-v1-5" \\
+  --instance_data_dir="data/instance" \\
+  --instance_prompt="a photo of sks object" \\
+  --resolution=512 --train_batch_size=1 --gradient_accumulation_steps=1 \\
+  --learning_rate=1e-4 --lr_scheduler="constant" --max_train_steps=400 \\
+  --output_dir="sks-lora"`),
+    md(`## 3 · Generate with the learned concept`),
+    code(`import torch
+from diffusers import StableDiffusionPipeline
+pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16).to("cuda")
+pipe.load_lora_weights("sks-lora")
+img = pipe("a photo of sks object on the moon, cinematic", num_inference_steps=30).images[0]
+img.save("out.png"); img`),
+    md(`## Troubleshooting & next steps\n- Use **prior-preservation** + class images to avoid overfitting; tune steps/LR.\n- For style (not subject) use plain **LoRA** text-to-image training.\n- Add structural control with **ControlNet** (the next lab); export to a fast runtime (LCM / SDXL-Turbo).`),
+  ],
+};
+
+const controlnet = {
+  file: "LM_controlnet.ipynb", title: "ControlNet — conditional diffusion", track: "LM", tag: "Inference",
+  what: "Steer Stable Diffusion with a structural condition (edges / pose / depth).",
+  cells: [
+    md(`# 🔥 Advanced · ControlNet\n\n${banner("Generate images that follow a structure map (Canny edges, pose, depth) with ControlNet.", "T4 GPU", "10–20 min", "diffusers ControlNet", "https://huggingface.co/docs/diffusers/using-diffusers/controlnet")}\n\nConditional control over a diffusion foundation model — links to track B (geometry/structure) and to pose (track A).`),
+    code(`!nvidia-smi -L
+!pip install -q diffusers accelerate transformers opencv-python controlnet_aux`),
+    md(`## 1 · Build a control image (Canny edges of your input)`),
+    code(`import cv2, numpy as np
+from PIL import Image
+img = np.array(Image.open("input.jpg").convert("RGB"))
+edges = cv2.Canny(img, 100, 200)
+control = Image.fromarray(np.stack([edges] * 3, -1))
+control.save("control.png")`),
+    md(`## 2 · Generate following that structure`),
+    code(`import torch
+from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
+cn = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
+pipe = StableDiffusionControlNetPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", controlnet=cn, torch_dtype=torch.float16).to("cuda")
+out = pipe("a photorealistic robot, studio lighting", image=control, num_inference_steps=30).images[0]
+out.save("controlled.png"); out`),
+    md(`## Next steps\n- Swap the conditioner for **OpenPose** (links to the pose lab, track A) or **depth/normal** maps (track B).\n- Train your own ControlNet to condition on a new modality; combine with the LoRA lab.`),
+  ],
+};
+
+const whisper = {
+  file: "C_whisper_finetune.ipynb", title: "Whisper — fine-tune ASR", track: "C", tag: "Fine-tune",
+  what: "Fine-tune the Whisper speech-to-text foundation model on a small dataset.",
+  cells: [
+    md(`# 🔥 Advanced · Whisper (speech-to-text)\n\n${banner("Fine-tune OpenAI's Whisper on a small ASR dataset — audio is the other half of egocentric video.", "T4 GPU", "30–60 min", "transformers / Whisper", "https://huggingface.co/blog/fine-tune-whisper")}\n\nEgocentric clips carry narration & sound; Whisper transcribes it (track C).`),
+    code(`!nvidia-smi -L
+!pip install -q "transformers>=4.41" datasets accelerate evaluate jiwer librosa soundfile`),
+    md(`## 1 · A small speech dataset`),
+    code(`from datasets import load_dataset, Audio
+ds = load_dataset("PolyAI/minds14", "en-US", split="train[:200]")
+ds = ds.cast_column("audio", Audio(sampling_rate=16000))`),
+    md(`## 2 · Processor + model`),
+    code(`from transformers import WhisperProcessor, WhisperForConditionalGeneration
+ck = "openai/whisper-tiny"
+proc = WhisperProcessor.from_pretrained(ck, language="english", task="transcribe")
+model = WhisperForConditionalGeneration.from_pretrained(ck)
+def prep(b):
+    a = b["audio"]
+    b["input_features"] = proc(a["array"], sampling_rate=16000).input_features[0]
+    b["labels"] = proc(text=b["transcription"]).input_ids
+    return b
+ds = ds.map(prep, remove_columns=ds.column_names)`),
+    md(`## 3 · Train`),
+    code(`import torch
+from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments
+def collate(feats):
+    inp = proc.feature_extractor.pad([{"input_features": f["input_features"]} for f in feats], return_tensors="pt")
+    lab = proc.tokenizer.pad([{"input_ids": f["labels"]} for f in feats], return_tensors="pt")
+    labels = lab["input_ids"].masked_fill(lab.attention_mask.ne(1), -100)
+    inp["labels"] = labels; return inp
+args = Seq2SeqTrainingArguments(output_dir="whisper-ft", per_device_train_batch_size=8, learning_rate=1e-5,
+    max_steps=300, fp16=torch.cuda.is_available(), logging_steps=25, report_to="none")
+Seq2SeqTrainer(model=model, args=args, train_dataset=ds, data_collator=collate, processing_class=proc).train()`),
+    md(`## Next steps\n- Evaluate **WER** with \`evaluate.load("wer")\` on a held-out split.\n- Fine-tune on **egocentric narration** (Ego4D) and feed transcripts to the Video-LM lab.`),
+  ],
+};
+
+const llmagent = {
+  file: "AG_llm_agent_tooluse.ipynb", title: "LLM agent — tool use (ReAct)", track: "AG", tag: "Agent",
+  what: "An LLM that reasons and calls tools in a loop (the real version of the agent-harness lab).",
+  cells: [
+    md(`# 🔥 Advanced · LLM agent with tool use\n\n${banner("An LLM decides which tool to call, observes the result, and iterates (ReAct) to solve tasks.", "T4 GPU", "10–20 min", "transformers (function-calling)", "https://huggingface.co/docs/transformers/main/en/chat_extras")}\n\nThe LLM-powered version of the self-contained **agent harness** (track AG) — drop it into that harness to score it.`),
+    code(`!nvidia-smi -L
+!pip install -q "transformers>=4.45" accelerate`),
+    md(`## 1 · Tools the model may call`),
+    code(`import math
+def calculator(expression: str):
+    """Evaluate an arithmetic expression."""
+    return eval(expression, {"__builtins__": {}}, {"sqrt": math.sqrt})
+def word_length(word: str):
+    """Return the number of letters in a word."""
+    return len(word)
+tools = [calculator, word_length]`),
+    md(`## 2 · A tool-calling chat model (ReAct loop)`),
+    code(`import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+ck = "Qwen/Qwen2.5-1.5B-Instruct"
+tok = AutoTokenizer.from_pretrained(ck)
+model = AutoModelForCausalLM.from_pretrained(ck, torch_dtype="auto", device_map="auto")
+msgs = [{"role": "user", "content": "What is sqrt(144) plus the number of letters in 'robotics'?"}]
+text = tok.apply_chat_template(msgs, tools=tools, add_generation_prompt=True, tokenize=False)
+out = model.generate(**tok(text, return_tensors="pt").to(model.device), max_new_tokens=256)
+print(tok.decode(out[0], skip_special_tokens=True))`),
+    md(`## 3 · Execute the tool call(s) and feed results back\nParse the model's tool call, run the Python function, append the result as a \`tool\` message, and generate again until it answers. (The chat template handles the tool-call format.)`),
+    code(`# Minimal loop sketch: parse tool_calls from the model output, run the matching
+# Python function, append {"role": "tool", "content": str(result)} and re-generate.
+# Plug this agent into AG_agent_harness.evaluate(...) to score it on the task suite.`),
+    md(`## Next steps\n- Use a framework — **LangGraph**, **smolagents**, or **transformers** agents — for robust parsing, memory and multi-step planning.\n- Add retrieval (the RAG lab) as a tool; give it environment actions for an embodied agent (track D).`),
+  ],
+};
+
+const habitat = {
+  file: "AG_habitat_navigation.ipynb", title: "Habitat — embodied navigation", track: "AG", tag: "Embodied RL",
+  what: "Train/run a navigation agent in the Habitat 3D simulator.",
+  cells: [
+    md(`# 🔥 Advanced · Habitat embodied navigation\n\n${banner("Put an agent in a photorealistic 3D house and learn PointGoal navigation.", "T4 GPU", "heavy — sim install + training", "facebookresearch/habitat-lab", "https://github.com/facebookresearch/habitat-lab")}\n\nWhere agents (track AG) meet scene reconstruction & world models (track D): act inside a reconstructed 3D world.`),
+    code(`!nvidia-smi`),
+    md(`## 1 · Install Habitat-Sim + Habitat-Lab (headless)`),
+    code(`!pip install -q habitat-sim --extra-index-url https://dl.fbaipublicfiles.com/habitat/habitat-sim/whl/cu121
+!git clone --branch stable https://github.com/facebookresearch/habitat-lab.git
+%cd habitat-lab
+!pip install -q -e habitat-lab`),
+    md(`## 2 · Download a test scene (Habitat test assets)`),
+    code(`!python -m habitat_sim.utils.datasets_download --uids habitat_test_scenes --data-path data/`),
+    md(`## 3 · Train a PointGoal navigation agent (DD-PPO)`),
+    code(`!python -u habitat-baselines/habitat_baselines/run.py \\
+  --config-name=pointnav/ppo_pointnav_example.yaml \\
+  habitat_baselines.total_num_steps=20000`),
+    md(`## Troubleshooting & next steps\n- Habitat is **install-heavy**; match the \`habitat-sim\` wheel to the runtime CUDA, run headless (EGL).\n- Swap in **ObjectNav** / **ImageNav**; feed the agent a learned world model (DreamerV3 lab) or map (SLAM lab, track D).`),
+  ],
+};
+
+const vllm = {
+  file: "LM_vllm_serving.ipynb", title: "Serve an LLM (vLLM / Ollama)", track: "LM", tag: "Serve",
+  what: "Deploy a fine-tuned LLM for fast inference and query it via an API.",
+  cells: [
+    md(`# 🔥 Advanced · Serve an LLM (vLLM)\n\n${banner("Take a (fine-tuned) model to fast, batched, OpenAI-compatible serving.", "T4 GPU", "10–15 min", "vLLM", "https://github.com/vllm-project/vllm")}\n\nThe deployment end of the LM lifecycle — after QLoRA/DPO/Unsloth, serve it.`),
+    code(`!nvidia-smi -L
+!pip install -q vllm`),
+    md(`## 1 · Start an OpenAI-compatible server (background)`),
+    code(`import subprocess, time
+srv = subprocess.Popen(["python", "-m", "vllm.entrypoints.openai.api_server",
+                        "--model", "Qwen/Qwen2.5-0.5B-Instruct", "--max-model-len", "2048"])
+time.sleep(60)  # wait for weights to load`),
+    md(`## 2 · Query it like the OpenAI API`),
+    code(`from openai import OpenAI
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="none")
+r = client.chat.completions.create(model="Qwen/Qwen2.5-0.5B-Instruct",
+    messages=[{"role": "user", "content": "Give me three tips for fine-tuning an LLM."}])
+print(r.choices[0].message.content)`),
+    md(`## Next steps\n- Serve your **LoRA adapter** (\`--enable-lora\`) or a merged model; benchmark throughput.\n- For laptops, export **GGUF** (Unsloth lab) and run with **Ollama** / **llama.cpp** instead.\n- Add **speculative decoding** / quantization (AWQ/GPTQ) for more speed.`),
+  ],
+};
+
 // ===========================================================================
-const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer, qlora, dpo, vlm, videolm, rag, lmeval, unsloth];
+const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer, qlora, dpo, vlm, videolm, rag, lmeval, unsloth, rlhf, sdlora, controlnet, whisper, llmagent, habitat, vllm];
 
 // Every advanced repo writes its own artifacts (checkpoints, logs, renders) to a
 // run/output directory; add a uniform reminder that Colab is ephemeral.
@@ -559,6 +759,12 @@ const LINK_NOTES = {
   LM_vlm_finetune: "Grounding language in pixels feeds two tracks:\n- **C · Egocentric** first-person visual question answering · **D · Scene / world** open-vocabulary scene understanding (OpenScene / LERF use vision-language features).",
   LM_videolm_qwen2vl: "Video-language reasoning maps to:\n- **C · Egocentric** first-person video Q&A and action understanding · **A · Human** describing / parsing human actions in video.",
   LM_rag_pipeline: "Retrieval gives models external memory:\n- **D · Scene / world** query a scene / world memory (open-vocabulary map lookups) · **C · Egocentric** retrieve the relevant clips from long egocentric video.",
+  LM_rlhf_ppo: "RL fine-tuning generalises:\n- **A · Human** align a motion generator (MDM) to preferred motions · **D · Scene / world** RL alignment for agents and world-model planning.",
+  LM_stable_diffusion_lora: "Generative image models feed the visual tracks:\n- **A · Human** generate humans / avatars · **B · 3D** synthesize textures & assets for scenes.",
+  LM_controlnet: "Structural control links to geometry:\n- **A · Human** pose-conditioned generation · **B · 3D** depth / edge / normal control.",
+  AG_llm_agent_tooluse: "An LLM agent ties the stack together:\n- **C · Egocentric** an assistant that reasons over what you see · **D · Scene / world** an embodied agent that acts · **LM** the policy is a language model.",
+  AG_habitat_navigation: "Embodied agents live in reconstructed worlds:\n- **D · Scene / world** act inside a 3D scene / map (SLAM, world models) · learned with RL (track AG).",
+  LM_vllm_serving: "Deployment serves any fine-tuned model:\n- **A / B / C / D** ship the foundation models you trained across every track.",
 };
 for (const lab of labs) {
   const id = lab.file.replace(/\.ipynb$/, "");
@@ -593,7 +799,7 @@ for (const lab of labs) {
 
 const badge = (f) =>
   `[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/${REPO}/blob/main/notebooks/advanced/${f})`;
-const trackName = { A: "A · Human", B: "B · 3D / rendering", C: "C · Egocentric", D: "D · Scene / world", LM: "LM · Language & multimodal" };
+const trackName = { A: "A · Human", B: "B · 3D / rendering", C: "C · Egocentric", D: "D · Scene / world", LM: "LM · Language & multimodal", AG: "AG · Agents & RL" };
 const readme = `# Advanced labs · heavy GPU pipelines
 
 Real research-repo pipelines — **training, fine-tuning, and inference on actual foundation models** — two per track. Unlike the [Training labs](../training/), these clone official repos, download large checkpoints/datasets, and **require a GPU**.
