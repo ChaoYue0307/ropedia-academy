@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 import {
-  LABS, TRACK_LABEL, TRACK_ACCENT, LEVEL_LABEL, colabHref, githubDir,
+  LABS, FUTURE, TRACK_LABEL, TRACK_ACCENT, LEVEL_LABEL, colabHref, githubDir,
   type LabLevel, type LabTrack,
 } from "../lib/labs";
 
@@ -129,6 +129,36 @@ export function LabsPage() {
         <a href={githubDir("training")} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300">notebooks/training →</a>
         <a href={githubDir("advanced")} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300">notebooks/advanced →</a>
       </div>
+
+      {/* Future explore directions — projects that combine labs across tracks */}
+      <section className="space-y-3 border-t border-stone-200/70 pt-6 dark:border-white/10">
+        <div>
+          <h2 className="font-display text-lg font-bold tracking-tight text-ink dark:text-stone-50">{t("futureDirections", mode)}</h2>
+          <p className="mt-1 max-w-2xl text-sm text-ink/55 dark:text-stone-400">{t("futureIntro", mode)}</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {FUTURE.map((f, i) => (
+            <div key={i} className="rounded-2xl border border-stone-200/70 bg-white/70 p-4 shadow-card backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.03]">
+              <div className="text-[15px] font-semibold text-ink dark:text-stone-100">{pick(f.title, mode)}</div>
+              <p className="mt-1 text-sm text-ink/65 dark:text-stone-300">{pick(f.desc, mode)}</p>
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-ink/40 dark:text-stone-500">{t("appliesTo", mode)}</span>
+                {f.links.map((tk) => (
+                  <button
+                    key={tk}
+                    onClick={() => setTrack(tk)}
+                    title={pick(TRACK_LABEL[tk], mode)}
+                    className="rounded px-2 py-0.5 text-[11px] font-bold text-white transition hover:scale-105"
+                    style={{ backgroundColor: TRACK_ACCENT[tk] }}
+                  >
+                    {tk}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

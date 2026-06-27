@@ -765,6 +765,15 @@ const LINK_NOTES = {
   AG_llm_agent_tooluse: "An LLM agent ties the stack together:\n- **C · Egocentric** an assistant that reasons over what you see · **D · Scene / world** an embodied agent that acts · **LM** the policy is a language model.",
   AG_habitat_navigation: "Embodied agents live in reconstructed worlds:\n- **D · Scene / world** act inside a 3D scene / map (SLAM, world models) · learned with RL (track AG).",
   LM_vllm_serving: "Deployment serves any fine-tuned model:\n- **A / B / C / D** ship the foundation models you trained across every track.",
+  A_mdm_text_to_motion: "Generative motion connects out:\n- **LM** the same diffusion recipe as image/text generation · **AG** motion priors for agent policies.",
+  A_4dhumans_mesh: "Human mesh recovery feeds:\n- **C · Egocentric** people seen in first-person video · **D · Scene / world** humans placed inside reconstructed scenes.",
+  B_gaussian_splatting_3d: "Gaussian scenes are the map substrate for **D · Scene / world** (SLAM, world models).",
+  B_nerfstudio_nerfacto: "These reconstructions become the **D · Scene / world** scene representation an agent reasons over.",
+  C_videomae_egocentric: "Egocentric action models relate to:\n- **A · Human** human motion / activity · **D · Scene / world** what happens where in a scene.",
+  C_sam2_video_segmentation: "Masks feed:\n- **A · Human** hand / person parsing · **D · Scene / world** object-level semantic mapping.",
+  D_splatam_slam: "Dense SLAM builds directly on **B · 3D** Gaussian-Splatting / NeRF geometry.",
+  D_dreamerv3_world_model: "World models are the engine of **AG · Agents & RL** model-based agents.",
+  C_whisper_finetune: "Speech transcripts feed **LM** video-language models (egocentric narration, track C).",
 };
 for (const lab of labs) {
   const id = lab.file.replace(/\.ipynb$/, "");

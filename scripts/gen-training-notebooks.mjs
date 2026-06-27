@@ -1495,6 +1495,36 @@ for (const lab of labs) {
   else if (id === "C_videomae_finetune") lab.cells.splice(lab.cells.length - 1, 0, VIDEOMAE_NOTE);
 }
 
+// Cross-reference each lab back to the other embodied tracks (mirrors the catalog links).
+const LINK_NOTES_TRAIN = {
+  A_smplify_fit: "Recovered bodies show up in **C · Egocentric** first-person video.",
+  A_motion_diffusion: "Same diffusion idea as **LM** generation; supplies motion priors for **AG** agents.",
+  A_pose_heatmap: "2D joints from first-person views feed **C · Egocentric** understanding.",
+  A_rotation_6d: "Continuous rotations are used for **B · 3D** camera pose and poses in **D**.",
+  B_nerf_from_scratch: "A trained NeRF is the **D · Scene / world** scene representation.",
+  B_deepsdf_shape: "Implicit surfaces are a **D · Scene / world** map substrate.",
+  B_gaussian_splatting_2d: "Lifts to the 3D Gaussian maps used in **D · Scene / world** SLAM.",
+  B_hashgrid_instngp: "Speeds up the NeRF / scene models used in **D · Scene / world**.",
+  B_icp_registration: "Registration is the front-end of **D · Scene / world** SLAM & fusion.",
+  B_mae_pretrain: "The MAE objective underlies **C** VideoMAE and pretraining for **D** perception.",
+  CD_clip_zeroshot_probe: "CLIP features power **D** open-vocabulary mapping and link vision to **LM**.",
+  C_videomae_finetune: "Video features describe **A** human action and **D** scene activity.",
+  C_dinov2_features_probe: "Dense features feed **B** geometry and **D** mapping.",
+  C_action_anticipation_lstm: "Anticipation supports **D** planning and **AG** agents.",
+  C_simclr_pretrain: "Self-supervision pretrains backbones for **B** and **D** vision tasks.",
+  D_world_model: "World models are the core of **AG · Agents & RL**.",
+  D_tsdf_fusion: "Fuses **B · 3D** geometry into a scene map.",
+  D_semantic_mapping: "Combines **C** perception with **LM** open-vocabulary labels.",
+  LM_distillation: "Compresses the foundation models from **A / B / C / D** for deployment.",
+  AG_reinforce_gridworld: "Policy gradients scale up to **D · Scene / world** embodied control.",
+  AG_behavior_cloning: "Imitation learns **A** human-like skills and **D** embodied policies.",
+  AG_agent_harness: "The harness scores **LM** agents on **C** egocentric-assistant and **D** embodied tasks.",
+};
+for (const lab of labs) {
+  const id = lab.file.replace(/\.ipynb$/, "");
+  if (LINK_NOTES_TRAIN[id]) lab.cells.splice(lab.cells.length - 1, 0, md(`## How this links to tracks A–D\n${LINK_NOTES_TRAIN[id]}`));
+}
+
 function toNotebook(lab) {
   const cells = lab.cells.map((c) =>
     c.kind === "md"

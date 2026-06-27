@@ -77,8 +77,10 @@ real research repos for when you want the production tools, not a teaching toy:
 The verified self-contained labs were each run to confirm real results; the
 advanced labs follow each project's official recipe and run on a Colab GPU (some
 need gated data), so they are flagged as **not pre-executed**. Every lab records
-its checkpoints / loss-eval history / outputs to a downloadable folder, and the
-language/multimodal & agent labs cross-link back to tracks A–D.
+its checkpoints / loss-eval history / outputs to a downloadable folder, **every lab
+cross-links to its related tracks** (chips + filters + an in-notebook note), and the
+**Labs** tab closes with a **Future explore directions** board — open cross-track
+projects that combine the labs.
 
 These clone official repos, download multi-GB checkpoints/datasets, and **require a
 GPU** — they're authored to each project's documented recipe and are **not

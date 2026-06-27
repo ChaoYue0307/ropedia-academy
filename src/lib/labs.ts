@@ -29,35 +29,35 @@ const T = (en: string, zh: string): Bilingual => ({ en, zh });
 
 export const LABS: Lab[] = [
   // ── Track A · Human ───────────────────────────────────────────────
-  { file: "A_smplify_fit.ipynb", dir: "training", track: "A", level: "scratch", title: T("Fit a body (SMPLify)", "拟合人体（SMPLify）"), action: T("Optimize", "优化") },
-  { file: "A_motion_diffusion.ipynb", dir: "training", track: "A", level: "scratch", title: T("Motion diffusion model", "运动扩散模型"), action: T("Train", "训练") },
-  { file: "A_pose_heatmap.ipynb", dir: "training", track: "A", level: "scratch", title: T("2D pose (heatmap regression)", "2D 姿态（热图回归）"), action: T("Train", "训练") },
-  { file: "A_rotation_6d.ipynb", dir: "training", track: "A", level: "scratch", title: T("6D vs Euler rotation", "6D vs 欧拉角旋转"), action: T("Train", "训练") },
-  { file: "A_mdm_text_to_motion.ipynb", dir: "advanced", track: "A", level: "advanced", title: T("MDM — text-to-motion", "MDM — 文本生成动作"), action: T("Generate", "生成"), note: "GuyTevet/motion-diffusion-model" },
-  { file: "A_4dhumans_mesh.ipynb", dir: "advanced", track: "A", level: "advanced", title: T("4D-Humans — mesh from video", "4D-Humans — 视频重建人体"), action: T("Inference", "推理"), note: "shubham-goel/4D-Humans" },
+  { file: "A_smplify_fit.ipynb", dir: "training", track: "A", level: "scratch", title: T("Fit a body (SMPLify)", "拟合人体（SMPLify）"), action: T("Optimize", "优化"), links: ["C"] },
+  { file: "A_motion_diffusion.ipynb", dir: "training", track: "A", level: "scratch", title: T("Motion diffusion model", "运动扩散模型"), action: T("Train", "训练"), links: ["LM", "AG"] },
+  { file: "A_pose_heatmap.ipynb", dir: "training", track: "A", level: "scratch", title: T("2D pose (heatmap regression)", "2D 姿态（热图回归）"), action: T("Train", "训练"), links: ["C"] },
+  { file: "A_rotation_6d.ipynb", dir: "training", track: "A", level: "scratch", title: T("6D vs Euler rotation", "6D vs 欧拉角旋转"), action: T("Train", "训练"), links: ["B", "D"] },
+  { file: "A_mdm_text_to_motion.ipynb", dir: "advanced", track: "A", level: "advanced", title: T("MDM — text-to-motion", "MDM — 文本生成动作"), action: T("Generate", "生成"), note: "GuyTevet/motion-diffusion-model", links: ["LM", "AG"] },
+  { file: "A_4dhumans_mesh.ipynb", dir: "advanced", track: "A", level: "advanced", title: T("4D-Humans — mesh from video", "4D-Humans — 视频重建人体"), action: T("Inference", "推理"), note: "shubham-goel/4D-Humans", links: ["C", "D"] },
   // ── Track B · 3D / rendering ──────────────────────────────────────
-  { file: "B_nerf_from_scratch.ipynb", dir: "training", track: "B", level: "scratch", title: T("Train a NeRF from scratch", "从零训练 NeRF"), action: T("Train", "训练") },
-  { file: "B_deepsdf_shape.ipynb", dir: "training", track: "B", level: "scratch", title: T("Neural SDF (DeepSDF-style)", "神经 SDF（DeepSDF）"), action: T("Train", "训练") },
-  { file: "B_gaussian_splatting_2d.ipynb", dir: "training", track: "B", level: "scratch", title: T("2D Gaussian Splatting", "2D 高斯泼溅"), action: T("Train", "训练") },
-  { file: "B_hashgrid_instngp.ipynb", dir: "training", track: "B", level: "scratch", title: T("Multiresolution hash grid (Instant-NGP)", "多分辨率哈希网格（Instant-NGP）"), action: T("Train", "训练") },
-  { file: "B_icp_registration.ipynb", dir: "training", track: "B", level: "scratch", title: T("ICP point-cloud registration", "ICP 点云配准"), action: T("Optimize", "优化") },
+  { file: "B_nerf_from_scratch.ipynb", dir: "training", track: "B", level: "scratch", title: T("Train a NeRF from scratch", "从零训练 NeRF"), action: T("Train", "训练"), links: ["D"] },
+  { file: "B_deepsdf_shape.ipynb", dir: "training", track: "B", level: "scratch", title: T("Neural SDF (DeepSDF-style)", "神经 SDF（DeepSDF）"), action: T("Train", "训练"), links: ["D"] },
+  { file: "B_gaussian_splatting_2d.ipynb", dir: "training", track: "B", level: "scratch", title: T("2D Gaussian Splatting", "2D 高斯泼溅"), action: T("Train", "训练"), links: ["D"] },
+  { file: "B_hashgrid_instngp.ipynb", dir: "training", track: "B", level: "scratch", title: T("Multiresolution hash grid (Instant-NGP)", "多分辨率哈希网格（Instant-NGP）"), action: T("Train", "训练"), links: ["D"] },
+  { file: "B_icp_registration.ipynb", dir: "training", track: "B", level: "scratch", title: T("ICP point-cloud registration", "ICP 点云配准"), action: T("Optimize", "优化"), links: ["D"] },
   { file: "B_mae_pretrain.ipynb", dir: "training", track: "B", level: "scratch", title: T("Masked Autoencoder (MAE) pretraining", "掩码自编码（MAE）预训练"), action: T("Pretrain", "预训练"), links: ["C", "D"] },
-  { file: "B_gaussian_splatting_3d.ipynb", dir: "advanced", track: "B", level: "advanced", title: T("3D Gaussian Splatting", "3D 高斯泼溅"), action: T("Train", "训练"), note: "graphdeco-inria/gaussian-splatting" },
-  { file: "B_nerfstudio_nerfacto.ipynb", dir: "advanced", track: "B", level: "advanced", title: T("Nerfstudio nerfacto", "Nerfstudio nerfacto"), action: T("Train", "训练"), note: "nerfstudio" },
+  { file: "B_gaussian_splatting_3d.ipynb", dir: "advanced", track: "B", level: "advanced", title: T("3D Gaussian Splatting", "3D 高斯泼溅"), action: T("Train", "训练"), note: "graphdeco-inria/gaussian-splatting", links: ["D"] },
+  { file: "B_nerfstudio_nerfacto.ipynb", dir: "advanced", track: "B", level: "advanced", title: T("Nerfstudio nerfacto", "Nerfstudio nerfacto"), action: T("Train", "训练"), note: "nerfstudio", links: ["D"] },
   // ── Track C · Egocentric ──────────────────────────────────────────
-  { file: "CD_clip_zeroshot_probe.ipynb", dir: "training", track: "C", level: "foundation", title: T("CLIP: zero-shot vs. probe", "CLIP：零样本 vs. 探针"), action: T("Fine-tune", "微调") },
-  { file: "C_videomae_finetune.ipynb", dir: "training", track: "C", level: "foundation", title: T("Fine-tune VideoMAE", "微调 VideoMAE"), action: T("Fine-tune", "微调") },
-  { file: "C_dinov2_features_probe.ipynb", dir: "training", track: "C", level: "foundation", title: T("DINOv2 features + probe", "DINOv2 特征 + 探针"), action: T("Fine-tune", "微调") },
-  { file: "C_action_anticipation_lstm.ipynb", dir: "training", track: "C", level: "scratch", title: T("Action anticipation (LSTM)", "动作预判（LSTM）"), action: T("Train", "训练") },
+  { file: "CD_clip_zeroshot_probe.ipynb", dir: "training", track: "C", level: "foundation", title: T("CLIP: zero-shot vs. probe", "CLIP：零样本 vs. 探针"), action: T("Fine-tune", "微调"), links: ["D", "LM"] },
+  { file: "C_videomae_finetune.ipynb", dir: "training", track: "C", level: "foundation", title: T("Fine-tune VideoMAE", "微调 VideoMAE"), action: T("Fine-tune", "微调"), links: ["A", "D"] },
+  { file: "C_dinov2_features_probe.ipynb", dir: "training", track: "C", level: "foundation", title: T("DINOv2 features + probe", "DINOv2 特征 + 探针"), action: T("Fine-tune", "微调"), links: ["B", "D"] },
+  { file: "C_action_anticipation_lstm.ipynb", dir: "training", track: "C", level: "scratch", title: T("Action anticipation (LSTM)", "动作预判（LSTM）"), action: T("Train", "训练"), links: ["D", "AG"] },
   { file: "C_simclr_pretrain.ipynb", dir: "training", track: "C", level: "scratch", title: T("SimCLR self-supervised pretraining", "SimCLR 自监督预训练"), action: T("Pretrain", "预训练"), links: ["B", "D"] },
-  { file: "C_videomae_egocentric.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("VideoMAE on EPIC/Ego4D", "VideoMAE 第一视角微调"), action: T("Fine-tune", "微调"), note: "EPIC-Kitchens / Ego4D" },
-  { file: "C_sam2_video_segmentation.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("SAM 2 — video segmentation", "SAM 2 — 视频分割"), action: T("Inference", "推理"), note: "facebookresearch/sam2" },
+  { file: "C_videomae_egocentric.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("VideoMAE on EPIC/Ego4D", "VideoMAE 第一视角微调"), action: T("Fine-tune", "微调"), note: "EPIC-Kitchens / Ego4D", links: ["A", "D"] },
+  { file: "C_sam2_video_segmentation.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("SAM 2 — video segmentation", "SAM 2 — 视频分割"), action: T("Inference", "推理"), note: "facebookresearch/sam2", links: ["A", "D"] },
   // ── Track D · Scene / world ───────────────────────────────────────
-  { file: "D_world_model.ipynb", dir: "training", track: "D", level: "scratch", title: T("World model + planning", "世界模型 + 规划"), action: T("Train", "训练") },
-  { file: "D_tsdf_fusion.ipynb", dir: "training", track: "D", level: "scratch", title: T("TSDF fusion → mesh", "TSDF 融合 → 网格"), action: T("Reconstruct", "重建") },
-  { file: "D_semantic_mapping.ipynb", dir: "training", track: "D", level: "scratch", title: T("Bayesian semantic mapping", "贝叶斯语义建图"), action: T("Fuse", "融合") },
-  { file: "D_splatam_slam.ipynb", dir: "advanced", track: "D", level: "advanced", title: T("SplaTAM — Gaussian SLAM", "SplaTAM — 高斯 SLAM"), action: T("Reconstruct", "重建"), note: "spla-tam/SplaTAM" },
-  { file: "D_dreamerv3_world_model.ipynb", dir: "advanced", track: "D", level: "advanced", title: T("DreamerV3 — world model", "DreamerV3 — 世界模型"), action: T("Train", "训练"), note: "danijar/dreamerv3" },
+  { file: "D_world_model.ipynb", dir: "training", track: "D", level: "scratch", title: T("World model + planning", "世界模型 + 规划"), action: T("Train", "训练"), links: ["AG"] },
+  { file: "D_tsdf_fusion.ipynb", dir: "training", track: "D", level: "scratch", title: T("TSDF fusion → mesh", "TSDF 融合 → 网格"), action: T("Reconstruct", "重建"), links: ["B"] },
+  { file: "D_semantic_mapping.ipynb", dir: "training", track: "D", level: "scratch", title: T("Bayesian semantic mapping", "贝叶斯语义建图"), action: T("Fuse", "融合"), links: ["C", "LM"] },
+  { file: "D_splatam_slam.ipynb", dir: "advanced", track: "D", level: "advanced", title: T("SplaTAM — Gaussian SLAM", "SplaTAM — 高斯 SLAM"), action: T("Reconstruct", "重建"), note: "spla-tam/SplaTAM", links: ["B"] },
+  { file: "D_dreamerv3_world_model.ipynb", dir: "advanced", track: "D", level: "advanced", title: T("DreamerV3 — world model", "DreamerV3 — 世界模型"), action: T("Train", "训练"), note: "danijar/dreamerv3", links: ["AG"] },
   // ── LM · Language & multimodal ────────────────────────────────────
   { file: "LM_nanogpt_pretrain.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Train a GPT from scratch (nanoGPT)", "从零训练 GPT（nanoGPT）"), action: T("Pretrain", "预训练"), links: ["A", "B", "C", "D"] },
   { file: "LM_distillation.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Knowledge distillation", "知识蒸馏"), action: T("Distill", "蒸馏"), links: ["A", "B", "C", "D"] },
@@ -76,7 +76,7 @@ export const LABS: Lab[] = [
   { file: "LM_stable_diffusion_lora.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Stable Diffusion — LoRA / DreamBooth", "Stable Diffusion — LoRA / DreamBooth"), action: T("Fine-tune", "微调"), note: "diffusers", links: ["A", "B"] },
   { file: "LM_controlnet.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("ControlNet — conditional diffusion", "ControlNet — 条件扩散"), action: T("Generate", "生成"), note: "diffusers", links: ["A", "B"] },
   { file: "LM_vllm_serving.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Serve an LLM (vLLM)", "部署大模型（vLLM）"), action: T("Serve", "部署"), note: "vLLM", links: ["A", "B", "C", "D"] },
-  { file: "C_whisper_finetune.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("Whisper — fine-tune ASR", "Whisper — 微调语音识别"), action: T("Fine-tune", "微调"), note: "transformers / Whisper" },
+  { file: "C_whisper_finetune.ipynb", dir: "advanced", track: "C", level: "advanced", title: T("Whisper — fine-tune ASR", "Whisper — 微调语音识别"), action: T("Fine-tune", "微调"), note: "transformers / Whisper", links: ["LM"] },
   { file: "AG_llm_agent_tooluse.ipynb", dir: "advanced", track: "AG", level: "advanced", title: T("LLM agent — tool use (ReAct)", "LLM 智能体 — 工具调用（ReAct）"), action: T("Agent", "智能体"), note: "transformers", links: ["C", "D", "LM"] },
   { file: "AG_habitat_navigation.ipynb", dir: "advanced", track: "AG", level: "advanced", title: T("Habitat — embodied navigation", "Habitat — 具身导航"), action: T("Embodied RL", "具身强化"), note: "habitat-lab", links: ["D"] },
 ];
@@ -97,3 +97,72 @@ export const LEVEL_LABEL: Record<LabLevel, Bilingual> = {
   foundation: T("Foundation model", "基础模型"),
   advanced: T("Advanced · GPU", "进阶 · GPU"),
 };
+
+// Future explore directions — open projects that combine labs across tracks.
+export interface FutureDirection {
+  title: Bilingual;
+  desc: Bilingual;
+  links: LabTrack[];
+}
+export const FUTURE: FutureDirection[] = [
+  {
+    title: T("Unified embodied agent", "统一具身智能体"),
+    desc: T("Chain SAM 2 + SLAM + a world model + an LLM agent into one loop that sees (egocentric), maps the scene, plans, and acts.",
+            "把 SAM 2 + SLAM + 世界模型 + LLM 智能体串成一个闭环：第一视角感知、建图、规划、行动。"),
+    links: ["C", "D", "AG", "LM"],
+  },
+  {
+    title: T("4D human + scene capture", "4D 人体 + 场景捕捉"),
+    desc: T("Jointly reconstruct the moving human (4D-Humans) and the scene (Gaussian Splatting) from a single video → editable 4D.",
+            "从单段视频同时重建运动人体（4D-Humans）与场景（高斯泼溅）→ 可编辑的 4D。"),
+    links: ["A", "B"],
+  },
+  {
+    title: T("Open-vocabulary 3D scene graphs", "开放词表 3D 场景图"),
+    desc: T("Fuse CLIP / DINOv2 features into a 3D map and scene graph you query in natural language (RAG over a scene).",
+            "把 CLIP / DINOv2 特征融合进 3D 地图与场景图，用自然语言查询（对场景做 RAG）。"),
+    links: ["C", "D", "LM"],
+  },
+  {
+    title: T("Text-to-3D / text-to-4D", "文本生成 3D / 4D"),
+    desc: T("Use diffusion priors (Stable Diffusion / ControlNet) to generate 3D Gaussians and motion from a prompt.",
+            "用扩散先验（Stable Diffusion / ControlNet）从提示词生成 3D 高斯与运动。"),
+    links: ["A", "B", "LM"],
+  },
+  {
+    title: T("Egocentric video-language foundation model", "第一视角视频-语言基础模型"),
+    desc: T("Pretrain (MAE / contrastive) on Ego4D, align to language, and serve it as a first-person assistant.",
+            "在 Ego4D 上做（MAE / 对比）预训练，与语言对齐，作为第一视角助手部署。"),
+    links: ["C", "LM"],
+  },
+  {
+    title: T("World-model planning from pixels", "从像素学习世界模型并规划"),
+    desc: T("Learn a latent world model of a reconstructed scene (Dreamer) and plan / act inside the imagination.",
+            "对重建场景学习潜在世界模型（Dreamer），在想象中规划与行动。"),
+    links: ["D", "AG", "B"],
+  },
+  {
+    title: T("Diffusion policy for manipulation", "用于操作的扩散策略"),
+    desc: T("Generate robot action sequences with a diffusion model — the motion-diffusion recipe applied to control.",
+            "用扩散模型生成机器人动作序列——把运动扩散用于控制。"),
+    links: ["A", "AG"],
+  },
+  {
+    title: T("Sim-to-real embodied learning", "仿真到现实的具身学习"),
+    desc: T("Train in Habitat, transfer to the real world, and close the loop with a learned world model.",
+            "在 Habitat 中训练，迁移到真实世界，用学到的世界模型闭环。"),
+    links: ["AG", "D"],
+  },
+  {
+    title: T("On-device & self-improving loop", "端侧与自我改进闭环"),
+    desc: T("Distill + quantize + serve (vLLM / Ollama); let an agent generate data and improve itself with DPO / RLHF.",
+            "蒸馏 + 量化 + 部署（vLLM / Ollama）；让智能体自产数据，用 DPO / RLHF 自我改进。"),
+    links: ["LM", "AG"],
+  },
+  {
+    title: T("One model across modalities", "跨模态统一模型"),
+    desc: T("A single transformer over pose, 3D, video, and language tokens — toward a unified embodied foundation model.",
+            "一个 Transformer 统一处理姿态、3D、视频与语言 token——迈向统一的具身基础模型。"),
+    links: ["A", "B", "C", "D", "LM"],
+  },
+];
