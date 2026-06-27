@@ -155,6 +155,62 @@ export function Dashboard() {
           })}
         </div>
       </section>
+
+      <section>
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink/40 dark:text-stone-500">
+            {t("trainingLabs", mode)}
+          </h2>
+          <a
+            href={`${LABS_REPO}/tree/main/notebooks/training`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300"
+          >
+            {t("allLabs", mode)} →
+          </a>
+        </div>
+        <p className="mb-3 text-xs text-ink/45 dark:text-stone-500">{t("trainingLabsDesc", mode)}</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {LABS.map((lab) => (
+            <a
+              key={lab.file}
+              href={COLAB + lab.file}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 rounded-2xl border border-stone-200/70 bg-white/80 p-4 shadow-card backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-card-hover dark:border-white/[0.07] dark:bg-white/[0.04]"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_8px_20px_-8px_#f59e0b] transition group-hover:scale-105">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l14 9-14 9V3z" /></svg>
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[15px] font-semibold text-ink dark:text-stone-100">{pick(lab.title, mode)}</div>
+                <div className="truncate text-xs text-ink/45 dark:text-stone-500">{t("openInColab", mode)}</div>
+              </div>
+              <span
+                className={
+                  "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold " +
+                  (lab.foundation
+                    ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                    : "bg-stone-100 text-ink/55 dark:bg-white/10 dark:text-stone-300")
+                }
+              >
+                {pick(lab.foundation ? { en: "Foundation", zh: "基础模型" } : { en: "PyTorch", zh: "PyTorch" }, mode)}
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
+
+const LABS_REPO = "https://github.com/ChaoYue0307/ropedia-academy";
+const COLAB = "https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/";
+const LABS = [
+  { file: "B_nerf_from_scratch.ipynb", title: { en: "Train a NeRF from scratch", zh: "从零训练 NeRF" }, foundation: false },
+  { file: "B_deepsdf_shape.ipynb", title: { en: "Neural SDF (DeepSDF-style)", zh: "神经 SDF（DeepSDF）" }, foundation: false },
+  { file: "A_smplify_fit.ipynb", title: { en: "Fit a body (SMPLify)", zh: "拟合人体（SMPLify）" }, foundation: false },
+  { file: "CD_clip_zeroshot_probe.ipynb", title: { en: "CLIP: zero-shot vs. probe", zh: "CLIP：零样本 vs. 探针" }, foundation: true },
+  { file: "C_videomae_finetune.ipynb", title: { en: "Fine-tune VideoMAE", zh: "微调 VideoMAE" }, foundation: true },
+];

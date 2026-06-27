@@ -37,6 +37,26 @@ spaced repetition. Runs entirely in the browser — no account required.
   forecast, a cross-track **concept map**, progress tracking, and a ⌘K palette.
 - **Light / dark theme**, mobile-friendly, **local-first** (no account required).
 
+## Training labs
+
+Beyond the per-lesson snippets, [`notebooks/training/`](notebooks/training/) holds
+**real, multi-cell Colab notebooks you can actually train** — split into clear
+blocks (data · model · train · compare) so you can step through and watch each
+stage. Three are self-contained PyTorch pipelines (verified to train); two apply
+a **foundation model**:
+
+| Lab | Trains |
+|---|---|
+| Train a NeRF from scratch (`tiny_nerf`) | a NeRF MLP via photometric loss (PSNR climbs) |
+| Neural SDF, DeepSDF-style | an MLP signed-distance field + marching-cubes surface |
+| Fit a body (SMPLify mechanics) | pose by reprojection optimization (+ how to use real SMPL) |
+| **CLIP** zero-shot vs. linear probe | a head on frozen CLIP features (foundation) |
+| Fine-tune **VideoMAE** | a video transformer for action recognition (foundation) |
+
+Open them from the dashboard's **Training labs** section, or see
+[`notebooks/training/README.md`](notebooks/training/README.md) for one-click Colab
+badges. Set **Runtime → T4 GPU** first.
+
 ## Run & deploy
 
 ```bash
