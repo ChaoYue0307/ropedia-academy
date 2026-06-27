@@ -768,7 +768,372 @@ print(decode(model.generate(ctx, 500)[0].tolist()))`),
 };
 
 // ---------------------------------------------------------------------------
-const labs = [smplify, motion, nerf, sdf, gsplat, clip, videomae, dinov2, worldmodel, nanogpt];
+// LAB 11 — 2D pose estimation by heatmap regression (Track A)
+// ---------------------------------------------------------------------------
+const pose = {
+  file: "A_pose_heatmap.ipynb", title: "2D pose estimation (heatmap regression)", track: "A · Human Modeling", tag: "PyTorch",
+  what: "a CNN that predicts per-joint heatmaps, decoded to coordinates by soft-argmax",
+  cells: [
+    md(`# 2D pose estimation — heatmap regression\n\n**Track A · Human Modeling** · maps to lesson A2 (2D→3D pose).\n\nThe standard way to find joints: a CNN predicts one **heatmap per joint** (a blob at the joint), and **soft-argmax** turns each heatmap into a coordinate. We train it on a synthetic articulated arm so it is fully self-contained.\n\n> CPU is fine.`),
+    code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 1500)); H = W = 48; K = 3
+ys, xs = torch.meshgrid(torch.arange(H, dtype=torch.float32), torch.arange(W, dtype=torch.float32), indexing="ij")
+ys, xs = ys.to(device), xs.to(device)`),
+    md(`## 1 · Synthetic data — a 3-joint arm (base · elbow · hand)`),
+    code(`def make_batch(n):                                       # vectorised: a 3-joint arm
+    bx = W * 0.5 + torch.randn(n, 1, device=device) * 3
+    by = H * 0.85 + torch.randn(n, 1, device=device) * 1.5
+    a1 = -1.57 + (torch.rand(n, 1, device=device) - 0.5) * 1.4
+    ex = bx + 14 * torch.cos(a1); ey = by + 14 * torch.sin(a1)
+    a2 = a1 + (torch.rand(n, 1, device=device) - 0.5) * 1.6
+    hx = ex + 12 * torch.cos(a2); hy = ey + 12 * torch.sin(a2)
+    cx = torch.cat([bx, ex, hx], 1); cy = torch.cat([by, ey, hy], 1)        # (n,K)
+    co = torch.stack([cx, cy], -1)                                          # (n,K,2)
+    d2 = (xs[None, None] - cx[..., None, None]) ** 2 + (ys[None, None] - cy[..., None, None]) ** 2
+    hms = torch.exp(-d2 / (2 * 2.0 ** 2))                                   # (n,K,H,W) target heatmaps
+    imgs = hms.sum(1, keepdim=True).clamp(0, 1) + 0.03 * torch.randn(n, 1, H, W, device=device)
+    return imgs, hms, co
+xb, hb, cb = make_batch(4)
+plt.imshow(xb[0, 0].cpu()); plt.title("input (joint blobs + noise)"); plt.axis("off"); plt.show()`),
+    md(`## 2 · Model — a small fully-convolutional net (keeps resolution)`),
+    code(`class PoseNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv2d(1, 32, 3, padding=1), nn.ReLU(), nn.Conv2d(32, 32, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.Conv2d(64, K, 3, padding=1))
+    def forward(self, x): return self.net(x)
+def soft_argmax(hm):                          # differentiable coordinate decoder
+    B, Kk, h, w = hm.shape
+    p = torch.softmax(hm.reshape(B, Kk, -1), -1).reshape(B, Kk, h, w)
+    return torch.stack([(p * xs).sum((-1, -2)), (p * ys).sum((-1, -2))], -1)
+def coords_from(hm):                          # hard peak location -> (B,K,2) as (x,y), for PCK
+    B, Kk, h, w = hm.shape
+    idx = hm.reshape(B, Kk, -1).argmax(-1)
+    return torch.stack([idx % w, idx // w], -1).float()`),
+    md(`## 3 · Train — MSE on the heatmaps`),
+    code(`model = PoseNet().to(device); opt = torch.optim.Adam(model.parameters(), 1e-3); hist = []
+for step in range(STEPS + 1):
+    x, hm, co = make_batch(16)
+    pred = model(x); loss = ((pred - hm) ** 2).mean()
+    opt.zero_grad(); loss.backward(); opt.step()
+    if step % max(1, STEPS // 10) == 0:
+        with torch.no_grad():
+            pck = ((coords_from(pred) - co).norm(dim=-1) < 0.1 * (H ** 2 + W ** 2) ** 0.5).float().mean().item()
+        hist.append((step, round(pck, 3))); print(f"step {step:4d}  loss {loss.item():.4f}  PCK@0.1 {pck:.3f}")`),
+    md(`## 4 · Compare — predicted joints vs. ground truth`),
+    code(`x, hm, co = make_batch(1)
+with torch.no_grad(): pr = model(x); pj = coords_from(pr)[0].cpu()
+fig, ax = plt.subplots(1, 2, figsize=(7, 3.6))
+ax[0].imshow(x[0, 0].cpu()); ax[0].scatter(co[0, :, 0].cpu(), co[0, :, 1].cpu(), c="lime", s=40, label="truth")
+ax[0].scatter(pj[:, 0], pj[:, 1], c="red", marker="x", s=40, label="pred"); ax[0].legend(); ax[0].set_title("joints"); ax[0].axis("off")
+ax[1].imshow(pr[0].sum(0).cpu()); ax[1].set_title("predicted heatmaps"); ax[1].axis("off")
+plt.show()`),
+    md(`### Where to go next\n- Add a U-Net / stacked-hourglass and real images (MPII, COCO).\n- **Lift** these 2D joints to 3D with a small lifter network (lesson A2), or fit SMPL to them (the SMPLify lab).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 12 — 6D vs Euler rotation regression (Track A)
+// ---------------------------------------------------------------------------
+const rot6d = {
+  file: "A_rotation_6d.ipynb", title: "6D vs Euler rotation regression", track: "A · Human Modeling", tag: "PyTorch",
+  what: "two nets regress rotations — showing the 6D representation beats Euler angles",
+  cells: [
+    md(`# Why 6D rotations beat Euler angles\n\n**Track A · Human Modeling** · maps to lesson A6 (rotation continuity).\n\nEuler angles (and quaternions) are **discontinuous** as a network output, which hurts learning. The **6D** representation (Zhou et al. 2019) is continuous. We train identical nets to regress random rotations with each parametrisation and compare the geodesic error.\n\n> CPU is fine.`),
+    code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 3000))
+def rand_rot(n):
+    q = torch.randn(n, 4, device=device); q = q / q.norm(dim=1, keepdim=True)
+    w, x, y, z = q.unbind(1)
+    return torch.stack([1-2*(y*y+z*z), 2*(x*y-z*w), 2*(x*z+y*w),
+                        2*(x*y+z*w), 1-2*(x*x+z*z), 2*(y*z-x*w),
+                        2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)], 1).view(n, 3, 3)
+pts = torch.randn(8, 3, device=device)
+def geo(A, B):
+    tr = (A.transpose(1, 2) @ B).diagonal(dim1=1, dim2=2).sum(1)
+    return torch.acos(((tr - 1) / 2).clamp(-1 + 1e-6, 1 - 1e-6))`),
+    md(`## 1 · The two output heads`),
+    code(`def sixd_to_R(d):
+    a1, a2 = d[:, :3], d[:, 3:]
+    b1 = a1 / a1.norm(dim=1, keepdim=True)
+    a2 = a2 - (b1 * a2).sum(1, keepdim=True) * b1; b2 = a2 / a2.norm(dim=1, keepdim=True)
+    b3 = torch.cross(b1, b2, dim=1)
+    return torch.stack([b1, b2, b3], 2)
+def euler_to_R(e):
+    cx, cy, cz = torch.cos(e).unbind(1); sx, sy, sz = torch.sin(e).unbind(1)
+    return torch.stack([cy*cz, cz*sx*sy-cx*sz, sx*sz+cx*cz*sy,
+                        cy*sz, cx*cz+sx*sy*sz, cx*sy*sz-cz*sx,
+                        -sy, cy*sx, cx*cy], 1).view(-1, 3, 3)
+def make_net(out):
+    return nn.Sequential(nn.Linear(24, 128), nn.ReLU(), nn.Linear(128, 128), nn.ReLU(), nn.Linear(128, out)).to(device)`),
+    md(`## 2 · Train both (same data, same budget)`),
+    code(`def train(out, to_R):
+    net = make_net(out); opt = torch.optim.Adam(net.parameters(), 1e-3); h = []
+    for step in range(STEPS + 1):
+        R = rand_rot(256); x = (R @ pts.T).transpose(1, 2).reshape(256, -1)
+        loss = geo(to_R(net(x)), R).mean()
+        opt.zero_grad(); loss.backward(); opt.step()
+        if step % max(1, STEPS // 10) == 0: h.append((step, loss.item()))
+    return net, h
+torch.manual_seed(0); _, h6 = train(6, sixd_to_R)
+torch.manual_seed(0); m_e, hE = train(3, euler_to_R)
+torch.manual_seed(0); m6, _ = train(6, sixd_to_R)
+print(f"final mean geodesic error (rad) — 6D {h6[-1][1]:.3f}  vs  Euler {hE[-1][1]:.3f}")`),
+    md(`## 3 · Compare — 6D converges lower`),
+    code(`import math
+fig, ax = plt.subplots(figsize=(6, 3.6))
+ax.plot(*zip(*h6), label="6D (continuous)"); ax.plot(*zip(*hE), label="Euler (discontinuous)")
+ax.set_xlabel("step"); ax.set_ylabel("geodesic error (rad)"); ax.legend(); ax.grid(alpha=.3); ax.set_title("rotation representation matters")
+plt.show()`),
+    md(`### Where to go next\n- Use 6D outputs anywhere a network predicts rotation: body pose (SMPL θ), camera pose, hand pose.\n- Read Zhou et al., *On the Continuity of Rotation Representations* (CVPR 2019).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 13 — Multiresolution hash-grid (Instant-NGP idea), image fit (Track B)
+// ---------------------------------------------------------------------------
+const hashgrid = {
+  file: "B_hashgrid_instngp.ipynb", title: "Multiresolution hash grid (Instant-NGP)", track: "B · 3D & Neural Rendering", tag: "PyTorch",
+  what: "a multiresolution hash-grid encoding + tiny MLP fitting an image (the Instant-NGP trick)",
+  cells: [
+    md(`# Multiresolution hash grid — the Instant-NGP trick\n\n**Track B · 3D & Neural Rendering** · maps to lesson B6 (hash grids).\n\nInstant-NGP made NeRF ~1000× faster by replacing a big MLP with a **multiresolution hash grid** of trainable features + a tiny MLP. Here we fit a 2D image with it (the paper's gigapixel demo) so it trains in seconds.\n\n> CPU is fine; PSNR climbs fast.`),
+    code(`import os, math, torch, torch.nn as nn, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 1500)); H = W = 96
+L, T, Fdim = 8, 1 << 14, 2                      # levels, hash-table size, features/level
+res = [int(round(8 * 1.5 ** l)) for l in range(L)]
+primes = torch.tensor([1, 2654435761], device=device)`),
+    md(`## 1 · Target image (procedural, self-contained)`),
+    code(`ys = torch.linspace(0, 1, H, device=device); xs = torch.linspace(0, 1, W, device=device)
+YY, XX = torch.meshgrid(ys, xs, indexing="ij")
+target = torch.stack([0.5 + 0.5 * torch.sin(12 * XX) * torch.cos(9 * YY),
+                      0.5 + 0.5 * torch.sin(7 * (XX + YY)),
+                      0.5 + 0.5 * torch.cos(10 * YY)], -1).clamp(0, 1)
+coords = torch.stack([XX, YY], -1).reshape(-1, 2)
+plt.imshow(target.cpu()); plt.title("target"); plt.axis("off"); plt.show()`),
+    md(`## 2 · The hash-grid encoding (bilinear, per level)`),
+    code(`tables = nn.Parameter((torch.rand(L, T, Fdim, device=device) * 2 - 1) * 1e-4)
+def encode(c):                                  # c (N,2) in [0,1]
+    out = []
+    for l in range(L):
+        p = c * (res[l] - 1)
+        x0 = p[:, 0].floor().long(); y0 = p[:, 1].floor().long(); x1 = x0 + 1; y1 = y0 + 1
+        wx = (p[:, 0] - x0).unsqueeze(1); wy = (p[:, 1] - y0).unsqueeze(1)
+        def f(ix, iy): return tables[l][((ix * primes[0]) ^ (iy * primes[1])) % T]
+        c0 = f(x0, y0) * (1 - wx) + f(x1, y0) * wx
+        c1 = f(x0, y1) * (1 - wx) + f(x1, y1) * wx
+        out.append(c0 * (1 - wy) + c1 * wy)
+    return torch.cat(out, -1)
+mlp = nn.Sequential(nn.Linear(L * Fdim, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 3)).to(device)`),
+    md(`## 3 · Train — fit the image`),
+    code(`opt = torch.optim.Adam([tables, *mlp.parameters()], 1e-2); tgt = target.reshape(-1, 3); hist = []
+for step in range(STEPS + 1):
+    rgb = torch.sigmoid(mlp(encode(coords)))
+    loss = ((rgb - tgt) ** 2).mean()
+    opt.zero_grad(); loss.backward(); opt.step()
+    if step % max(1, STEPS // 10) == 0:
+        psnr = (-10 * torch.log10(loss)).item(); hist.append((step, psnr)); print(f"step {step:4d}  PSNR {psnr:5.2f} dB")`),
+    md(`## 4 · Compare — reconstruction vs. target`),
+    code(`with torch.no_grad(): img = torch.sigmoid(mlp(encode(coords))).reshape(H, W, 3).cpu()
+fig, ax = plt.subplots(1, 3, figsize=(11, 3.6))
+ax[0].imshow(target.cpu()); ax[0].set_title("target"); ax[0].axis("off")
+ax[1].imshow(img.clamp(0, 1)); ax[1].set_title("hash-grid fit"); ax[1].axis("off")
+ax[2].plot(*zip(*hist), "-o"); ax[2].set_title("PSNR ↑"); ax[2].set_xlabel("step"); ax[2].grid(alpha=.3)
+plt.tight_layout(); plt.show()`),
+    md(`### Where to go next\n- Feed this encoding into a NeRF (3D coords) → **Instant-NGP** speed for the from-scratch NeRF lab.\n- Add per-level learning-rate / weight decay; the real implementation uses a CUDA kernel (tiny-cuda-nn).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 14 — ICP point-cloud registration (Track B)
+// ---------------------------------------------------------------------------
+const icp = {
+  file: "B_icp_registration.ipynb", title: "ICP point-cloud registration", track: "B · 3D & Neural Rendering", tag: "PyTorch",
+  what: "align two point clouds with Iterative Closest Point (nearest-neighbour + Kabsch)",
+  cells: [
+    md(`# ICP — align two point clouds\n\n**Track B · 3D & Neural Rendering** (also lessons D1–D3) · the core of registration & SLAM front-ends.\n\n**Iterative Closest Point**: match each source point to its nearest target point, solve the best rigid transform (Kabsch/SVD), apply, repeat. We recover a known transform from noisy data.\n\n> CPU is fine.`),
+    code(`import os, math, torch, matplotlib.pyplot as plt
+device = "cuda" if torch.cuda.is_available() else "cpu"
+ITERS = int(os.environ.get("STEPS", 30))
+# a 3D shape (two linked rings)
+t = torch.linspace(0, 2 * math.pi, 400, device=device)
+src = torch.cat([torch.stack([torch.cos(t), torch.sin(t), 0 * t], 1),
+                 torch.stack([1 + torch.cos(t), 0 * t, torch.sin(t)], 1)], 0)`),
+    md(`## 1 · Make a target = rigidly-moved, noisy copy`),
+    code(`def Rz(a): return torch.tensor([[math.cos(a), -math.sin(a), 0], [math.sin(a), math.cos(a), 0], [0, 0, 1]], device=device)
+R_true = Rz(0.7) @ torch.tensor([[1., 0, 0], [0, math.cos(0.4), -math.sin(0.4)], [0, math.sin(0.4), math.cos(0.4)]], device=device)
+t_true = torch.tensor([0.6, -0.4, 0.3], device=device)
+tgt = (R_true @ src.T).T + t_true + 0.01 * torch.randn_like(src)`),
+    md(`## 2 · ICP — nearest neighbours + Kabsch, iterated`),
+    code(`def kabsch(P, Q):
+    pc, qc = P.mean(0), Q.mean(0)
+    U, S, Vt = torch.linalg.svd((P - pc).T @ (Q - qc))
+    d = torch.sign(torch.det(Vt.T @ U.T))
+    R = Vt.T @ torch.diag(torch.tensor([1., 1., d], device=device)) @ U.T
+    return R, qc - R @ pc
+P = src.clone(); hist = []
+for it in range(ITERS + 1):
+    idx = torch.cdist(P, tgt).argmin(1); Q = tgt[idx]
+    R, tt = kabsch(P, Q); P = (R @ P.T).T + tt
+    rmse = (P - Q).norm(dim=1).mean().item(); hist.append((it, rmse))
+    if it % max(1, ITERS // 10) == 0: print(f"iter {it:3d}  RMSE {rmse:.4f}")`),
+    md(`## 3 · Compare — before vs. after alignment`),
+    code(`fig = plt.figure(figsize=(10, 4))
+for i, (Pp, ttl) in enumerate([(src, "before"), (P, "after ICP")]):
+    ax = fig.add_subplot(1, 2, i + 1, projection="3d")
+    ax.scatter(*tgt.cpu().T, s=3, c="C0", label="target"); ax.scatter(*Pp.detach().cpu().T, s=3, c="C3", label="source")
+    ax.set_title(ttl); ax.legend(); ax.set_axis_off()
+plt.tight_layout(); plt.show()`),
+    md(`### Where to go next\n- Add point-to-plane ICP, outlier rejection, and a coarse global init (FPFH / RANSAC).\n- ICP is the registration step in TSDF fusion and dense SLAM (next labs in track D).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 15 — Action anticipation with an LSTM (Track C)
+// ---------------------------------------------------------------------------
+const anticip = {
+  file: "C_action_anticipation_lstm.ipynb", title: "Action anticipation (LSTM)", track: "C · Egocentric Vision", tag: "PyTorch",
+  what: "an LSTM that anticipates the next action from a sequence (top-k accuracy)",
+  cells: [
+    md(`# Anticipate the next action — an LSTM\n\n**Track C · Egocentric Vision** · maps to lesson C4 (recognition & anticipation).\n\nAnticipation = predict what happens **next**. We generate action sequences from a hidden grammar (a Markov process over a verb vocabulary) and train an LSTM to predict the next action — then measure top-1/top-2 accuracy against the chance baseline.\n\n> CPU is fine.`),
+    code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+torch.manual_seed(0)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+STEPS = int(os.environ.get("STEPS", 1500)); V, Lseq = 6, 12
+verbs = ["take", "wash", "cut", "cook", "pour", "place"]
+trans = torch.rand(V, V) + torch.eye(V) * 2.0; trans = trans / trans.sum(1, keepdim=True)   # structured grammar`),
+    md(`## 1 · Generate sequences from the hidden grammar`),
+    code(`def batch(n):
+    seqs = torch.zeros(n, Lseq, dtype=torch.long)
+    for b in range(n):
+        s = torch.randint(0, V, (1,)).item()
+        for i in range(Lseq):
+            seqs[b, i] = s; s = torch.multinomial(trans[s], 1).item()
+    return seqs.to(device)
+print("example:", [verbs[i] for i in batch(1)[0].tolist()])`),
+    md(`## 2 · Model — embedding + LSTM + next-token head`),
+    code(`class Antic(nn.Module):
+    def __init__(self):
+        super().__init__(); self.emb = nn.Embedding(V, 32); self.lstm = nn.LSTM(32, 64, batch_first=True); self.head = nn.Linear(64, V)
+    def forward(self, x): return self.head(self.lstm(self.emb(x))[0])
+model = Antic().to(device); opt = torch.optim.Adam(model.parameters(), 3e-3)`),
+    md(`## 3 · Train — predict token t+1 from tokens ≤ t`),
+    code(`hist = []
+for step in range(STEPS + 1):
+    x = batch(128); logits = model(x[:, :-1])
+    loss = nn.functional.cross_entropy(logits.reshape(-1, V), x[:, 1:].reshape(-1))
+    opt.zero_grad(); loss.backward(); opt.step()
+    if step % max(1, STEPS // 10) == 0:
+        with torch.no_grad():
+            xv = batch(512); lg = model(xv[:, :-1]); tgt = xv[:, 1:]
+            top1 = (lg.argmax(-1) == tgt).float().mean().item()
+            top2 = (lg.topk(2, -1).indices == tgt.unsqueeze(-1)).any(-1).float().mean().item()
+        hist.append((step, top1)); print(f"step {step:4d}  top-1 {top1:.3f}  top-2 {top2:.3f}  (chance {1/V:.3f})")`),
+    md(`## 4 · Compare — accuracy vs. chance`),
+    code(`fig, ax = plt.subplots(figsize=(6, 3.6))
+ax.plot(*zip(*hist), "-o", label="top-1"); ax.axhline(1 / V, ls="--", c="C7", label="chance")
+ax.set_xlabel("step"); ax.set_ylabel("next-action accuracy"); ax.legend(); ax.grid(alpha=.3); ax.set_title("the model learned the grammar")
+plt.show()`),
+    md(`### Where to go next\n- Feed real video features (from the VideoMAE / CLIP labs) instead of action IDs.\n- Predict actions further ahead (anticipation horizon), or the time-to-next-action.`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 16 — TSDF fusion → mesh (Track D)
+// ---------------------------------------------------------------------------
+const tsdf = {
+  file: "D_tsdf_fusion.ipynb", title: "TSDF fusion → mesh", track: "D · Scene & World Models", tag: "PyTorch",
+  what: "fuse multi-view depth into a truncated SDF volume and extract a mesh (marching cubes)",
+  cells: [
+    md(`# TSDF fusion — depth maps → a 3D mesh\n\n**Track D · Scene & World Models** · maps to lesson D3 (TSDF fusion).\n\nDense reconstruction integrates many depth images into a **Truncated Signed Distance** volume; the surface is its zero level set. We simulate depth from six viewpoints of a shape, fuse, and run marching cubes.\n\n> CPU is fine.`),
+    code(`import os, numpy as np, matplotlib.pyplot as plt
+R = int(os.environ.get("STEPS", 64)); tau = 3.0 / R * 4   # grid res, truncation
+g = np.linspace(-1, 1, R)
+X, Y, Z = np.meshgrid(g, g, g, indexing="ij")`),
+    md(`## 1 · The scene (two spheres) and its occupancy`),
+    code(`def sdf(x, y, z):
+    d1 = np.sqrt((x + .25) ** 2 + y ** 2 + z ** 2) - 0.55
+    d2 = np.sqrt((x - .45) ** 2 + (y - .2) ** 2 + z ** 2) - 0.4
+    return np.minimum(d1, d2)
+occ = sdf(X, Y, Z) < 0
+print("occupied voxels:", int(occ.sum()))`),
+    md(`## 2 · Simulate 6 orthographic depth views and fuse into a TSDF`),
+    code(`tsdf = np.zeros((R, R, R)); wsum = np.zeros((R, R, R))
+axes = [(0, 1), (0, -1), (1, 1), (1, -1), (2, 1), (2, -1)]   # (axis, direction)
+coord = [X, Y, Z]
+for ax, sign in axes:
+    o = occ if sign > 0 else occ[tuple(slice(None, None, -1) if i == ax else slice(None) for i in range(3))]
+    c = coord[ax] if sign > 0 else coord[ax][tuple(slice(None, None, -1) if i == ax else slice(None) for i in range(3))]
+    # nearest surface coordinate seen by this view, per (u,v) column along 'ax'
+    first = np.argmax(o, axis=ax); seen = o.any(axis=ax)
+    surf = np.take_along_axis(c, np.expand_dims(first, ax), axis=ax)            # (.. surface coord ..)
+    raw = c - surf                                                              # +ve in front of surface, -ve behind
+    w = (np.abs(raw) < tau) & np.expand_dims(seen, ax)
+    raw = np.clip(raw, -tau, tau)
+    if sign < 0:  # undo the flip
+        raw = raw[tuple(slice(None, None, -1) if i == ax else slice(None) for i in range(3))]
+        w = w[tuple(slice(None, None, -1) if i == ax else slice(None) for i in range(3))]
+    tsdf += np.where(w, raw, 0.0); wsum += w
+vol = np.where(wsum > 0, tsdf / np.maximum(wsum, 1), tau)
+print("TSDF range:", round(float(vol.min()), 3), "to", round(float(vol.max()), 3))`),
+    md(`## 3 · Extract the surface (marching cubes)`),
+    code(`from skimage import measure
+verts, faces, _, _ = measure.marching_cubes(vol, level=0.0)
+fig = plt.figure(figsize=(5, 5)); ax = fig.add_subplot(111, projection="3d")
+ax.plot_trisurf(verts[:, 0], verts[:, 1], verts[:, 2], triangles=faces, cmap="viridis", lw=0)
+ax.set_title(f"fused mesh — {verts.shape[0]} verts"); ax.set_axis_off(); plt.show()`),
+    md(`### Where to go next\n- Use real RGB-D (a phone LiDAR scan, RealSense) with true camera poses; weight by depth confidence.\n- Stream it online with pose tracking → dense **SLAM** (the SplaTAM advanced lab).`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// LAB 17 — Bayesian semantic mapping (Track D)
+// ---------------------------------------------------------------------------
+const semmap = {
+  file: "D_semantic_mapping.ipynb", title: "Bayesian semantic mapping", track: "D · Scene & World Models", tag: "PyTorch",
+  what: "fuse noisy per-cell observations into an occupancy + semantic-label map over time",
+  cells: [
+    md(`# Bayesian semantic mapping\n\n**Track D · Scene & World Models** · maps to lesson D4 (Bayesian label fusion).\n\nA map is built from many **noisy** observations. We fuse them the principled way: **log-odds** for occupancy and **count-based posteriors** for the semantic class, and watch the map converge to the truth.\n\n> CPU is fine.`),
+    code(`import os, numpy as np, matplotlib.pyplot as plt
+rng = np.random.default_rng(0)
+Gh, Gw, Kc = 32, 32, 4
+STEPS = int(os.environ.get("STEPS", 300))
+gt_label = rng.integers(0, Kc, size=(Gh, Gw))
+gt_occ = (rng.random((Gh, Gw)) < 0.45)`),
+    md(`## 1 · Sensor model — observations are right with prob. p`),
+    code(`p_occ, p_lab = 0.8, 0.7
+logodds = np.zeros((Gh, Gw)); counts = np.ones((Gh, Gw, Kc))   # Dirichlet prior
+def observe():
+    ys = rng.integers(0, Gh, 60); xs = rng.integers(0, Gw, 60)   # a sensor footprint
+    for y, x in zip(ys, xs):
+        z_occ = gt_occ[y, x] if rng.random() < p_occ else not gt_occ[y, x]
+        logodds[y, x] += (1.84 if z_occ else -1.84)             # log(p/(1-p))
+        z_lab = gt_label[y, x] if rng.random() < p_lab else rng.integers(0, Kc)
+        counts[y, x, z_lab] += 1`),
+    md(`## 2 · Fuse over time, tracking accuracy`),
+    code(`hist = []
+for step in range(STEPS + 1):
+    observe()
+    if step % max(1, STEPS // 10) == 0:
+        occ_acc = ((logodds > 0) == gt_occ).mean()
+        lab_acc = (counts.argmax(-1) == gt_label).mean()
+        hist.append((step, round(float(occ_acc), 3), round(float(lab_acc), 3)))
+        print(f"step {step:4d}  occupancy acc {occ_acc:.3f}  label acc {lab_acc:.3f}")`),
+    md(`## 3 · Compare — recovered maps vs. ground truth`),
+    code(`fig, ax = plt.subplots(2, 2, figsize=(7, 7))
+ax[0, 0].imshow(gt_occ); ax[0, 0].set_title("true occupancy"); ax[0, 1].imshow(logodds > 0); ax[0, 1].set_title("estimated")
+ax[1, 0].imshow(gt_label, cmap="tab10"); ax[1, 0].set_title("true labels"); ax[1, 1].imshow(counts.argmax(-1), cmap="tab10"); ax[1, 1].set_title("estimated")
+for a in ax.ravel(): a.axis("off")
+plt.tight_layout(); plt.show()`),
+    md(`### Where to go next\n- Replace random footprints with a moving camera frustum and real per-pixel class probabilities (e.g. from the CLIP / DINOv2 labs) → **open-vocabulary mapping**.\n- Add a 3D voxel grid and fuse into the TSDF for a semantic 3D map.`),
+  ],
+};
+
+// ---------------------------------------------------------------------------
+const labs = [smplify, motion, pose, rot6d, nerf, sdf, gsplat, hashgrid, icp, clip, videomae, dinov2, anticip, worldmodel, tsdf, semmap, nanogpt];
 
 // Per-lab artifact saving (checkpoint + metrics), spliced before the last cell.
 const SAVE = {
@@ -781,6 +1146,13 @@ const SAVE = {
   C_dinov2_features_probe: [`torch.save(clf.state_dict(), f"{run}/probe.pt")`, `json.dump({"linear_probe": float(probe_acc)}, open(f"{run}/metrics.json", "w"), indent=2)`],
   D_world_model: [`torch.save(model.state_dict(), f"{run}/dynamics.pt")`, `json.dump({"dyn_mse": hist, "final_dist": {"planner": float(traj_plan[-1].norm()), "random": float(traj_rand[-1].norm())}}, open(f"{run}/metrics.json", "w"), indent=2)`],
   LM_nanogpt_pretrain: [`torch.save(model.state_dict(), f"{run}/gpt.pt")`, `json.dump({"loss": hist}, open(f"{run}/metrics.json", "w"), indent=2)`, `open(f"{run}/sample.txt", "w").write(decode(model.generate(torch.zeros((1, 1), dtype=torch.long, device=device), 500)[0].tolist()))`],
+  A_pose_heatmap: [`torch.save(model.state_dict(), f"{run}/pose.pt")`, `json.dump({"pck": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  A_rotation_6d: [`torch.save(m6.state_dict(), f"{run}/rot6d.pt")`, `json.dump({"geo_6d": h6, "geo_euler": hE}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  B_hashgrid_instngp: [`torch.save({"tables": tables.detach().cpu(), "mlp": mlp.state_dict()}, f"{run}/hashgrid.pt")`, `json.dump({"psnr": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  B_icp_registration: [`torch.save({"R": R.detach().cpu(), "t": tt.detach().cpu()}, f"{run}/transform.pt")`, `json.dump({"rmse": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  C_action_anticipation_lstm: [`torch.save(model.state_dict(), f"{run}/lstm.pt")`, `json.dump({"top1": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  D_tsdf_fusion: [`torch.save({"verts": torch.tensor(verts.copy()), "faces": torch.tensor(faces.copy())}, f"{run}/mesh.pt")`, `json.dump({"verts": int(verts.shape[0]), "faces": int(faces.shape[0])}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  D_semantic_mapping: [`json.dump({"history": hist}, open(f"{run}/metrics.json", "w"), indent=2)`, `np.save(f"{run}/occ.npy", (logodds > 0)); np.save(f"{run}/labels.npy", counts.argmax(-1))`],
 };
 const VIDEOMAE_NOTE = md(`## Save & persist\nThe 🤗 Trainer already writes checkpoints, \`trainer_state.json\` (the full loss/eval history) and logs to its \`output_dir\` ("videomae-ucf101"). Also call \`trainer.save_model("videomae-final")\` (and optionally \`trainer.push_to_hub()\`). Colab is ephemeral, so zip + download the folder or mount Google Drive to keep it.`);
 for (const lab of labs) {

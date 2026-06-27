@@ -40,21 +40,22 @@ spaced repetition. Runs entirely in the browser — no account required.
 ## Training labs
 
 Beyond the per-lesson snippets, [`notebooks/training/`](notebooks/training/) holds
-**ten real, multi-cell Colab notebooks you can actually train** — split into clear
-blocks (data · model · train · compare) so you can step through and watch each
-stage. Every track gets both a *from-scratch* and a *foundation-model* pipeline:
+**seventeen real, multi-cell Colab notebooks you can actually train** — split into
+clear blocks (data · model · train · compare) so you can step through and watch
+each stage:
 
 | Track | From scratch (PyTorch) | Foundation model |
 |---|---|---|
-| **A · Human** | SMPLify body fit · motion diffusion (DDPM) | — |
-| **B · 3D / rendering** | NeRF (`tiny_nerf`) · neural SDF · 2D Gaussian Splatting | — |
-| **C · Egocentric** | — | CLIP probe · fine-tune VideoMAE · DINOv2 features |
-| **D · Scene / world** | world model + planning (MPC) | — |
+| **A · Human** | SMPLify body fit · motion diffusion (DDPM) · 2D pose (heatmap) · 6D vs Euler rotation | — |
+| **B · 3D / rendering** | NeRF (`tiny_nerf`) · neural SDF · 2D Gaussian Splatting · hash grid (Instant-NGP) · ICP registration | — |
+| **C · Egocentric** | action anticipation (LSTM) | CLIP probe · fine-tune VideoMAE · DINOv2 features |
+| **D · Scene / world** | world model + planning (MPC) · TSDF fusion → mesh · Bayesian semantic mapping | — |
 | **LM · Language** | a GPT from scratch (nanoGPT) | — |
 
-The seven self-contained PyTorch labs are **verified to train** (loss decreases /
-PSNR climbs); the three foundation labs follow the official APIs and run on a
-Colab GPU. Open them from the dashboard's **Training labs** section, or see
+The fourteen self-contained PyTorch labs are **verified to train** (each was run
+to confirm loss drops / PSNR climbs / metrics beat chance); the three foundation
+labs follow the official APIs and run on a Colab GPU. Every lab records its
+checkpoint + loss/eval history + figures to a downloadable `outputs/<lab>/`. Open them from the dashboard's **Training labs** section, or see
 [`notebooks/training/README.md`](notebooks/training/README.md) for one-click Colab
 badges. Set **Runtime → T4 GPU** first.
 
