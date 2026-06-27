@@ -1,5 +1,11 @@
 import type { Bilingual } from "../types";
 
+// Each lesson's snippet also lives as a runnable notebook in /notebooks,
+// opened straight from the public repo via Colab's GitHub bridge (no login to
+// read; one click to run). Keep in sync with scripts/gen-notebooks.mjs.
+export const colabUrl = (id: string) =>
+  `https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/${id}.ipynb`;
+
 // A focused Python/PyTorch snippet per lesson — the core idea as code.
 // Comments are English (universal for code); the `note` is bilingual.
 export const lessonCode: Record<string, { code: string; note: Bilingual }> = {

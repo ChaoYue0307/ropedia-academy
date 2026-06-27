@@ -57,6 +57,8 @@ export const S: Dict = {
   implementation: { en: "Implementation — see it in code", zh: "代码实现 — 看核心代码" },
   copyCode: { en: "Copy", zh: "复制" },
   copiedCode: { en: "Copied", zh: "已复制" },
+  openInColab: { en: "Open in Colab", zh: "在 Colab 打开" },
+  runItYourself: { en: "Run it yourself — no setup", zh: "亲自运行 — 无需配置" },
   keyTerms: { en: "Key terms", zh: "关键术语" },
   papers: { en: "Key papers", zh: "关键论文" },
   learnMore: { en: "Learn more", zh: "延伸阅读" },

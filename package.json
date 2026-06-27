@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
-    "gen-og": "node scripts/gen-og.mjs"
+    "gen-og": "node scripts/gen-og.mjs",
+    "gen-notebooks": "node scripts/gen-notebooks.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

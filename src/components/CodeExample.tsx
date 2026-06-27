@@ -10,10 +10,12 @@ export function CodeExample({
   code,
   note,
   mode,
+  colabUrl,
 }: {
   code: string;
   note: Bilingual;
   mode: LangMode;
+  colabUrl?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -38,8 +40,24 @@ export function CodeExample({
           </span>
           <span className="font-mono text-[11px] uppercase tracking-wider text-ink/45 dark:text-stone-500">Python</span>
         </div>
-        <button
-          onClick={copy}
+        <div className="flex items-center gap-1">
+          {colabUrl && (
+            <a
+              href={colabUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t("runItYourself", mode)}
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-ink/55 transition hover:bg-[#f9ab00]/10 hover:text-[#e8710a] dark:text-stone-400 dark:hover:text-[#f9ab00]"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-[#f9ab00]" aria-hidden="true">
+                <circle cx="6" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.4" />
+                <circle cx="18" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="2.4" />
+              </svg>
+              {t("openInColab", mode)}
+            </a>
+          )}
+          <button
+            onClick={copy}
           className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-ink/50 transition hover:bg-stone-100 hover:text-ink dark:text-stone-400 dark:hover:bg-white/5"
           aria-label={t("copyCode", mode)}
         >
@@ -49,7 +67,8 @@ export function CodeExample({
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
           )}
           {copied ? t("copiedCode", mode) : t("copyCode", mode)}
-        </button>
+          </button>
+        </div>
       </div>
       {/* The Markdown component renders the fenced block; .md pre supplies the dark theme. */}
       <div className="code-example-body p-4">

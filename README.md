@@ -33,7 +33,10 @@ account required.
   SMPL body) and explorable diagrams (pinhole projection, TSDF fusion, SLAM
   loop closure, action anticipation, and more).
 - **Bilingual reading** — switch 中文 / English / 双语 (side-by-side) anywhere.
-- **Math & code** — KaTeX formulas and syntax-highlighted code in lessons.
+- **Math & code** — KaTeX formulas and a focused Python/PyTorch snippet in every
+  lesson (soft-argmax, 6D rotations, NeRF volume rendering, TSDF fusion, world-model
+  rollouts, …), each with one-click **[Open in Colab](notebooks/)** to run it — no
+  install, no login to read.
 - **Self-graded checks & quiz mode** — reveal standard answers, or take a
   per-track quiz with scoring.
 - **Spaced repetition** — add any check to a review deck; an SM-2 scheduler
@@ -87,6 +90,7 @@ src/
   lib/
     types.ts            content model (Track, Lesson, CheckQuestion, …)
     curriculum/         the 4 tracks × 9 lessons (trackA..D) + index helpers
+                        + lessonCode.ts (per-lesson Python/PyTorch snippets)
     store.ts            zustand store, local-first persistence
     srs.ts              SM-2 spaced-repetition scheduler
     i18n.ts             UI strings (中/EN)
@@ -95,6 +99,10 @@ src/
                         mastery map, figures/ (interactive demos incl. three/ 3D)
   pages/                Dashboard, Overview, Track, Lesson, Quiz, Review,
                         Concept map, Glossary, Settings
+notebooks/              one Colab-ready .ipynb per lesson (generated)
+scripts/
+  gen-notebooks.mjs     regenerates notebooks/ from lessonCode.ts
+  gen-og.mjs            regenerates the social card (public/og.png)
 ```
 
 ## Editing or extending content
@@ -104,6 +112,11 @@ objects. To add a lesson, append a `Lesson` to a track's `lessons` array; to add
 a track, create a new file and register it in `src/lib/curriculum/index.ts`.
 Lesson bodies are Markdown with `$math$` and fenced code. No CMS, no build step
 beyond Vite — edit, save, hot-reload.
+
+Per-lesson code examples live in `src/lib/curriculum/lessonCode.ts` (a
+`lessonId → { code, note }` map). After editing them, run `npm run gen-notebooks`
+to regenerate the matching Colab notebooks in `notebooks/` — the snippet, the
+lesson page, and the notebook all come from that one file.
 
 ## Roadmap
 
