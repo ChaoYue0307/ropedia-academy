@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { tracks } from "../lib/curriculum";
+import { foundations } from "../lib/foundations";
 import { useStore } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 
@@ -56,7 +57,14 @@ export function CommandPalette() {
         })),
       ),
     );
-    return [...pages, ...trackItems, ...lessonItems, ...termItems];
+    const foundationItems: Item[] = foundations.map((f) => ({
+      kind: "term",
+      label: f.term,
+      sub: mode === "zh" ? "基础概念" : "foundation",
+      to: "/glossary",
+      hay: `${f.term} ${(f.aka ?? []).join(" ")} ${f.def.en} ${f.def.zh}`.toLowerCase(),
+    }));
+    return [...pages, ...trackItems, ...lessonItems, ...termItems, ...foundationItems];
   }, [mode]);
 
   const results = useMemo(() => {

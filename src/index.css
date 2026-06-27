@@ -119,6 +119,15 @@ html.dark .md a {
 .md a.autolink:hover {
   text-decoration-style: solid;
 }
+/* foundational terms: dashed underline + a "definition on hover" cursor */
+.md abbr.glossary-term {
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(120, 115, 145, 0.55);
+  cursor: help;
+}
+html.dark .md abbr.glossary-term {
+  border-bottom-color: rgba(205, 200, 225, 0.4);
+}
 .md blockquote {
   @apply border-l-2 border-brand-300 pl-4 italic text-ink/70;
 }
