@@ -16,6 +16,7 @@ const SITE = "https://chaoyue0307.github.io/ropedia-academy";
 const codePath = path.join(root, "src/lib/curriculum/lessonCode.ts");
 let src = fs.readFileSync(codePath, "utf8");
 src = src.replace(/^import type .*$/m, "");
+src = src.replace(/export const colabUrl[\s\S]*?;\n/, "");   // defined locally below
 src = src.replace(/export const lessonCode\s*:[^=]*=/, "export const lessonCode =");
 const tmp = path.join(os.tmpdir(), `lessonCode.${Date.now()}.mjs`);
 fs.writeFileSync(tmp, src);
@@ -55,11 +56,12 @@ for (const id of ids) {
     `# Ropedia Academy — ${title}\n\n` +
     `[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](${colabUrl(id)})\n\n` +
     `> **${note.en}**\n>\n> ${note.zh}\n\n` +
-    `This is the core snippet from the lesson — read it, run it, and tinker. ` +
-    `Colab's default runtime already includes \`torch\`, \`numpy\`, \`cv2\`, and \`networkx\`, ` +
-    `so just press **Run**.\n\n` +
-    `Some snippets are deliberately minimal: where you see \`...\` or names like ` +
-    `\`model\` / \`loader\` / \`smpl\`, plug in your own data to extend the example.\n\n` +
+    `This is the lesson's core example — **self-contained and runnable end to end**. ` +
+    `It builds toy tensors, performs the lesson's key computation, and prints a real ` +
+    `result, so you learn the concept by executing it.\n\n` +
+    `Colab's default runtime already includes \`torch\`, \`numpy\`, and \`networkx\`, so just ` +
+    `press **Run all** — every cell should go green. Sizes are shrunk to run on CPU; ` +
+    `swap in a real batch and the same code scales up.\n\n` +
     `🔗 Full lesson (with the interactive demo & key terms): ${SITE}/lesson/${id}`;
 
   const footer =
