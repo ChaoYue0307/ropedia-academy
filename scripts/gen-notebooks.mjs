@@ -57,11 +57,12 @@ for (const id of ids) {
     `[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](${colabUrl(id)})\n\n` +
     `> **${note.en}**\n>\n> ${note.zh}\n\n` +
     `This is the lesson's core example — **self-contained and runnable end to end**. ` +
-    `It builds toy tensors, performs the lesson's key computation, and prints a real ` +
-    `result, so you learn the concept by executing it.\n\n` +
-    `Colab's default runtime already includes \`torch\`, \`numpy\`, and \`networkx\`, so just ` +
-    `press **Run all** — every cell should go green. Sizes are shrunk to run on CPU; ` +
-    `swap in a real batch and the same code scales up.\n\n` +
+    `It builds toy tensors, performs the lesson's key computation, and **visualizes the ` +
+    `result with matplotlib** (the plot renders inline below the cell), so you learn the ` +
+    `concept by executing and *seeing* it.\n\n` +
+    `Colab's default runtime already includes \`torch\`, \`numpy\`, \`networkx\`, and ` +
+    `\`matplotlib\`, so just press **Run all** — every cell goes green and a figure appears. ` +
+    `Sizes are shrunk to run on CPU; swap in a real batch and the same code scales up.\n\n` +
     `🔗 Full lesson (with the interactive demo & key terms): ${SITE}/lesson/${id}`;
 
   const footer =
