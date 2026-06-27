@@ -130,6 +130,8 @@ export const S: Dict = {
   trainingLabs: { en: "Training labs", zh: "训练实验室" },
   trainingLabsDesc: { en: "Runnable Colab notebooks — train these models step by step and compare.", zh: "可运行的 Colab 笔记本——逐步训练这些模型并对比。" },
   allLabs: { en: "All labs", zh: "全部实验" },
+  advancedLabs: { en: "Advanced labs · GPU", zh: "进阶实验 · GPU" },
+  advancedLabsDesc: { en: "Heavy real-repo pipelines (training · fine-tuning · inference) on real foundation models — need a Colab GPU; authored to the official recipes, not pre-run.", zh: "基于真实仓库的重型流水线（训练 · 微调 · 推理）——需 Colab GPU；按官方流程编写，未预先运行。" },
   learningPath: { en: "Learning path", zh: "学习路径" },
   pathGuided: { en: "Guided", zh: "引导" },
   pathFull: { en: "Full", zh: "完整" },

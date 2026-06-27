@@ -12,6 +12,7 @@
     "gen-og": "node scripts/gen-og.mjs",
     "gen-notebooks": "node scripts/gen-notebooks.mjs",
     "gen-training-notebooks": "node scripts/gen-training-notebooks.mjs",
+    "gen-advanced-notebooks": "node scripts/gen-advanced-notebooks.mjs",
     "gen-outputs": "node scripts/gen-outputs.mjs",
     "check-links": "node scripts/check-links.mjs"
   },

@@ -57,6 +57,24 @@ Colab GPU. Open them from the dashboard's **Training labs** section, or see
 [`notebooks/training/README.md`](notebooks/training/README.md) for one-click Colab
 badges. Set **Runtime → T4 GPU** first.
 
+### Advanced labs (heavy · real repos · GPU)
+
+[`notebooks/advanced/`](notebooks/advanced/) adds **eight heavy GPU pipelines** on
+real research repos — two per track — for when you want the production tools, not a
+teaching toy:
+
+| Track | Advanced pipelines |
+|---|---|
+| **A · Human** | MDM text-to-motion · 4D-Humans (HMR 2.0) mesh-from-video |
+| **B · 3D / rendering** | 3D Gaussian Splatting (CUDA) · Nerfstudio nerfacto |
+| **C · Egocentric** | VideoMAE fine-tune on EPIC/Ego4D · SAM 2 video segmentation |
+| **D · Scene / world** | SplaTAM (Gaussian SLAM) · DreamerV3 world model |
+
+These clone official repos, download multi-GB checkpoints/datasets, and **require a
+GPU** — they're authored to each project's documented recipe and are **not
+pre-executed** (expect to pin a version or two). See the dashboard's **Advanced
+labs · GPU** section or [`notebooks/advanced/README.md`](notebooks/advanced/README.md).
+
 ## Run & deploy
 
 ```bash
