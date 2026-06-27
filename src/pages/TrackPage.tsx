@@ -1,18 +1,23 @@
 import { Link, useParams } from "react-router-dom";
 import { getTrack, trackProgress } from "../lib/curriculum";
-import { useStore, useCompletedSet } from "../lib/store";
+import { useStore, useCompletedSet, visibleLessons } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 import { readingMinutes } from "../lib/reading";
 import { ProgressRing } from "../components/ProgressRing";
+import { PathToggle } from "../components/PathToggle";
 
 export function TrackPage() {
   const { id } = useParams();
   const mode = useStore((s) => s.lang);
+  const path = useStore((s) => s.path);
+  const setPath = useStore((s) => s.setPath);
   const completed = useCompletedSet();
   const track = getTrack(id ?? "");
 
   if (!track) return <div className="text-ink/60">Track not found.</div>;
   const p = trackProgress(track.id, completed);
+  const lessons = visibleLessons(track.lessons, path);
+  const hidden = track.lessons.length - lessons.length;
 
   return (
     <div className="space-y-6">
@@ -49,8 +54,15 @@ export function TrackPage() {
         {t("quizTrack", mode)} · {track.lessons.reduce((n, l) => n + l.checks.length, 0)} {mode === "zh" ? "题" : "questions"}
       </Link>
 
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-ink/40 dark:text-stone-500">
+          {lessons.length} {t("lessonsCount", mode)}
+        </span>
+        <PathToggle />
+      </div>
+
       <ol className="space-y-2">
-        {track.lessons.map((lesson) => {
+        {lessons.map((lesson) => {
           const done = completed.has(lesson.id);
           return (
             <Link
@@ -84,6 +96,15 @@ export function TrackPage() {
           );
         })}
       </ol>
+
+      {hidden > 0 && (
+        <button
+          onClick={() => setPath("full")}
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-stone-300 py-2.5 text-xs font-medium text-ink/45 transition hover:border-brand-300 hover:text-brand-600 dark:border-white/10 dark:text-stone-500"
+        >
+          + {hidden} {t("reproHidden", mode)} →
+        </button>
+      )}
     </div>
   );
 }

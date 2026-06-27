@@ -7,8 +7,10 @@ import type { Theme } from "../lib/store";
 export function SettingsPage() {
   const mode = useStore((s) => s.lang);
   const theme = useStore((s) => s.theme);
+  const path = useStore((s) => s.path);
   const setLang = useStore((s) => s.setLang);
   const setTheme = useStore((s) => s.setTheme);
+  const setPath = useStore((s) => s.setPath);
   const resetAll = useStore((s) => s.resetAll);
 
   const langs: { v: LangMode; key: string }[] = [
@@ -43,6 +45,27 @@ export function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-ink dark:text-stone-200">{t("learningPath", mode)}</h2>
+        <div className="flex gap-2">
+          {(["guided", "full"] as const).map((pp) => (
+            <button
+              key={pp}
+              onClick={() => setPath(pp)}
+              className={
+                "rounded-lg border px-4 py-2 text-sm font-medium transition " +
+                (path === pp
+                  ? "border-brand-400 bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200"
+                  : "border-stone-200 text-ink/60 hover:text-ink dark:border-white/10 dark:text-stone-400")
+              }
+            >
+              {t(pp === "guided" ? "pathGuided" : "pathFull", mode)}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-ink/50 dark:text-stone-500">{t(path === "guided" ? "pathGuidedDesc" : "pathFullDesc", mode)}</p>
       </section>
 
       <section className="space-y-2">

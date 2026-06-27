@@ -118,6 +118,12 @@ export const S: Dict = {
     zh: "每个圆点是一课。悬停查看它跨赛道连接到哪些课；点击即可打开。",
   },
 
+  learningPath: { en: "Learning path", zh: "学习路径" },
+  pathGuided: { en: "Guided", zh: "引导" },
+  pathFull: { en: "Full", zh: "完整" },
+  pathGuidedDesc: { en: "Concepts only — hides the hands-on paper-reproduction projects (lesson 9 of each track).", zh: "仅概念——隐藏各赛道第 9 课的动手论文复现项目。" },
+  pathFullDesc: { en: "Everything, including the reproduction capstones.", zh: "全部内容，包括复现综合项目。" },
+  reproHidden: { en: "reproduction project hidden in Guided path", zh: "复现项目在「引导」路径中已隐藏" },
   settingsLanguage: { en: "Content language", zh: "内容语言" },
   langEn: { en: "English", zh: "英文" },
   langZh: { en: "中文", zh: "中文" },

@@ -4,10 +4,12 @@ import type { LangMode } from "./types";
 import { type Grade, type SrsCard, newCard, schedule } from "./srs";
 
 export type Theme = "light" | "dark";
+export type LearnPath = "full" | "guided"; // guided = concepts only (hides reproduction capstones)
 
 interface State {
   lang: LangMode;
   theme: Theme;
+  path: LearnPath;
   completed: string[]; // lesson ids
   lastLessonId?: string;
   srs: Record<string, SrsCard>; // checkId -> card
@@ -16,6 +18,7 @@ interface State {
   setLang: (l: LangMode) => void;
   toggleTheme: () => void;
   setTheme: (t: Theme) => void;
+  setPath: (p: LearnPath) => void;
   markComplete: (lessonId: string) => void;
   markIncomplete: (lessonId: string) => void;
   setLastLesson: (lessonId: string) => void;
@@ -29,6 +32,7 @@ export const useStore = create<State>()(
   persist(
     (set, get) => ({
       lang: "both",
+      path: "full",
       theme:
         typeof window !== "undefined" &&
         window.matchMedia?.("(prefers-color-scheme: dark)").matches
@@ -42,6 +46,7 @@ export const useStore = create<State>()(
       setLang: (lang) => set({ lang }),
       toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" }),
       setTheme: (theme) => set({ theme }),
+      setPath: (path) => set({ path }),
 
       markComplete: (lessonId) =>
         set((s) =>
@@ -89,6 +94,11 @@ export const useStore = create<State>()(
     },
   ),
 );
+
+// In "guided" mode, hide the hands-on reproduction / capstone lessons (index 9).
+export function visibleLessons<T extends { index: number }>(lessons: T[], path: LearnPath): T[] {
+  return path === "guided" ? lessons.filter((l) => l.index < 9) : lessons;
+}
 
 // Selectors / helpers
 export function useCompletedSet(): Set<string> {

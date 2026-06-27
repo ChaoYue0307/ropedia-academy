@@ -1,7 +1,7 @@
 import { Suspense, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { getLesson, lessonNeighbors } from "../lib/curriculum";
-import { useStore, useCompletedSet } from "../lib/store";
+import { getLesson, lessonNeighbors, tracks } from "../lib/curriculum";
+import { useStore, useCompletedSet, visibleLessons } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 import { readingMinutes } from "../lib/reading";
 import { BiText, BiInline } from "../components/BiText";
@@ -18,6 +18,7 @@ import { ResourceLinks } from "../components/ResourceLinks";
 export function LessonPage() {
   const { id } = useParams();
   const mode = useStore((s) => s.lang);
+  const path = useStore((s) => s.path);
   const completed = useCompletedSet();
   const markComplete = useStore((s) => s.markComplete);
   const markIncomplete = useStore((s) => s.markIncomplete);
@@ -25,7 +26,11 @@ export function LessonPage() {
 
   const navigate = useNavigate();
   const found = getLesson(id ?? "");
-  const { prev, next } = lessonNeighbors(id ?? "");
+  // Path-aware prev/next: skip lessons hidden by the current learning path.
+  // If the current lesson is itself hidden (visited directly), fall back to global.
+  const flat = tracks.flatMap((tr) => visibleLessons(tr.lessons, path));
+  const fi = flat.findIndex((l) => l.id === id);
+  const { prev, next } = fi === -1 ? lessonNeighbors(id ?? "") : { prev: flat[fi - 1], next: flat[fi + 1] };
 
   useEffect(() => {
     if (id && found) setLastLesson(id);

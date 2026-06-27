@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
 import { tracksById, trackProgress } from "../lib/curriculum";
-import { useStore, useCompletedSet } from "../lib/store";
+import { useStore, useCompletedSet, visibleLessons } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 import { ProgressRing } from "../components/ProgressRing";
+import { PathToggle } from "../components/PathToggle";
 import type { TrackId } from "../lib/types";
 
 const ORDER: TrackId[] = ["A", "B", "C", "D"];
 
 export function OverviewPage() {
   const mode = useStore((s) => s.lang);
+  const path = useStore((s) => s.path);
   const completed = useCompletedSet();
 
   return (
@@ -24,12 +26,17 @@ export function OverviewPage() {
         <p className="mt-2 max-w-2xl text-[15px] text-ink/55 dark:text-stone-400">
           {t("overviewIntro", mode)}
         </p>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-xs font-medium text-ink/45 dark:text-stone-500">{t("learningPath", mode)}</span>
+          <PathToggle />
+        </div>
       </header>
 
       <div className="space-y-7">
         {ORDER.map((id, i) => {
           const track = tracksById[id];
           const p = trackProgress(id, completed);
+          const lessons = visibleLessons(track.lessons, path);
           return (
             <div key={id} className="space-y-2.5">
               <div className="flex items-center gap-3 px-0.5">
@@ -72,10 +79,10 @@ export function OverviewPage() {
 
                 <div className="mt-4">
                   <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink/40 dark:text-stone-500">
-                    {t("coveredIn", mode)} · {track.lessons.length} {t("lessonsCount", mode)}
+                    {t("coveredIn", mode)} · {lessons.length} {t("lessonsCount", mode)}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {track.lessons.map((lesson) => {
+                    {lessons.map((lesson) => {
                       const done = completed.has(lesson.id);
                       return (
                         <Link
