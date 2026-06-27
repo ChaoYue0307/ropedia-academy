@@ -7,7 +7,7 @@ import rehypeHighlight from "rehype-highlight";
 import { rehypeAutolink } from "../lib/rehypeAutolink";
 import { autolinkTerms } from "../lib/autolinkTerms";
 import { rehypeGlossary } from "../lib/rehypeGlossary";
-import { foundationDefs } from "../lib/foundations";
+import { glossaryDefs } from "../lib/glossaryTerms";
 import { GlossaryTerm } from "./GlossaryTerm";
 import { useStore } from "../lib/store";
 
@@ -17,8 +17,8 @@ export function Markdown({ children }: { children: string }) {
   // Resolve each foundational definition to the active language for the tooltip.
   const tips = useMemo(() => {
     const m: Record<string, string> = {};
-    for (const k in foundationDefs) {
-      const d = foundationDefs[k];
+    for (const k in glossaryDefs) {
+      const d = glossaryDefs[k];
       m[k] = mode === "zh" ? d.zh : mode === "en" ? d.en : `${d.en} — ${d.zh}`;
     }
     return m;
