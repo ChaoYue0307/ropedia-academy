@@ -26,15 +26,18 @@ export function OverviewPage() {
         </p>
       </header>
 
-      <div className="space-y-5">
-        {ORDER.map((id) => {
+      <div className="space-y-7">
+        {ORDER.map((id, i) => {
           const track = tracksById[id];
           const p = trackProgress(id, completed);
           return (
-            <section
-              key={id}
-              className="overflow-hidden rounded-2xl border border-stone-200/70 bg-white/80 shadow-card backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.04]"
-            >
+            <div key={id} className="space-y-2.5">
+              <div className="flex items-center gap-3 px-0.5">
+                <span className="font-mono text-xs font-semibold tabular-nums text-ink/45 dark:text-stone-500">{String(i + 1).padStart(2, "0")}</span>
+                <span className="h-px flex-1 bg-stone-200/80 dark:bg-white/10" />
+                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-ink/35 dark:text-stone-600">Track {track.id}</span>
+              </div>
+              <section className="overflow-hidden rounded-2xl border border-stone-200/70 bg-white/80 shadow-card backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.04]">
               <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${track.accent}, ${track.accent}40)` }} />
               <div className="p-5">
                 <div className="flex items-start gap-4">
@@ -104,7 +107,8 @@ export function OverviewPage() {
                   </Link>
                 </div>
               </div>
-            </section>
+              </section>
+            </div>
           );
         })}
       </div>

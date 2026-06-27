@@ -128,7 +128,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main id="main-content" tabIndex={-1} key={location.pathname} className="min-w-0 flex-1 animate-fade-in focus:outline-none">
-        <div className="mx-auto max-w-3xl px-5 py-8 md:px-8 md:py-10">{children}</div>
+        <div className="page-enter mx-auto max-w-3xl px-5 py-8 md:px-8 md:py-10">{children}</div>
       </main>
     </div>
   );
