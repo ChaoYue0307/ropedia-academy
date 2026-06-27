@@ -763,6 +763,7 @@ for step in range(STEPS + 1):
     md(`## 4 · Generate — sample text from the trained model`),
     code(`ctx = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(model.generate(ctx, 500)[0].tolist()))`),
+    md(`## How this links to tracks A–D\nThis transformer is the shared engine across the whole course:\n- **A · Human** — motion is a sequence; the same architecture powers MDM (text-to-motion).\n- **B · 3D** — transformers also tokenise points / shapes / views.\n- **C · Egocentric** — VideoMAE is exactly this transformer applied to video patches.\n- **D · Scene / world** — world models predict the next latent state with a sequence model.`),
     md(`### Where to go next\n- Swap the character tokenizer for **BPE** (tiktoken) and scale width/depth/data → GPT-2 and beyond.\n- Don't pretrain from zero for real tasks — **fine-tune a pretrained LLM** efficiently with **QLoRA** (see the Advanced labs), then align it with **DPO**.\n- The same transformer, fed image/video tokens, becomes a **VLM / Video-LM** (Advanced labs).`),
   ],
 };

@@ -550,6 +550,21 @@ const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer
 const PERSIST = md(`## Save & persist your results\nThis pipeline writes its checkpoints, metrics/logs and outputs to the run/output directory shown above (e.g. \`output/\`, \`outputs/\`, \`logdir/\`, \`experiments/\`, or the trainer's \`output_dir\`). **Colab sessions are ephemeral** — to keep them, either mount Drive and copy the folder (\`from google.colab import drive; drive.mount('/content/drive')\`) or zip + download it (\`import shutil; shutil.make_archive('run','zip','OUTPUT_DIR')\` then \`from google.colab import files; files.download('run.zip')\`). The 🤗 Trainer labs also support \`trainer.push_to_hub()\`.`);
 for (const lab of labs) lab.cells.splice(lab.cells.length - 1, 0, PERSIST);
 
+// Cross-reference each language/multimodal lab back to the embodied tracks A–D.
+const LINK_NOTES = {
+  LM_qlora_finetune_llm: "The same QLoRA recipe fine-tunes the foundation backbones used across the course:\n- **A · Human** human-motion / pose models · **B · 3D** vision backbones · **C · Egocentric** VideoMAE / CLIP / DINOv2 · **D · Scene / world** VLMs for open-vocabulary scenes.",
+  LM_unsloth_finetune: "Same reach as QLoRA, just faster — adapt any course backbone:\n- **A · Human** · **B · 3D** · **C · Egocentric** · **D · Scene / world**.",
+  LM_eval_harness: "Honest evaluation (lesson C9) applies to every track:\n- **A / B / C / D** — always score against a baseline and report failure modes, not just one number.",
+  LM_dpo_alignment: "Preference alignment generalises beyond text:\n- **A · Human** align a motion generator (MDM) to preferred motions · **D · Scene / world** preference / RL-style alignment for agents and world-model planning.",
+  LM_vlm_finetune: "Grounding language in pixels feeds two tracks:\n- **C · Egocentric** first-person visual question answering · **D · Scene / world** open-vocabulary scene understanding (OpenScene / LERF use vision-language features).",
+  LM_videolm_qwen2vl: "Video-language reasoning maps to:\n- **C · Egocentric** first-person video Q&A and action understanding · **A · Human** describing / parsing human actions in video.",
+  LM_rag_pipeline: "Retrieval gives models external memory:\n- **D · Scene / world** query a scene / world memory (open-vocabulary map lookups) · **C · Egocentric** retrieve the relevant clips from long egocentric video.",
+};
+for (const lab of labs) {
+  const id = lab.file.replace(/\.ipynb$/, "");
+  if (LINK_NOTES[id]) lab.cells.splice(lab.cells.length - 1, 0, md(`## How this links to tracks A–D\n${LINK_NOTES[id]}`));
+}
+
 function splitLines(s) {
   const lines = s.split("\n");
   return lines.map((l, i) => (i < lines.length - 1 ? l + "\n" : l));

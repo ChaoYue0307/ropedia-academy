@@ -130,6 +130,7 @@ export const S: Dict = {
   navLabs: { en: "Labs", zh: "实验" },
   labsIntro: { en: "Runnable, multi-cell training notebooks — open any in Colab (Runtime → GPU). Each records its checkpoint, loss/eval history and figures to a downloadable folder.", zh: "可运行的多单元训练笔记本——在 Colab 打开（Runtime → GPU）。每个都会把检查点、损失/评估记录与图表保存到可下载的文件夹。" },
   labsAll: { en: "All", zh: "全部" },
+  appliesTo: { en: "Links to tracks", zh: "关联赛道" },
   labsCount: { en: "notebooks", zh: "个笔记本" },
   trainingLabs: { en: "Training labs", zh: "训练实验室" },
   trainingLabsDesc: { en: "Runnable Colab notebooks — train these models step by step and compare.", zh: "可运行的 Colab 笔记本——逐步训练这些模型并对比。" },

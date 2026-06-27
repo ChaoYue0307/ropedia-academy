@@ -15,7 +15,12 @@ export function LabsPage() {
   const [level, setLevel] = useState<LabLevel | "all">("all");
 
   const labs = useMemo(
-    () => LABS.filter((l) => (track === "all" || l.track === track) && (level === "all" || l.level === level)),
+    () =>
+      LABS.filter(
+        (l) =>
+          (track === "all" || l.track === track || (l.links?.includes(track as LabTrack) ?? false)) &&
+          (level === "all" || l.level === level),
+      ),
     [track, level],
   );
 
@@ -96,6 +101,14 @@ export function LabsPage() {
                   >
                     {pick(LEVEL_LABEL[lab.level], mode)}
                   </span>
+                  {lab.links && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-ink/40 dark:text-stone-500" title={`${t("appliesTo", mode)}: ${lab.links.join(" · ")}`}>
+                      <span aria-hidden>↔</span>
+                      {lab.links.map((tk) => (
+                        <span key={tk} className="rounded px-1.5 py-0.5 font-bold text-white" style={{ backgroundColor: TRACK_ACCENT[tk] }}>{tk}</span>
+                      ))}
+                    </span>
+                  )}
                 </div>
               </div>
             </a>

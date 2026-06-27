@@ -16,6 +16,7 @@ export interface Lab {
   title: Bilingual;
   action: Bilingual; // what you do: Train / Fine-tune / Generate / ...
   note?: string; // repo or dataset hint
+  links?: LabTrack[]; // related embodied tracks (used for the LM labs)
 }
 
 const REPO = "ChaoYue0307/ropedia-academy";
@@ -56,14 +57,14 @@ export const LABS: Lab[] = [
   { file: "D_splatam_slam.ipynb", dir: "advanced", track: "D", level: "advanced", title: T("SplaTAM — Gaussian SLAM", "SplaTAM — 高斯 SLAM"), action: T("Reconstruct", "重建"), note: "spla-tam/SplaTAM" },
   { file: "D_dreamerv3_world_model.ipynb", dir: "advanced", track: "D", level: "advanced", title: T("DreamerV3 — world model", "DreamerV3 — 世界模型"), action: T("Train", "训练"), note: "danijar/dreamerv3" },
   // ── LM · Language & multimodal ────────────────────────────────────
-  { file: "LM_nanogpt_pretrain.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Train a GPT from scratch (nanoGPT)", "从零训练 GPT（nanoGPT）"), action: T("Pretrain", "预训练") },
-  { file: "LM_qlora_finetune_llm.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("QLoRA — fine-tune an LLM", "QLoRA — 微调大语言模型"), action: T("Fine-tune", "微调"), note: "TRL + PEFT" },
-  { file: "LM_dpo_alignment.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("DPO — align an LLM", "DPO — 偏好对齐"), action: T("Align", "对齐"), note: "TRL DPOTrainer" },
-  { file: "LM_vlm_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Fine-tune a VLM", "微调视觉语言模型"), action: T("Fine-tune", "微调"), note: "TRL + SmolVLM" },
-  { file: "LM_videolm_qwen2vl.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Video-LM (Qwen2-VL)", "视频语言模型（Qwen2-VL）"), action: T("Video QA", "视频问答"), note: "QwenLM/Qwen2-VL" },
-  { file: "LM_rag_pipeline.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("RAG — retrieval-augmented generation", "RAG — 检索增强生成"), action: T("Retrieve + Generate", "检索 + 生成"), note: "sentence-transformers + FAISS" },
-  { file: "LM_eval_harness.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Evaluate an LLM (lm-eval-harness)", "评测大模型（lm-eval-harness）"), action: T("Evaluate", "评测"), note: "EleutherAI/lm-evaluation-harness" },
-  { file: "LM_unsloth_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Unsloth — fast LLM fine-tune", "Unsloth — 快速微调大模型"), action: T("Fine-tune (fast)", "快速微调"), note: "unslothai/unsloth" },
+  { file: "LM_nanogpt_pretrain.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Train a GPT from scratch (nanoGPT)", "从零训练 GPT（nanoGPT）"), action: T("Pretrain", "预训练"), links: ["A", "B", "C", "D"] },
+  { file: "LM_qlora_finetune_llm.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("QLoRA — fine-tune an LLM", "QLoRA — 微调大语言模型"), action: T("Fine-tune", "微调"), note: "TRL + PEFT", links: ["A", "B", "C", "D"] },
+  { file: "LM_dpo_alignment.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("DPO — align an LLM", "DPO — 偏好对齐"), action: T("Align", "对齐"), note: "TRL DPOTrainer", links: ["A", "D"] },
+  { file: "LM_vlm_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Fine-tune a VLM", "微调视觉语言模型"), action: T("Fine-tune", "微调"), note: "TRL + SmolVLM", links: ["C", "D"] },
+  { file: "LM_videolm_qwen2vl.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Video-LM (Qwen2-VL)", "视频语言模型（Qwen2-VL）"), action: T("Video QA", "视频问答"), note: "QwenLM/Qwen2-VL", links: ["A", "C"] },
+  { file: "LM_rag_pipeline.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("RAG — retrieval-augmented generation", "RAG — 检索增强生成"), action: T("Retrieve + Generate", "检索 + 生成"), note: "sentence-transformers + FAISS", links: ["C", "D"] },
+  { file: "LM_eval_harness.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Evaluate an LLM (lm-eval-harness)", "评测大模型（lm-eval-harness）"), action: T("Evaluate", "评测"), note: "EleutherAI/lm-evaluation-harness", links: ["A", "B", "C", "D"] },
+  { file: "LM_unsloth_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Unsloth — fast LLM fine-tune", "Unsloth — 快速微调大模型"), action: T("Fine-tune (fast)", "快速微调"), note: "unslothai/unsloth", links: ["A", "B", "C", "D"] },
 ];
 
 export const TRACK_LABEL: Record<LabTrack, Bilingual> = {
