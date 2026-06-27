@@ -48,7 +48,7 @@ export function MotionSequence() {
   const zh = useStore((s) => s.lang) === "zh";
   const [shift, setShift] = useState(0);
   const T = 48, X0 = 24, W = 320, mid = 96;
-  const pos = (t: number) => 40 * Math.sin((t / T) * Math.PI * 3);
+  const pos = (t: number) => 34 * Math.sin((t / T) * Math.PI * 3);
   const path = (fn: (t: number) => number, off: number) =>
     Array.from({ length: T + 1 }, (_, t) => `${X0 + (t / T) * W},${mid + off - fn(t)}`).join(" ");
   const posPts = path((t) => pos(t), -shift);
@@ -70,7 +70,7 @@ export function MotionSequence() {
         <polyline points={velPts} fill="none" stroke="#1d9e75" strokeWidth={2.4} />
       </svg>
       <div className="mt-3">
-        <Slider label={zh ? "空间平移" : "spatial shift"} value={shift} min={-40} max={40} onChange={setShift} format={(v) => `${v}`} />
+        <Slider label={zh ? "空间平移" : "spatial shift"} value={shift} min={-30} max={30} onChange={setShift} format={(v) => `${v}`} />
       </div>
     </FigureFrame>
   );
@@ -180,8 +180,8 @@ export function MotionDiffusion() {
   const [step, setStep] = useState(0.7); // 1 = pure noise, 0 = clean
   const T = 48, X0 = 24, W = 320, mid = 92;
   const pts = Array.from({ length: T + 1 }, (_, t) => {
-    const clean = 46 * Math.sin((t / T) * Math.PI * 2);
-    const y = mid - (clean + NOISE[t] * 70 * step);
+    const clean = 30 * Math.sin((t / T) * Math.PI * 2);
+    const y = Math.max(24, Math.min(152, mid - (clean + NOISE[t] * 40 * step)));
     return `${X0 + (t / T) * W},${y}`;
   }).join(" ");
   return (

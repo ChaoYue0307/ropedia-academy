@@ -104,7 +104,7 @@ export function MapParadigms() {
         zh: "划分场景的两种方式。空间中心地图（占据/TSDF）平铺空间——擅长「我能去哪/会不会撞」。物体中心地图（场景图）围绕事物组织——擅长「它是什么、彼此如何关联」。没有单一地图能兼顾，故成熟系统两者都保留。",
       }}
     >
-      <svg viewBox="0 0 360 178" className="w-full">
+      <svg viewBox="0 0 360 190" className="w-full">
         {space ? (
           <g>
             {Array.from({ length: R }, (_, j) => Array.from({ length: C }, (_, i) => {

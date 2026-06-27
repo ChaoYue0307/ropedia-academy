@@ -10,12 +10,17 @@ export function Triangulation() {
   const C1 = { x: 80, y: 172 }, C2 = { x: 300, y: 172 };
   const P = { x: px, y: 178 - depth };
   const ext = (C: { x: number; y: number }) => {
-    const dx = P.x - C.x, dy = P.y - C.y, L = Math.hypot(dx, dy);
-    return { x: C.x + (dx / L) * 230, y: C.y + (dy / L) * 230 };
+    const dx = P.x - C.x, dy = P.y - C.y, L = Math.hypot(dx, dy) || 1;
+    const ux = dx / L, uy = dy / L;
+    let t = 240; // clip the ray to the frame so it never leaves the figure
+    if (ux > 0) t = Math.min(t, (354 - C.x) / ux); else if (ux < 0) t = Math.min(t, (6 - C.x) / ux);
+    if (uy > 0) t = Math.min(t, (190 - C.y) / uy); else if (uy < 0) t = Math.min(t, (6 - C.y) / uy);
+    return { x: C.x + ux * t, y: C.y + uy * t };
   };
   const proj = (C: { x: number; y: number }) => {
     const planeY = C.y - 30, dx = P.x - C.x, dy = P.y - C.y;
-    return { x: C.x + (dx * (planeY - C.y)) / dy, y: planeY };
+    const x = C.x + (dx * (planeY - C.y)) / dy;
+    return { x: Math.max(C.x - 26, Math.min(C.x + 26, x)), y: planeY }; // keep on the sensor
   };
   return (
     <FigureFrame

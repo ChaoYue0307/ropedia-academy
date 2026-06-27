@@ -141,7 +141,7 @@ export function ActiveObject() {
           </g>
         ))}
         <circle cx={hx} cy={hy} r={13} fill="#e0598b" />
-        <text x={hx} y={hy + 4} textAnchor="middle" fontSize="9" fill="#fff">{zh ? "手" : "hand"}</text>
+        <text x={hx} y={hy + 26} textAnchor="middle" fontSize="9" fontWeight="600" fill="#e0598b">{zh ? "手" : "hand"}</text>
         <text x={20} y={22} fontSize="10" fontWeight="600" fill={contact ? "#f59e0b" : "#9ca3af"}>
           {contact ? (zh ? `活动物体：${OBJS[active].name.zh}` : `active: ${OBJS[active].name.en}`) : (zh ? "无接触" : "no contact")}
         </text>
@@ -231,8 +231,8 @@ export function BaselineMetric() {
     >
       <svg viewBox="0 0 360 150" className="w-full">
         <line x1={40} y1={BASE} x2={330} y2={BASE} stroke="#cbd5e1" strokeWidth={1} />
-        <line x1={40} y1={BASE - chance * 96} x2={330} y2={BASE - chance * 96} stroke="#ef4444" strokeWidth={1} strokeDasharray="4 3" />
-        <text x={334} y={BASE - chance * 96 + 3} fontSize="8" fill="#ef4444">{zh ? "随机" : "chance"}</text>
+        <line x1={40} y1={BASE - chance * 96} x2={320} y2={BASE - chance * 96} stroke="#ef4444" strokeWidth={1} strokeDasharray="4 3" />
+        <text x={44} y={BASE - chance * 96 - 4} fontSize="8" fill="#ef4444">{zh ? "随机水平" : "chance"}</text>
         {bars.map((b, i) => {
           const h = b.v * 96, x = X0 + i * BW;
           return (
