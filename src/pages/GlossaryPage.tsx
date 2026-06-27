@@ -55,8 +55,8 @@ export function GlossaryPage() {
     [q],
   );
 
-  const defText = (def: Bilingual) =>
-    mode === "en" ? def.en : mode === "zh" ? def.zh : `${def.zh} · ${def.en}`;
+  // Always show both languages so the glossary is fully bilingual in any mode.
+  const defText = (def: Bilingual) => `${def.en} — ${def.zh}`;
 
   return (
     <div className="space-y-6">

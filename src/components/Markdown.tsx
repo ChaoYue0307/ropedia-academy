@@ -9,20 +9,18 @@ import { autolinkTerms } from "../lib/autolinkTerms";
 import { rehypeGlossary } from "../lib/rehypeGlossary";
 import { glossaryDefs } from "../lib/glossaryTerms";
 import { GlossaryTerm } from "./GlossaryTerm";
-import { useStore } from "../lib/store";
 
 export function Markdown({ children }: { children: string }) {
-  const mode = useStore((s) => s.lang);
-
-  // Resolve each foundational definition to the active language for the tooltip.
+  // Glossary tooltips are always bilingual (English — 中文) regardless of the
+  // reading mode, so hovering a term doubles as a translation aid.
   const tips = useMemo(() => {
     const m: Record<string, string> = {};
     for (const k in glossaryDefs) {
       const d = glossaryDefs[k];
-      m[k] = mode === "zh" ? d.zh : mode === "en" ? d.en : `${d.en} — ${d.zh}`;
+      m[k] = `${d.en} — ${d.zh}`;
     }
     return m;
-  }, [mode]);
+  }, []);
 
   return (
     <div className="md">
