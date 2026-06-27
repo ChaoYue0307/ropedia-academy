@@ -8,6 +8,7 @@ import type { LangMode } from "../lib/types";
 const NAV = [
   { to: "/", key: "navDashboard", icon: "M3 11l9-8 9 8M5 10v10h14V10", end: true },
   { to: "/overview", key: "navOverview", icon: "M12 3a9 9 0 100 18 9 9 0 000-18zM15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" },
+  { to: "/labs", key: "navLabs", icon: "M9 3h6M10 3v6.5L5.5 18a2 2 0 001.8 3h9.4a2 2 0 001.8-3L14 9.5V3M8 14h8" },
   { to: "/review", key: "navReview", icon: "M4 4v6h6M20 20v-6h-6M20 9a8 8 0 00-15-3M4 15a8 8 0 0015 3" },
   { to: "/graph", key: "navGraph", icon: "M6 6a2 2 0 100-.01M18 6a2 2 0 100-.01M12 18a2 2 0 100-.01M7.5 7.5l3 8M16.5 7.5l-3 8" },
   { to: "/glossary", key: "navGlossary", icon: "M4 6h16M4 12h10M4 18h7" },

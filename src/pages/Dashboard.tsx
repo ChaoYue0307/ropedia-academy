@@ -6,6 +6,7 @@ import { t, pick } from "../lib/i18n";
 import { BiInline } from "../components/BiText";
 import { ProgressRing } from "../components/ProgressRing";
 import { MasteryHeatmap } from "../components/MasteryHeatmap";
+import { LABS as ALL_LABS } from "../lib/labs";
 
 export function Dashboard() {
   const mode = useStore((s) => s.lang);
@@ -18,8 +19,6 @@ export function Dashboard() {
   const dueCount = reviewing.filter((id) => isDue(srs[id])).length;
   const last = lastLessonId ? getLesson(lastLessonId) : undefined;
   const firstUnseen = tracks[0].lessons.find((l) => !completed.has(l.id)) ?? tracks[0].lessons[0];
-  const accent = Object.fromEntries(tracks.map((tr) => [tr.id, tr.accent])) as Record<string, string>;
-  const accentOf = (tr: string) => accent[tr] ?? "#6366f1"; // LM labs (no curriculum track) → indigo
 
   return (
     <div className="space-y-8">
@@ -159,132 +158,20 @@ export function Dashboard() {
       </section>
 
       <section>
-        <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink/40 dark:text-stone-500">
-            {t("trainingLabs", mode)}
-          </h2>
-          <a
-            href={`${LABS_REPO}/tree/main/notebooks/training`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300"
-          >
-            {t("allLabs", mode)} →
-          </a>
-        </div>
-        <p className="mb-3 text-xs text-ink/45 dark:text-stone-500">{t("trainingLabsDesc", mode)}</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {LABS.map((lab) => (
-            <a
-              key={lab.file}
-              href={COLAB + lab.file}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-3 rounded-2xl border border-stone-200/70 bg-white/80 p-4 shadow-card backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-card-hover dark:border-white/[0.07] dark:bg-white/[0.04]"
-            >
-              <span
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-base font-bold text-white transition group-hover:scale-105"
-                style={{
-                  backgroundImage: `linear-gradient(135deg, ${accentOf(lab.track)}, ${accentOf(lab.track)}c0)`,
-                  boxShadow: `0 8px 20px -8px ${accentOf(lab.track)}`,
-                }}
-              >
-                {lab.track}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[15px] font-semibold text-ink dark:text-stone-100">{pick(lab.title, mode)}</div>
-                <div className="truncate text-xs text-ink/45 dark:text-stone-500">{t("openInColab", mode)}</div>
-              </div>
-              <span
-                className={
-                  "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold " +
-                  (lab.foundation
-                    ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
-                    : "bg-stone-100 text-ink/55 dark:bg-white/10 dark:text-stone-300")
-                }
-              >
-                {pick(lab.foundation ? { en: "Foundation", zh: "基础模型" } : { en: "PyTorch", zh: "PyTorch" }, mode)}
-              </span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink/40 dark:text-stone-500">
-            {t("advancedLabs", mode)}
-          </h2>
-          <a
-            href={`${LABS_REPO}/tree/main/notebooks/advanced`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300"
-          >
-            {t("allLabs", mode)} →
-          </a>
-        </div>
-        <p className="mb-3 text-xs text-ink/45 dark:text-stone-500">{t("advancedLabsDesc", mode)}</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {ADV_LABS.map((lab) => (
-            <a
-              key={lab.file}
-              href={ADV_COLAB + lab.file}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-3 rounded-2xl border border-amber-300/50 bg-amber-50/40 p-4 shadow-card backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-card-hover dark:border-amber-400/15 dark:bg-amber-500/[0.05]"
-            >
-              <span
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-base font-bold text-white transition group-hover:scale-105"
-                style={{
-                  backgroundImage: `linear-gradient(135deg, ${accentOf(lab.track)}, ${accentOf(lab.track)}c0)`,
-                  boxShadow: `0 8px 20px -8px ${accentOf(lab.track)}`,
-                }}
-              >
-                {lab.track}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[15px] font-semibold text-ink dark:text-stone-100">{pick(lab.title, mode)}</div>
-                <div className="truncate text-xs text-ink/45 dark:text-stone-500">{lab.repo}</div>
-              </div>
-              <span className="shrink-0 rounded-full bg-amber-200/70 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                {pick(lab.tag, mode)}
-              </span>
-            </a>
-          ))}
-        </div>
+        <Link
+          to="/labs"
+          className="group flex items-center gap-4 rounded-2xl border border-stone-200/70 bg-gradient-to-br from-white to-stone-50/50 p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-card-hover dark:border-white/[0.07] dark:from-white/[0.05] dark:to-transparent"
+        >
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-indigo-400 to-violet-600 text-white shadow-[0_8px_20px_-8px_#6366f1] transition group-hover:scale-105">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6M10 3v6.5L5.5 18a2 2 0 001.8 3h9.4a2 2 0 001.8-3L14 9.5V3M8 14h8" /></svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-semibold text-ink dark:text-stone-100">{t("trainingLabs", mode)}</div>
+            <div className="text-xs text-ink/50 dark:text-stone-400">{ALL_LABS.length} {t("labsCount", mode)} · {t("trainingLabsDesc", mode)}</div>
+          </div>
+          <span className="shrink-0 text-sm font-medium text-brand-600 transition-all group-hover:translate-x-0.5 dark:text-brand-300">→</span>
+        </Link>
       </section>
     </div>
   );
 }
-
-const LABS_REPO = "https://github.com/ChaoYue0307/ropedia-academy";
-const COLAB = "https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/";
-const LABS = [
-  { file: "A_smplify_fit.ipynb", track: "A", title: { en: "Fit a body (SMPLify)", zh: "拟合人体（SMPLify）" }, foundation: false },
-  { file: "A_motion_diffusion.ipynb", track: "A", title: { en: "Motion diffusion model", zh: "运动扩散模型" }, foundation: false },
-  { file: "B_nerf_from_scratch.ipynb", track: "B", title: { en: "Train a NeRF from scratch", zh: "从零训练 NeRF" }, foundation: false },
-  { file: "B_deepsdf_shape.ipynb", track: "B", title: { en: "Neural SDF (DeepSDF-style)", zh: "神经 SDF（DeepSDF）" }, foundation: false },
-  { file: "B_gaussian_splatting_2d.ipynb", track: "B", title: { en: "2D Gaussian Splatting", zh: "2D 高斯泼溅" }, foundation: false },
-  { file: "CD_clip_zeroshot_probe.ipynb", track: "C", title: { en: "CLIP: zero-shot vs. probe", zh: "CLIP：零样本 vs. 探针" }, foundation: true },
-  { file: "C_videomae_finetune.ipynb", track: "C", title: { en: "Fine-tune VideoMAE", zh: "微调 VideoMAE" }, foundation: true },
-  { file: "C_dinov2_features_probe.ipynb", track: "C", title: { en: "DINOv2 features + probe", zh: "DINOv2 特征 + 探针" }, foundation: true },
-  { file: "D_world_model.ipynb", track: "D", title: { en: "World model + planning", zh: "世界模型 + 规划" }, foundation: false },
-  { file: "LM_nanogpt_pretrain.ipynb", track: "LM", title: { en: "Train a GPT from scratch (nanoGPT)", zh: "从零训练 GPT（nanoGPT）" }, foundation: false },
-];
-
-const ADV_COLAB = "https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/";
-const ADV_LABS = [
-  { file: "A_mdm_text_to_motion.ipynb", track: "A", title: { en: "MDM — text-to-motion", zh: "MDM — 文本生成动作" }, tag: { en: "Generate", zh: "生成" }, repo: "GuyTevet/motion-diffusion-model" },
-  { file: "A_4dhumans_mesh.ipynb", track: "A", title: { en: "4D-Humans — mesh from video", zh: "4D-Humans — 视频重建人体" }, tag: { en: "Inference", zh: "推理" }, repo: "shubham-goel/4D-Humans" },
-  { file: "B_gaussian_splatting_3d.ipynb", track: "B", title: { en: "3D Gaussian Splatting", zh: "3D 高斯泼溅" }, tag: { en: "Train", zh: "训练" }, repo: "graphdeco-inria/gaussian-splatting" },
-  { file: "B_nerfstudio_nerfacto.ipynb", track: "B", title: { en: "Nerfstudio nerfacto", zh: "Nerfstudio nerfacto" }, tag: { en: "Train", zh: "训练" }, repo: "nerfstudio" },
-  { file: "C_videomae_egocentric.ipynb", track: "C", title: { en: "VideoMAE — egocentric fine-tune", zh: "VideoMAE — 第一视角微调" }, tag: { en: "Fine-tune", zh: "微调" }, repo: "EPIC-Kitchens / Ego4D" },
-  { file: "C_sam2_video_segmentation.ipynb", track: "C", title: { en: "SAM 2 — video segmentation", zh: "SAM 2 — 视频分割" }, tag: { en: "Inference", zh: "推理" }, repo: "facebookresearch/sam2" },
-  { file: "D_splatam_slam.ipynb", track: "D", title: { en: "SplaTAM — Gaussian SLAM", zh: "SplaTAM — 高斯 SLAM" }, tag: { en: "Reconstruct", zh: "重建" }, repo: "spla-tam/SplaTAM" },
-  { file: "D_dreamerv3_world_model.ipynb", track: "D", title: { en: "DreamerV3 — world model", zh: "DreamerV3 — 世界模型" }, tag: { en: "Train", zh: "训练" }, repo: "danijar/dreamerv3" },
-  { file: "LM_qlora_finetune_llm.ipynb", track: "LM", title: { en: "QLoRA — fine-tune an LLM", zh: "QLoRA — 微调大语言模型" }, tag: { en: "Fine-tune", zh: "微调" }, repo: "TRL + PEFT" },
-  { file: "LM_dpo_alignment.ipynb", track: "LM", title: { en: "DPO — align an LLM", zh: "DPO — 偏好对齐" }, tag: { en: "Align", zh: "对齐" }, repo: "TRL DPOTrainer" },
-  { file: "LM_vlm_finetune.ipynb", track: "LM", title: { en: "Fine-tune a VLM", zh: "微调视觉语言模型" }, tag: { en: "Fine-tune", zh: "微调" }, repo: "TRL + SmolVLM" },
-  { file: "LM_videolm_qwen2vl.ipynb", track: "LM", title: { en: "Video-LM (Qwen2-VL)", zh: "视频语言模型（Qwen2-VL）" }, tag: { en: "Video QA", zh: "视频问答" }, repo: "QwenLM/Qwen2-VL" },
-];

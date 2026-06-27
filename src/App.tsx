@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NotFound } from "./pages/NotFound";
 import { Dashboard } from "./pages/Dashboard";
 import { OverviewPage } from "./pages/OverviewPage";
+import { LabsPage } from "./pages/LabsPage";
 import { TrackPage } from "./pages/TrackPage";
 import { LessonPage } from "./pages/LessonPage";
 import { QuizPage } from "./pages/QuizPage";
@@ -38,6 +39,7 @@ export default function App() {
     const seg = p.split("/").filter(Boolean);
     if (p === "/") title = "";
     else if (p === "/overview") title = t("researchDirections", mode);
+    else if (p === "/labs") title = t("navLabs", mode);
     else if (seg[0] === "lesson") {
       const f = getLesson(seg[1] ?? "");
       if (f) { title = pick(f.lesson.title, mode); desc = pick(f.lesson.summary, mode); }
@@ -65,6 +67,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/overview" element={<OverviewPage />} />
+          <Route path="/labs" element={<LabsPage />} />
           <Route path="/track/:id" element={<TrackPage />} />
           <Route path="/quiz/:id" element={<QuizPage />} />
           <Route path="/lesson/:id" element={<LessonPage />} />
