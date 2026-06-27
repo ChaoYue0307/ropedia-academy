@@ -1,6 +1,6 @@
 # Ropedia Academy — runnable notebooks
 
-One Colab-ready notebook per lesson, generated from [`src/lib/curriculum/lessonCode.ts`](../src/lib/curriculum/lessonCode.ts) (`npm run gen-notebooks`). Click any badge to open it in Google Colab — no setup, no login to read; one click to run.
+One Colab-ready notebook per lesson, generated from [`src/lib/curriculum/lessonCode.ts`](../src/lib/curriculum/lessonCode.ts) (`npm run gen-notebooks`). Each script is structured with clear `--- INPUT ---` / `--- OUTPUT ---` sections and ships with its **output pre-rendered** (printed values + figure), so you see the result before running. Click any badge to open it in Google Colab — no setup, no login to read; one click to re-run.
 
 ## Track A — Human Modeling
 

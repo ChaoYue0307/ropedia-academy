@@ -1,6 +1,10 @@
 // Generate one Colab-ready Jupyter notebook per lesson from the SINGLE source of
 // truth (src/lib/curriculum/lessonCode.ts), so the notebook code, the lesson
 // page, and the snippet never drift. Run:  npm run gen-notebooks
+//
+// NOTE: this writes notebooks WITHOUT outputs. To pre-render the printed values
+// and figures inline (so GitHub/Colab show them before running), execute after:
+//   jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -97,8 +101,11 @@ let readme =
   `# Ropedia Academy — runnable notebooks\n\n` +
   `One Colab-ready notebook per lesson, generated from ` +
   `[\`src/lib/curriculum/lessonCode.ts\`](../src/lib/curriculum/lessonCode.ts) ` +
-  `(\`npm run gen-notebooks\`). Click any badge to open it in Google Colab — ` +
-  `no setup, no login to read; one click to run.\n\n`;
+  `(\`npm run gen-notebooks\`). Each script is structured with clear ` +
+  `\`--- INPUT ---\` / \`--- OUTPUT ---\` sections and ships with its **output ` +
+  `pre-rendered** (printed values + figure), so you see the result before running. ` +
+  `Click any badge to open it in Google Colab — no setup, no login to read; ` +
+  `one click to re-run.\n\n`;
 for (const tr of ["A", "B", "C", "D"]) {
   readme += `## Track ${tr} — ${trackName[tr]}\n\n`;
   for (const id of byTrack[tr]) {
