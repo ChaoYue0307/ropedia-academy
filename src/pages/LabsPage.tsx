@@ -61,57 +61,66 @@ export function LabsPage() {
         {labs.map((lab) => {
           const advanced = lab.level === "advanced";
           return (
-            <a
+            <div
               key={lab.file}
-              href={colabHref(lab)}
-              target="_blank"
-              rel="noopener noreferrer"
               className={
-                "group flex items-start gap-3 rounded-2xl border p-4 shadow-card backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-card-hover " +
+                "group flex flex-col rounded-2xl border p-4 shadow-card backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-card-hover " +
                 (advanced
                   ? "border-amber-300/50 bg-amber-50/40 dark:border-amber-400/15 dark:bg-amber-500/[0.05]"
                   : "border-stone-200/70 bg-white/80 dark:border-white/[0.07] dark:bg-white/[0.04]")
               }
             >
-              <span
-                className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-base font-bold text-white transition group-hover:scale-105"
-                style={{
-                  backgroundImage: `linear-gradient(135deg, ${TRACK_ACCENT[lab.track]}, ${TRACK_ACCENT[lab.track]}c0)`,
-                  boxShadow: `0 8px 20px -8px ${TRACK_ACCENT[lab.track]}`,
-                }}
-              >
-                {lab.track}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-semibold text-ink dark:text-stone-100">{pick(lab.title, mode)}</div>
-                <div className="mt-0.5 truncate text-xs text-ink/45 dark:text-stone-500">{lab.note ?? t("openInColab", mode)}</div>
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                  <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-200">
-                    {pick(lab.action, mode)}
-                  </span>
-                  <span
-                    className={
-                      "rounded-full px-2 py-0.5 text-[10px] font-semibold " +
-                      (advanced
-                        ? "bg-amber-200/70 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
-                        : lab.level === "foundation"
-                          ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
-                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300")
-                    }
-                  >
-                    {pick(LEVEL_LABEL[lab.level], mode)}
-                  </span>
-                  {lab.links && (
-                    <span className="inline-flex items-center gap-1 text-[10px] text-ink/40 dark:text-stone-500" title={`${t("appliesTo", mode)}: ${lab.links.join(" · ")}`}>
-                      <span aria-hidden>↔</span>
-                      {lab.links.map((tk) => (
-                        <span key={tk} className="rounded px-1.5 py-0.5 font-bold text-white" style={{ backgroundColor: TRACK_ACCENT[tk] }}>{tk}</span>
-                      ))}
+              <a href={colabHref(lab)} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3">
+                <span
+                  className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-base font-bold text-white transition group-hover:scale-105"
+                  style={{
+                    backgroundImage: `linear-gradient(135deg, ${TRACK_ACCENT[lab.track]}, ${TRACK_ACCENT[lab.track]}c0)`,
+                    boxShadow: `0 8px 20px -8px ${TRACK_ACCENT[lab.track]}`,
+                  }}
+                >
+                  {lab.track}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[15px] font-semibold text-ink dark:text-stone-100">{pick(lab.title, mode)}</div>
+                  <div className="mt-0.5 truncate text-xs text-ink/45 dark:text-stone-500">{lab.note ?? t("openInColab", mode)}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-200">
+                      {pick(lab.action, mode)}
                     </span>
-                  )}
+                    <span
+                      className={
+                        "rounded-full px-2 py-0.5 text-[10px] font-semibold " +
+                        (advanced
+                          ? "bg-amber-200/70 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
+                          : lab.level === "foundation"
+                            ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300")
+                      }
+                    >
+                      {pick(LEVEL_LABEL[lab.level], mode)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </a>
+              </a>
+
+              {/* Track links — outside the Colab link; click to filter by that track */}
+              {lab.links && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-stone-200/60 pt-2.5 dark:border-white/10">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-ink/40 dark:text-stone-500">{t("appliesTo", mode)}</span>
+                  {lab.links.map((tk) => (
+                    <button
+                      key={tk}
+                      onClick={() => setTrack(tk)}
+                      title={pick(TRACK_LABEL[tk], mode)}
+                      className="rounded px-2 py-0.5 text-[11px] font-bold text-white transition hover:scale-105"
+                      style={{ backgroundColor: TRACK_ACCENT[tk] }}
+                    >
+                      {tk}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
