@@ -444,8 +444,106 @@ model.print_trainable_parameters()
   ],
 };
 
+const rag = {
+  file: "LM_rag_pipeline.ipynb", title: "RAG — retrieval-augmented generation", track: "LM", tag: "Retrieve + Generate",
+  what: "Index a corpus with embeddings + FAISS, retrieve, and ground an LLM's answer in it.",
+  cells: [
+    md(`# 🔥 Advanced · RAG — retrieval-augmented generation\n\n${banner("Ground an LLM's answers in your own documents: embed → index → retrieve → generate.", "T4 GPU", "10–15 min", "sentence-transformers + FAISS", "https://github.com/facebookresearch/faiss")}\n\nRAG gives an LLM fresh, private, or citable knowledge without retraining it.`),
+    code(`!nvidia-smi -L
+!pip install -q -U sentence-transformers faiss-cpu transformers accelerate`),
+    md(`## 1 · A small corpus (swap in your own documents)`),
+    code(`docs = [
+    "NeRF represents a scene as an MLP mapping (x,y,z,view) to colour and density, rendered by volume integration.",
+    "3D Gaussian Splatting represents a scene as many anisotropic Gaussians, rasterized differentiably for real-time rendering.",
+    "SMPL is a parametric human body model controlled by shape (beta) and pose (theta) parameters.",
+    "SLAM jointly estimates the camera trajectory and a map of the environment from sensor data.",
+    "A world model learns environment dynamics so an agent can plan by imagining future states.",
+    "VideoMAE is a self-supervised video transformer pretrained by masking and reconstructing spatiotemporal patches.",
+]`),
+    md(`## 2 · Embed the corpus and build a FAISS index`),
+    code(`import faiss
+from sentence_transformers import SentenceTransformer
+embedder = SentenceTransformer("BAAI/bge-small-en-v1.5")
+emb = embedder.encode(docs, normalize_embeddings=True)
+index = faiss.IndexFlatIP(emb.shape[1]); index.add(emb)
+print("indexed", index.ntotal, "documents")`),
+    md(`## 3 · Retrieve the most relevant passages`),
+    code(`def retrieve(q, k=3):
+    qe = embedder.encode([q], normalize_embeddings=True)
+    scores, idx = index.search(qe, k)
+    return [docs[i] for i in idx[0]]
+print(retrieve("How are 3D scenes rendered in real time?"))`),
+    md(`## 4 · Generate an answer grounded in the retrieved context`),
+    code(`from transformers import pipeline
+llm = pipeline("text-generation", model="Qwen/Qwen2.5-0.5B-Instruct", torch_dtype="auto", device_map="auto")
+def answer(q):
+    ctx = "\\n".join(f"[{i+1}] {c}" for i, c in enumerate(retrieve(q)))
+    msgs = [{"role": "system", "content": "Answer using ONLY the context, and cite the [n] you used."},
+            {"role": "user", "content": f"Context:\\n{ctx}\\n\\nQuestion: {q}"}]
+    print(llm(msgs, max_new_tokens=200)[0]["generated_text"][-1]["content"])
+answer("How does Gaussian Splatting render scenes, and how is it different from NeRF?")`),
+    md(`## Next steps\n- **Chunk** long docs, add a **reranker** (e.g. bge-reranker), and store vectors in **Chroma / Qdrant / pgvector**.\n- Return **citations** with the answer; evaluate retrieval (recall@k) and answer faithfulness.\n- Combine with a fine-tuned LLM (QLoRA lab) for a domain assistant.`),
+  ],
+};
+
+const lmeval = {
+  file: "LM_eval_harness.ipynb", title: "Evaluate an LLM (lm-eval-harness)", track: "LM", tag: "Evaluate",
+  what: "Benchmark an LLM on standard tasks (ARC, HellaSwag, ...) with EleutherAI's harness.",
+  cells: [
+    md(`# 🔥 Advanced · LLM evaluation — lm-eval-harness\n\n${banner("Score an LLM on standard benchmarks with the de-facto evaluation harness.", "T4 GPU", "10–30 min (task-dependent)", "EleutherAI/lm-evaluation-harness", "https://github.com/EleutherAI/lm-evaluation-harness")}\n\nUse it to quantify a base model vs. your QLoRA / DPO fine-tune.`),
+    code(`!nvidia-smi -L
+!pip install -q lm-eval`),
+    md(`## 1 · Run a few tasks (limited for speed)`),
+    code(`!lm_eval --model hf \\
+  --model_args pretrained=Qwen/Qwen2.5-0.5B-Instruct,dtype=bfloat16 \\
+  --tasks arc_easy,hellaswag \\
+  --device cuda:0 --batch_size auto --limit 100 \\
+  --output_path results`),
+    md(`## 2 · Read the scores`),
+    code(`import json, glob
+f = sorted(glob.glob("results/**/*.json", recursive=True))[-1]
+res = json.load(open(f))["results"]
+for task, m in res.items():
+    print(task, {k: round(v, 4) for k, v in m.items() if isinstance(v, float)})`),
+    md(`## Next steps\n- Drop \`--limit\` and add tasks: \`mmlu\`, \`gsm8k\`, \`truthfulqa\`, \`winogrande\`.\n- Few-shot: \`--num_fewshot 5\`. Evaluate a fine-tune by pointing \`pretrained=\` at your merged model.\n- Compare base vs. fine-tuned to measure your SFT/DPO gains.`),
+  ],
+};
+
+const unsloth = {
+  file: "LM_unsloth_finetune.ipynb", title: "Unsloth — fast LLM fine-tune", track: "LM", tag: "Fine-tune (fast)",
+  what: "Fine-tune an LLM ~2x faster with less memory via Unsloth, then export GGUF.",
+  cells: [
+    md(`# 🔥 Advanced · Unsloth — fast fine-tuning\n\n${banner("The same QLoRA SFT, ~2x faster and lighter via Unsloth's fused kernels — then export GGUF for llama.cpp / Ollama.", "T4 GPU", "15–30 min", "unslothai/unsloth", "https://github.com/unslothai/unsloth")}\n\nA faster path than the plain QLoRA lab when the free T4 is tight.`),
+    code(`!nvidia-smi -L
+!pip install -q unsloth`),
+    md(`## 1 · Load a 4-bit model and attach LoRA (Unsloth)`),
+    code(`from unsloth import FastLanguageModel
+model, tok = FastLanguageModel.from_pretrained("unsloth/Qwen2.5-0.5B-Instruct", max_seq_length=2048, load_in_4bit=True)
+model = FastLanguageModel.get_peft_model(model, r=16, lora_alpha=16, lora_dropout=0,
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"])`),
+    md(`## 2 · Data`),
+    code(`from datasets import load_dataset
+ds = load_dataset("mlabonne/guanaco-llama2-1k", split="train")`),
+    md(`## 3 · Train (TRL SFTTrainer on the Unsloth model)`),
+    code(`from trl import SFTConfig, SFTTrainer
+trainer = SFTTrainer(model=model, train_dataset=ds, processing_class=tok,
+    args=SFTConfig(per_device_train_batch_size=2, gradient_accumulation_steps=4, max_steps=60,
+        learning_rate=2e-4, logging_steps=10, bf16=True, max_seq_length=2048,
+        dataset_text_field="text", output_dir="unsloth-out", report_to="none"))
+trainer.train()`),
+    md(`## 4 · Generate, then save (LoRA · merged · GGUF)`),
+    code(`FastLanguageModel.for_inference(model)
+ids = tok.apply_chat_template([{"role": "user", "content": "Explain QLoRA simply."}], add_generation_prompt=True, return_tensors="pt").to(model.device)
+print(tok.decode(model.generate(ids, max_new_tokens=160)[0][ids.shape[1]:], skip_special_tokens=True))
+model.save_pretrained("unsloth-lora"); tok.save_pretrained("unsloth-lora")
+# merged 16-bit:  model.save_pretrained_merged("unsloth-merged", tok, save_method="merged_16bit")
+# GGUF for llama.cpp / Ollama:  model.save_pretrained_gguf("unsloth-gguf", tok, quantization_method="q4_k_m")`),
+    md(`## Notes & next steps\n- Unsloth ships official Colab notebooks per model — match its pinned versions if install hiccups.\n- Export **GGUF**, then run locally with **llama.cpp** or **Ollama**.\n- Score the result with the lm-eval-harness lab.`),
+  ],
+};
+
 // ===========================================================================
-const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer, qlora, dpo, vlm, videolm];
+const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer, qlora, dpo, vlm, videolm, rag, lmeval, unsloth];
 
 // Every advanced repo writes its own artifacts (checkpoints, logs, renders) to a
 // run/output directory; add a uniform reminder that Colab is ephemeral.

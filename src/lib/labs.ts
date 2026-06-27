@@ -54,6 +54,9 @@ export const LABS: Lab[] = [
   { file: "LM_dpo_alignment.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("DPO — align an LLM", "DPO — 偏好对齐"), action: T("Align", "对齐"), note: "TRL DPOTrainer" },
   { file: "LM_vlm_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Fine-tune a VLM", "微调视觉语言模型"), action: T("Fine-tune", "微调"), note: "TRL + SmolVLM" },
   { file: "LM_videolm_qwen2vl.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Video-LM (Qwen2-VL)", "视频语言模型（Qwen2-VL）"), action: T("Video QA", "视频问答"), note: "QwenLM/Qwen2-VL" },
+  { file: "LM_rag_pipeline.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("RAG — retrieval-augmented generation", "RAG — 检索增强生成"), action: T("Retrieve + Generate", "检索 + 生成"), note: "sentence-transformers + FAISS" },
+  { file: "LM_eval_harness.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Evaluate an LLM (lm-eval-harness)", "评测大模型（lm-eval-harness）"), action: T("Evaluate", "评测"), note: "EleutherAI/lm-evaluation-harness" },
+  { file: "LM_unsloth_finetune.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("Unsloth — fast LLM fine-tune", "Unsloth — 快速微调大模型"), action: T("Fine-tune (fast)", "快速微调"), note: "unslothai/unsloth" },
 ];
 
 export const TRACK_LABEL: Record<LabTrack, Bilingual> = {

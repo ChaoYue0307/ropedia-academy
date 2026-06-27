@@ -60,7 +60,7 @@ badges. Set **Runtime → T4 GPU** first.
 
 ### Advanced labs (heavy · real repos · GPU)
 
-[`notebooks/advanced/`](notebooks/advanced/) adds **twelve heavy GPU pipelines** on
+[`notebooks/advanced/`](notebooks/advanced/) adds **fifteen heavy GPU pipelines** on
 real research repos for when you want the production tools, not a teaching toy:
 
 | Track | Advanced pipelines |
@@ -69,7 +69,7 @@ real research repos for when you want the production tools, not a teaching toy:
 | **B · 3D / rendering** | 3D Gaussian Splatting (CUDA) · Nerfstudio nerfacto |
 | **C · Egocentric** | VideoMAE fine-tune on EPIC/Ego4D · SAM 2 video segmentation |
 | **D · Scene / world** | SplaTAM (Gaussian SLAM) · DreamerV3 world model |
-| **LM · Language & multimodal** | QLoRA LLM fine-tune · DPO alignment · VLM fine-tune · Video-LM (Qwen2-VL) |
+| **LM · Language & multimodal** | QLoRA fine-tune · DPO alignment · VLM fine-tune · Video-LM (Qwen2-VL) · RAG · LLM eval (lm-eval-harness) · Unsloth fast fine-tune |
 
 These clone official repos, download multi-GB checkpoints/datasets, and **require a
 GPU** — they're authored to each project's documented recipe and are **not
