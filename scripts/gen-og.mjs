@@ -16,21 +16,40 @@ const tracks = [
   { id: "D", name: "Scene + World Models", color: "#378add" },
 ];
 
+// Chips auto-size to their labels, and the label font auto-fits so the whole row
+// stays inside the canvas margins — no squeezed or overflowing text.
+const NARROW = "iljItf./·,'r ";
+const WIDE = "mwMW";
+const charEm = (ch) => (NARROW.includes(ch) ? 0.31 : WIDE.includes(ch) ? 0.86 : ch >= "A" && ch <= "Z" ? 0.7 : "+&".includes(ch) ? 0.6 : 0.54);
+const textW = (s, fs) => [...s].reduce((w, c) => w + charEm(c), 0) * fs; // slightly generous
+
+const CH_Y = 452, CH_H = 86, PAD_L = 20, ICON = 40, ICON_GAP = 12, PAD_R = 18, GAP = 16, MARGIN = 80;
+const usable = 1200 - 2 * MARGIN;
+let lf = 18.5; // label font; shrink until the row fits
+let widths = [];
+for (; lf >= 13; lf -= 0.5) {
+  widths = tracks.map((t) => PAD_L + ICON + ICON_GAP + textW(t.name, lf) + PAD_R);
+  if (widths.reduce((a, b) => a + b, 0) + GAP * (tracks.length - 1) <= usable) break;
+}
+const rowW = widths.reduce((a, b) => a + b, 0) + GAP * (tracks.length - 1);
+let cx = Math.max(MARGIN, Math.round((1200 - rowW) / 2));
 const chips = tracks
   .map((t, i) => {
-    const x = 80 + i * 268;
-    return `
-      <g transform="translate(${x},452)">
-        <rect width="248" height="86" rx="18" fill="#ffffff" fill-opacity="0.05" stroke="${t.color}" stroke-opacity="0.55"/>
-        <rect x="20" y="23" width="40" height="40" rx="11" fill="${t.color}"/>
-        <text x="40" y="51" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" fill="#ffffff" text-anchor="middle">${t.id}</text>
-        <text x="76" y="49" font-family="Arial, Helvetica, sans-serif" font-size="18.5" font-weight="600" fill="#e7e6f3">${esc(t.name)}</text>
+    const w = widths[i];
+    const g = `
+      <g transform="translate(${cx},${CH_Y})">
+        <rect width="${w.toFixed(1)}" height="${CH_H}" rx="18" fill="#ffffff" fill-opacity="0.05" stroke="${t.color}" stroke-opacity="0.55"/>
+        <rect x="${PAD_L}" y="${(CH_H - ICON) / 2}" width="${ICON}" height="${ICON}" rx="11" fill="${t.color}"/>
+        <text x="${PAD_L + ICON / 2}" y="51" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" fill="#ffffff" text-anchor="middle">${t.id}</text>
+        <text x="${PAD_L + ICON + ICON_GAP}" y="49.5" font-family="Arial, Helvetica, sans-serif" font-size="${lf.toFixed(1)}" font-weight="600" fill="#e7e6f3">${esc(t.name)}</text>
       </g>`;
+    cx += w + GAP;
+    return g;
   })
   .join("");
 
 // concept-map motif (top-right): 4 rows of nodes with a few connecting edges
-const DX = 742, DY = 108, CW = 44, RH = 33;
+const DX = 742, DY = 98, CW = 44, RH = 33;
 const dotPos = (i) => [DX + (i % 9) * CW, DY + Math.floor(i / 9) * RH];
 const edgePairs = [[0, 14], [3, 20], [5, 28], [9, 25], [11, 33], [16, 30], [2, 21], [7, 24], [13, 27], [22, 31], [1, 19]];
 const edges = edgePairs
