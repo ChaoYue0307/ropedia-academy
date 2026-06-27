@@ -14,6 +14,7 @@ const HOVERABLE =
 export function GlossaryTerm({ def, children }: { def: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties | null>(null);
+  const [shown, setShown] = useState(false); // drives a restart-safe fade-in
   const wrapRef = useRef<HTMLSpanElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLSpanElement>(null);
@@ -31,14 +32,22 @@ export function GlossaryTerm({ def, children }: { def: string; children: ReactNo
       const w = Math.min(280, vw - 24);
       const h = popRef.current.offsetHeight;
       const left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, vw - w - 12));
-      // place below if there's room (or more room) there, else above — then clamp.
-      const below = vh - r.bottom >= h + 10 || vh - r.bottom >= r.top;
-      let top = below ? r.bottom + 8 : r.top - 8 - h;
+      // float ABOVE the word (classic tooltip); flip below only if there's no room.
+      const roomAbove = r.top - 8, roomBelow = vh - r.bottom - 8;
+      const above = roomAbove >= h || roomAbove >= roomBelow;
+      let top = above ? r.top - 8 - h : r.bottom + 8;
       top = Math.max(8, Math.min(top, vh - h - 8));
       setStyle({ left, top });
     };
     place();
     const raf = requestAnimationFrame(place);
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
+
+  // Fade in after the popover is positioned (a transition, not a restart-prone keyframe).
+  useEffect(() => {
+    if (!open) { setShown(false); return; }
+    const raf = requestAnimationFrame(() => setShown(true));
     return () => cancelAnimationFrame(raf);
   }, [open]);
 
@@ -90,7 +99,11 @@ export function GlossaryTerm({ def, children }: { def: string; children: ReactNo
             id={id}
             role="tooltip"
             className="glossary-pop"
-            style={style ?? { left: 0, top: 0, visibility: "hidden" }}
+            style={
+              style
+                ? { ...style, opacity: shown ? 1 : 0 }
+                : { left: 0, top: 0, visibility: "hidden" }
+            }
           >
             {def}
           </span>,
