@@ -11,6 +11,7 @@ import { lessonFigures } from "../components/figures/registry";
 import { lessonCode, colabUrl } from "../lib/curriculum/lessonCode";
 import { codeOutputs } from "../lib/curriculum/codeOutputs";
 import { lessonIntuition } from "../lib/curriculum/lessonIntuition";
+import { lessonPitfalls } from "../lib/curriculum/lessonPitfalls";
 import { CodeExample } from "../components/CodeExample";
 import { ResourceLinks } from "../components/ResourceLinks";
 
@@ -48,6 +49,9 @@ export function LessonPage() {
   const { lesson, track } = found;
   const done = completed.has(lesson.id);
   const minutes = readingMinutes(lesson, mode);
+  const levelKey =
+    lesson.index <= 2 ? "levelFoundations" : lesson.index <= 6 ? "levelCore" : lesson.index <= 8 ? "levelAdvanced" : "levelCapstone";
+  const prereq = lesson.index > 1 ? track.lessons[lesson.index - 2] : null;
 
   return (
     <article className="space-y-7">
@@ -68,6 +72,10 @@ export function LessonPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" /></svg>
           ~{minutes} {mode === "zh" ? "分钟" : "min"}
         </span>
+        <span>·</span>
+        <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ color: track.accent, backgroundColor: `${track.accent}1f` }}>
+          {t(levelKey, mode)}
+        </span>
       </div>
 
       <header>
@@ -75,6 +83,18 @@ export function LessonPage() {
           {pick(lesson.title, mode)}
         </h1>
         <p className="mt-2 text-[15px] text-ink/55 dark:text-stone-400">{pick(lesson.summary, mode)}</p>
+        {prereq && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-ink/45 dark:text-stone-500">
+            <span>{t("buildsOn", mode)}:</span>
+            <Link
+              to={`/lesson/${prereq.id}`}
+              className="inline-flex items-center gap-1 rounded-full border border-stone-200 px-2 py-0.5 font-medium text-ink/70 transition hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:text-stone-300 dark:hover:text-brand-200"
+            >
+              <span className="opacity-60">{prereq.index}</span>
+              {pick(prereq.title, mode)}
+            </Link>
+          </div>
+        )}
       </header>
 
       {lessonIntuition[lesson.id] && (
@@ -141,6 +161,18 @@ export function LessonPage() {
           <CheckCard key={c.id} check={c} mode={mode} index={i + 1} />
         ))}
       </section>
+
+      {lessonPitfalls[lesson.id] && (
+        <aside className="rounded-2xl border border-rose-300/50 bg-rose-50/50 p-4 dark:border-rose-400/20 dark:bg-rose-400/[0.06]">
+          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            {t("commonPitfall", mode)}
+          </div>
+          <div className="text-[15px] leading-relaxed text-ink/80 dark:text-stone-200">
+            <BiText value={lessonPitfalls[lesson.id]} mode={mode} />
+          </div>
+        </aside>
+      )}
 
       <ResourceLinks lesson={lesson} />
 
