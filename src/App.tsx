@@ -16,6 +16,7 @@ import { GraphPage } from "./pages/GraphPage";
 import { GlossaryPage } from "./pages/GlossaryPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { CommandPalette } from "./components/CommandPalette";
+import { WelcomeModal } from "./components/WelcomeModal";
 
 export default function App() {
   const theme = useStore((s) => s.theme);
@@ -75,6 +76,7 @@ export default function App() {
         </Routes>
       </ErrorBoundary>
       <CommandPalette />
+      <WelcomeModal />
     </Layout>
   );
 }

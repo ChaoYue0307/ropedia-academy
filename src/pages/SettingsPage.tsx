@@ -11,6 +11,7 @@ export function SettingsPage() {
   const setLang = useStore((s) => s.setLang);
   const setTheme = useStore((s) => s.setTheme);
   const setPath = useStore((s) => s.setPath);
+  const setWelcomed = useStore((s) => s.setWelcomed);
   const resetAll = useStore((s) => s.resetAll);
 
   const langs: { v: LangMode; key: string }[] = [
@@ -96,14 +97,22 @@ export function SettingsPage() {
           </span>
           {t("dataLocal", mode)}
         </div>
-        <button
-          onClick={() => {
-            if (window.confirm(t("resetConfirm", mode))) resetAll();
-          }}
-          className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
-        >
-          {t("resetData", mode)}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => {
+              if (window.confirm(t("resetConfirm", mode))) resetAll();
+            }}
+            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+          >
+            {t("resetData", mode)}
+          </button>
+          <button
+            onClick={() => setWelcomed(false)}
+            className="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-ink/60 transition hover:text-ink dark:border-white/10 dark:text-stone-400"
+          >
+            {t("showIntro", mode)}
+          </button>
+        </div>
       </section>
     </div>
   );

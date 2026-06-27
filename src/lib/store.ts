@@ -10,6 +10,7 @@ interface State {
   lang: LangMode;
   theme: Theme;
   path: LearnPath;
+  welcomed: boolean;
   completed: string[]; // lesson ids
   lastLessonId?: string;
   srs: Record<string, SrsCard>; // checkId -> card
@@ -19,6 +20,7 @@ interface State {
   toggleTheme: () => void;
   setTheme: (t: Theme) => void;
   setPath: (p: LearnPath) => void;
+  setWelcomed: (v: boolean) => void;
   markComplete: (lessonId: string) => void;
   markIncomplete: (lessonId: string) => void;
   setLastLesson: (lessonId: string) => void;
@@ -33,6 +35,7 @@ export const useStore = create<State>()(
     (set, get) => ({
       lang: "both",
       path: "full",
+      welcomed: false,
       theme:
         typeof window !== "undefined" &&
         window.matchMedia?.("(prefers-color-scheme: dark)").matches
@@ -47,6 +50,7 @@ export const useStore = create<State>()(
       toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" }),
       setTheme: (theme) => set({ theme }),
       setPath: (path) => set({ path }),
+      setWelcomed: (welcomed) => set({ welcomed }),
 
       markComplete: (lessonId) =>
         set((s) =>
