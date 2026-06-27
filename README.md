@@ -28,10 +28,11 @@ account required.
 - **4 tracks · 36 lessons**, each with a bilingual explanation, key terms, key
   papers, external links, cross-track links, and self-check questions with
   standard answers.
-- **Interactive demos** — 13 hands-on visualizations, including real-time
+- **Interactive demos in every one of the 36 lessons** — including real-time
   **three.js 3D** (Gaussian splatting, a raymarched NeRF volume, an articulated
-  SMPL body) and explorable diagrams (pinhole projection, TSDF fusion, SLAM
-  loop closure, action anticipation, and more).
+  SMPL body) and explorable diagrams (pinhole projection, triangulation, bundle
+  adjustment, rotation continuity, hash grids, TSDF fusion, SLAM loop closure,
+  Bayesian semantic fusion, reference frames, world-model rollouts, and more).
 - **Bilingual reading** — switch 中文 / English / 双语 (side-by-side) anywhere.
 - **Math & code** — KaTeX formulas and a focused Python/PyTorch snippet in every
   lesson (soft-argmax, 6D rotations, NeRF volume rendering, TSDF fusion, world-model

@@ -20,12 +20,12 @@ function LinkPill({ kind, label, url }: { kind: ResourceKind; label: string; url
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-medium text-ink/75 transition hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-stone-300 dark:hover:text-brand-200"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-medium text-ink/75 transition hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-stone-300 dark:hover:text-brand-200"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke={k.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0">
         <path d={k.path} />
       </svg>
-      <span className="truncate">{label}</span>
+      <span className="min-w-0 truncate">{label}</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3 w-3 shrink-0 opacity-40">
         <path d="M7 17L17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
