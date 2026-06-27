@@ -4,6 +4,7 @@ import { tracks } from "../lib/curriculum";
 import { foundations } from "../lib/foundations";
 import { useStore } from "../lib/store";
 import { pick, t } from "../lib/i18n";
+import { zhLabel } from "../lib/termLabelsZh";
 import type { Bilingual, TrackId } from "../lib/types";
 
 interface Term {
@@ -37,9 +38,16 @@ function matches(q: string, term: string, def: Bilingual) {
   if (!query) return true;
   return (
     term.toLowerCase().includes(query) ||
+    (zhLabel(term)?.includes(q.trim()) ?? false) ||
     def.en.toLowerCase().includes(query) ||
     def.zh.includes(q.trim())
   );
+}
+
+// "Linear blend skinning · 线性混合蒙皮" when a Chinese name exists.
+function termLabel(term: string) {
+  const z = zhLabel(term);
+  return z ? `${term} · ${z}` : term;
 }
 
 export function GlossaryPage() {
@@ -96,7 +104,10 @@ export function GlossaryPage() {
                 className="rounded-xl border border-stone-200/70 bg-white/70 p-4 shadow-card backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.03]"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-sm font-semibold text-ink dark:text-stone-100">{f.term}</span>
+                  <span className="text-sm font-semibold text-ink dark:text-stone-100">
+                    <span className="font-mono">{f.term}</span>
+                    {zhLabel(f.term) && <span className="text-ink/55 dark:text-stone-400"> · {zhLabel(f.term)}</span>}
+                  </span>
                   <span className="grid h-4 shrink-0 place-items-center rounded bg-stone-200/70 px-1.5 text-[9px] font-bold uppercase tracking-wide text-ink/55 dark:bg-white/10 dark:text-stone-400">
                     {mode === "zh" ? "基础" : "basics"}
                   </span>
@@ -122,7 +133,7 @@ export function GlossaryPage() {
                 className="group rounded-xl border border-stone-200/70 bg-white/70 p-4 shadow-card backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-card-hover dark:border-white/[0.07] dark:bg-white/[0.03]"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-brand-700 dark:text-brand-300">{x.term}</span>
+                  <span className="font-semibold text-brand-700 dark:text-brand-300">{termLabel(x.term)}</span>
                   <span
                     className="grid h-4 w-4 shrink-0 place-items-center rounded text-[9px] font-bold text-white"
                     style={{ backgroundColor: x.accent }}
