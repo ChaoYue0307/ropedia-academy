@@ -447,6 +447,11 @@ model.print_trainable_parameters()
 // ===========================================================================
 const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer, qlora, dpo, vlm, videolm];
 
+// Every advanced repo writes its own artifacts (checkpoints, logs, renders) to a
+// run/output directory; add a uniform reminder that Colab is ephemeral.
+const PERSIST = md(`## Save & persist your results\nThis pipeline writes its checkpoints, metrics/logs and outputs to the run/output directory shown above (e.g. \`output/\`, \`outputs/\`, \`logdir/\`, \`experiments/\`, or the trainer's \`output_dir\`). **Colab sessions are ephemeral** — to keep them, either mount Drive and copy the folder (\`from google.colab import drive; drive.mount('/content/drive')\`) or zip + download it (\`import shutil; shutil.make_archive('run','zip','OUTPUT_DIR')\` then \`from google.colab import files; files.download('run.zip')\`). The 🤗 Trainer labs also support \`trainer.push_to_hub()\`.`);
+for (const lab of labs) lab.cells.splice(lab.cells.length - 1, 0, PERSIST);
+
 function splitLines(s) {
   const lines = s.split("\n");
   return lines.map((l, i) => (i < lines.length - 1 ? l + "\n" : l));

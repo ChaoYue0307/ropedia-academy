@@ -17,6 +17,26 @@ fs.mkdirSync(OUT, { recursive: true });
 const md = (s) => ({ kind: "md", src: s });
 const code = (s) => ({ kind: "code", src: s });
 
+// A standard "Save artifacts" pair of cells: writes the checkpoint, the full
+// loss/eval history (JSON) and the final figure to outputs/<id>/, then zips it.
+function saveCells(id, saveLines) {
+  return [
+    md(`## Save artifacts — checkpoint · metrics · figure\nEverything is written to **outputs/${id}/** — the model checkpoint, the full loss/eval history as JSON, and the final figure — then zipped. Colab sessions are ephemeral, so the last lines show how to download the zip or copy it to Google Drive.`),
+    code([
+      `import os, json, torch, shutil`,
+      `run = "outputs/${id}"; os.makedirs(run, exist_ok=True)`,
+      ...saveLines,
+      `try:`,
+      `    fig.savefig(f"{run}/figure.png", dpi=120, bbox_inches="tight")`,
+      `except Exception: pass`,
+      `shutil.make_archive(run, "zip", run)`,
+      `print("saved to", run, "->", sorted(os.listdir(run)))`,
+      `# keep it past the session:  from google.colab import files; files.download(f"{run}.zip")`,
+      `# or mount Drive:  from google.colab import drive; drive.mount('/content/drive')  # then shutil.copytree(run, "/content/drive/MyDrive/"+run)`,
+    ].join("\n")),
+  ];
+}
+
 // ---------------------------------------------------------------------------
 // LAB 1 — NeRF from scratch on the classic tiny_nerf data (Track B)
 // ---------------------------------------------------------------------------
@@ -575,7 +595,8 @@ X = torch.cat(feats); y = torch.tensor(labels)
 clf = nn.Linear(X.shape[1], 10); opt = torch.optim.Adam(clf.parameters(), 1e-3)
 for e in range(400):
     opt.zero_grad(); nn.functional.cross_entropy(clf(X[:600]), y[:600]).backward(); opt.step()
-print("linear-probe accuracy:", (clf(X[600:]).argmax(-1) == y[600:]).float().mean().item())`),
+probe_acc = (clf(X[600:]).argmax(-1) == y[600:]).float().mean().item()
+print("linear-probe accuracy:", probe_acc)`),
     md(`### Where to go next\n- Run the PCA on **egocentric frames** (EPIC-Kitchens / Ego4D) — hands and manipulated objects separate cleanly.\n- Use patch features for open-vocabulary segmentation, or as inputs to a hand/object detector (lessons C5–C6).\n- Compare this probe with the **CLIP** probe lab — different pretraining, different features.`),
   ],
 };
@@ -729,6 +750,7 @@ class GPT(nn.Module):
     md(`## 3 · Train — next-token cross-entropy (watch train & val fall)`),
     code(`model = GPT().to(device); opt = torch.optim.AdamW(model.parameters(), 3e-4)
 print("parameters:", round(sum(p.numel() for p in model.parameters()) / 1e6, 2), "M")
+hist = []
 for step in range(STEPS + 1):
     xb, yb = get_batch("train"); _, loss = model(xb, yb)
     opt.zero_grad(); loss.backward(); opt.step()
@@ -736,6 +758,7 @@ for step in range(STEPS + 1):
         model.eval()
         with torch.no_grad(): _, vl = model(*get_batch("val"))
         model.train()
+        hist.append((step, round(loss.item(), 3), round(vl.item(), 3)))
         print(f"step {step:5d}  train {loss.item():.3f}  val {vl.item():.3f}")`),
     md(`## 4 · Generate — sample text from the trained model`),
     code(`ctx = torch.zeros((1, 1), dtype=torch.long, device=device)
@@ -746,6 +769,25 @@ print(decode(model.generate(ctx, 500)[0].tolist()))`),
 
 // ---------------------------------------------------------------------------
 const labs = [smplify, motion, nerf, sdf, gsplat, clip, videomae, dinov2, worldmodel, nanogpt];
+
+// Per-lab artifact saving (checkpoint + metrics), spliced before the last cell.
+const SAVE = {
+  A_smplify_fit: [`torch.save({"angles": ang.detach().cpu(), "root": root.detach().cpu()}, f"{run}/pose.pt")`, `json.dump({"reproj": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  A_motion_diffusion: [`torch.save(model.state_dict(), f"{run}/denoiser.pt")`, `json.dump({"loss": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  B_nerf_from_scratch: [`torch.save(model.state_dict(), f"{run}/nerf.pt")`, `json.dump({"psnr": psnrs}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  B_deepsdf_shape: [`torch.save(model.state_dict(), f"{run}/sdf.pt")`, `json.dump({"l1": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  B_gaussian_splatting_2d: [`torch.save({k: v.detach().cpu() for k, v in {"pos": pos, "logs": logs, "rot": rot, "col": col, "op": op}.items()}, f"{run}/gaussians.pt")`, `json.dump({"psnr": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  CD_clip_zeroshot_probe: [`torch.save(clf.state_dict(), f"{run}/probe.pt")`, `json.dump({"zero_shot": zs_acc, "linear_probe": probe_acc}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  C_dinov2_features_probe: [`torch.save(clf.state_dict(), f"{run}/probe.pt")`, `json.dump({"linear_probe": float(probe_acc)}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  D_world_model: [`torch.save(model.state_dict(), f"{run}/dynamics.pt")`, `json.dump({"dyn_mse": hist, "final_dist": {"planner": float(traj_plan[-1].norm()), "random": float(traj_rand[-1].norm())}}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  LM_nanogpt_pretrain: [`torch.save(model.state_dict(), f"{run}/gpt.pt")`, `json.dump({"loss": hist}, open(f"{run}/metrics.json", "w"), indent=2)`, `open(f"{run}/sample.txt", "w").write(decode(model.generate(torch.zeros((1, 1), dtype=torch.long, device=device), 500)[0].tolist()))`],
+};
+const VIDEOMAE_NOTE = md(`## Save & persist\nThe 🤗 Trainer already writes checkpoints, \`trainer_state.json\` (the full loss/eval history) and logs to its \`output_dir\` ("videomae-ucf101"). Also call \`trainer.save_model("videomae-final")\` (and optionally \`trainer.push_to_hub()\`). Colab is ephemeral, so zip + download the folder or mount Google Drive to keep it.`);
+for (const lab of labs) {
+  const id = lab.file.replace(/\.ipynb$/, "");
+  if (SAVE[id]) lab.cells.splice(lab.cells.length - 1, 0, ...saveCells(id, SAVE[id]));
+  else if (id === "C_videomae_finetune") lab.cells.splice(lab.cells.length - 1, 0, VIDEOMAE_NOTE);
+}
 
 function toNotebook(lab) {
   const cells = lab.cells.map((c) =>
