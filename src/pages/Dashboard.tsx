@@ -18,6 +18,7 @@ export function Dashboard() {
   const dueCount = reviewing.filter((id) => isDue(srs[id])).length;
   const last = lastLessonId ? getLesson(lastLessonId) : undefined;
   const firstUnseen = tracks[0].lessons.find((l) => !completed.has(l.id)) ?? tracks[0].lessons[0];
+  const accent = Object.fromEntries(tracks.map((tr) => [tr.id, tr.accent])) as Record<string, string>;
 
   return (
     <div className="space-y-8">
@@ -180,8 +181,14 @@ export function Dashboard() {
               rel="noopener noreferrer"
               className="group flex items-center gap-3 rounded-2xl border border-stone-200/70 bg-white/80 p-4 shadow-card backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-card-hover dark:border-white/[0.07] dark:bg-white/[0.04]"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_8px_20px_-8px_#f59e0b] transition group-hover:scale-105">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l14 9-14 9V3z" /></svg>
+              <span
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-base font-bold text-white transition group-hover:scale-105"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${accent[lab.track]}, ${accent[lab.track]}c0)`,
+                  boxShadow: `0 8px 20px -8px ${accent[lab.track]}`,
+                }}
+              >
+                {lab.track}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[15px] font-semibold text-ink dark:text-stone-100">{pick(lab.title, mode)}</div>
@@ -208,9 +215,13 @@ export function Dashboard() {
 const LABS_REPO = "https://github.com/ChaoYue0307/ropedia-academy";
 const COLAB = "https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/";
 const LABS = [
-  { file: "B_nerf_from_scratch.ipynb", title: { en: "Train a NeRF from scratch", zh: "从零训练 NeRF" }, foundation: false },
-  { file: "B_deepsdf_shape.ipynb", title: { en: "Neural SDF (DeepSDF-style)", zh: "神经 SDF（DeepSDF）" }, foundation: false },
-  { file: "A_smplify_fit.ipynb", title: { en: "Fit a body (SMPLify)", zh: "拟合人体（SMPLify）" }, foundation: false },
-  { file: "CD_clip_zeroshot_probe.ipynb", title: { en: "CLIP: zero-shot vs. probe", zh: "CLIP：零样本 vs. 探针" }, foundation: true },
-  { file: "C_videomae_finetune.ipynb", title: { en: "Fine-tune VideoMAE", zh: "微调 VideoMAE" }, foundation: true },
+  { file: "A_smplify_fit.ipynb", track: "A", title: { en: "Fit a body (SMPLify)", zh: "拟合人体（SMPLify）" }, foundation: false },
+  { file: "A_motion_diffusion.ipynb", track: "A", title: { en: "Motion diffusion model", zh: "运动扩散模型" }, foundation: false },
+  { file: "B_nerf_from_scratch.ipynb", track: "B", title: { en: "Train a NeRF from scratch", zh: "从零训练 NeRF" }, foundation: false },
+  { file: "B_deepsdf_shape.ipynb", track: "B", title: { en: "Neural SDF (DeepSDF-style)", zh: "神经 SDF（DeepSDF）" }, foundation: false },
+  { file: "B_gaussian_splatting_2d.ipynb", track: "B", title: { en: "2D Gaussian Splatting", zh: "2D 高斯泼溅" }, foundation: false },
+  { file: "CD_clip_zeroshot_probe.ipynb", track: "C", title: { en: "CLIP: zero-shot vs. probe", zh: "CLIP：零样本 vs. 探针" }, foundation: true },
+  { file: "C_videomae_finetune.ipynb", track: "C", title: { en: "Fine-tune VideoMAE", zh: "微调 VideoMAE" }, foundation: true },
+  { file: "C_dinov2_features_probe.ipynb", track: "C", title: { en: "DINOv2 features + probe", zh: "DINOv2 特征 + 探针" }, foundation: true },
+  { file: "D_world_model.ipynb", track: "D", title: { en: "World model + planning", zh: "世界模型 + 规划" }, foundation: false },
 ];

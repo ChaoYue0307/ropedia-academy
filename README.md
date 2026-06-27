@@ -40,20 +40,20 @@ spaced repetition. Runs entirely in the browser — no account required.
 ## Training labs
 
 Beyond the per-lesson snippets, [`notebooks/training/`](notebooks/training/) holds
-**real, multi-cell Colab notebooks you can actually train** — split into clear
+**nine real, multi-cell Colab notebooks you can actually train** — split into clear
 blocks (data · model · train · compare) so you can step through and watch each
-stage. Three are self-contained PyTorch pipelines (verified to train); two apply
-a **foundation model**:
+stage. Every track gets both a *from-scratch* and a *foundation-model* pipeline:
 
-| Lab | Trains |
-|---|---|
-| Train a NeRF from scratch (`tiny_nerf`) | a NeRF MLP via photometric loss (PSNR climbs) |
-| Neural SDF, DeepSDF-style | an MLP signed-distance field + marching-cubes surface |
-| Fit a body (SMPLify mechanics) | pose by reprojection optimization (+ how to use real SMPL) |
-| **CLIP** zero-shot vs. linear probe | a head on frozen CLIP features (foundation) |
-| Fine-tune **VideoMAE** | a video transformer for action recognition (foundation) |
+| Track | From scratch (PyTorch) | Foundation model |
+|---|---|---|
+| **A · Human** | SMPLify body fit · motion diffusion (DDPM) | — |
+| **B · 3D / rendering** | NeRF (`tiny_nerf`) · neural SDF · 2D Gaussian Splatting | — |
+| **C · Egocentric** | — | CLIP probe · fine-tune VideoMAE · DINOv2 features |
+| **D · Scene / world** | world model + planning (MPC) | — |
 
-Open them from the dashboard's **Training labs** section, or see
+The six self-contained PyTorch labs are **verified to train** (loss decreases /
+PSNR climbs); the three foundation labs follow the official APIs and run on a
+Colab GPU. Open them from the dashboard's **Training labs** section, or see
 [`notebooks/training/README.md`](notebooks/training/README.md) for one-click Colab
 badges. Set **Runtime → T4 GPU** first.
 
