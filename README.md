@@ -36,7 +36,8 @@ account required.
 - **Math & code** — KaTeX formulas and a focused Python/PyTorch snippet in every
   lesson (soft-argmax, 6D rotations, NeRF volume rendering, TSDF fusion, world-model
   rollouts, …), each with one-click **[Open in Colab](notebooks/)** to run it — no
-  install, no login to read.
+  install, no login to read. Each snippet's real output (printed values + figure)
+  is shown inline behind a *predict-it, then reveal* toggle for active recall.
 - **Self-graded checks & quiz mode** — reveal standard answers, or take a
   per-track quiz with scoring.
 - **Spaced repetition** — add any check to a review deck; an SM-2 scheduler

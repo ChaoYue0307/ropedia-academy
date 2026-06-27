@@ -11,13 +11,19 @@ export function CodeExample({
   note,
   mode,
   colabUrl,
+  output,
+  outputId,
 }: {
   code: string;
   note: Bilingual;
   mode: LangMode;
   colabUrl?: string;
+  output?: { stdout: string; image: boolean };
+  outputId?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const hasOutput = !!output && (!!output.stdout || output.image);
 
   const copy = async () => {
     try {
@@ -74,6 +80,48 @@ export function CodeExample({
       <div className="code-example-body p-4">
         <Markdown>{"```python\n" + code + "\n```"}</Markdown>
       </div>
+      {/* Predict-then-reveal output: the snippet's actual printed text + figure. */}
+      {hasOutput && (
+        <div className="border-t border-stone-200/60 dark:border-white/[0.06]">
+          <button
+            onClick={() => setRevealed((v) => !v)}
+            aria-expanded={revealed}
+            className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-xs font-semibold text-ink/60 transition hover:bg-stone-50 dark:text-stone-400 dark:hover:bg-white/[0.03]"
+          >
+            <span className="flex items-center gap-2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="m4 7 5 5-5 5M12 19h8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              {t("output", mode)}
+            </span>
+            <span className="flex items-center gap-1.5 font-medium text-brand-600 dark:text-brand-300">
+              {revealed ? t("hideOutput", mode) : t("revealOutput", mode)}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={"h-3.5 w-3.5 transition-transform " + (revealed ? "rotate-180" : "")}><path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </span>
+          </button>
+          {!revealed ? (
+            <p className="px-4 pb-3 text-[11px] italic text-ink/40 dark:text-stone-500">{t("predictHint", mode)}</p>
+          ) : (
+            <div className="space-y-3 px-4 pb-4">
+              {output!.stdout && (
+                <div>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-ink/35 dark:text-stone-500">{t("printedLabel", mode)}</div>
+                  <pre className="overflow-x-auto rounded-lg bg-[#11101a] px-3 py-2.5 font-mono text-[12px] leading-relaxed text-emerald-200/90">{output!.stdout}</pre>
+                </div>
+              )}
+              {output!.image && outputId && (
+                <div>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-ink/35 dark:text-stone-500">{t("figureLabel", mode)}</div>
+                  <img
+                    src={`${import.meta.env.BASE_URL}code-output/${outputId}.png`}
+                    alt={`${outputId} output figure`}
+                    loading="lazy"
+                    className="w-full rounded-lg border border-stone-200/70 bg-white dark:border-white/10"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
       <figcaption className="border-t border-stone-200/60 bg-stone-50/50 px-4 py-2.5 text-xs leading-relaxed text-ink/60 dark:border-white/[0.06] dark:bg-white/[0.02] dark:text-stone-400">
         {pick(note, mode)}
       </figcaption>
