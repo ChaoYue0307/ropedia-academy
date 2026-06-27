@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useStore } from "../lib/store";
 import { t } from "../lib/i18n";
 import { isSupabaseEnabled } from "../lib/supabase";
+import { Logo } from "./Logo";
 import type { LangMode } from "../lib/types";
 
 const NAV = [
@@ -61,9 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </a>
       <aside className="z-10 border-b border-stone-200/70 bg-white/70 backdrop-blur-xl md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:border-b-0 md:border-r dark:border-white/[0.06] dark:bg-[#16141f]/70">
         <div className="flex items-center gap-2.5 px-5 py-4">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-400 via-brand-500 to-brand-700 font-display text-[17px] font-bold text-white shadow-glow">
-            R
-          </div>
+          <Logo size={36} className="shrink-0 rounded-[8px] shadow-glow" />
           <div className="leading-tight">
             <div className="font-display text-sm font-semibold text-ink dark:text-stone-100">{t("appName", mode)}</div>
             <div className="flex items-center gap-1 text-[10px] text-ink/40 dark:text-stone-500">

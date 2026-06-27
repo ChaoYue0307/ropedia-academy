@@ -80,8 +80,12 @@ const svg = `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http:/
       <stop offset="1" stop-color="#378add" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#827ef9"/>
+      <stop offset="0" stop-color="#8b80ff"/>
       <stop offset="1" stop-color="#4c37b0"/>
+    </linearGradient>
+    <linearGradient id="logoHi" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.2"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
@@ -89,9 +93,11 @@ const svg = `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http:/
   <rect width="1200" height="630" fill="url(#glow2)"/>
   ${edges}
   ${dots}
-  <g transform="translate(80,86)">
-    <rect width="92" height="92" rx="24" fill="url(#logo)"/>
-    <text x="46" y="64" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="700" fill="#ffffff" text-anchor="middle">R</text>
+  <g transform="translate(80,86) scale(1.4375)">
+    <rect width="64" height="64" rx="15" fill="url(#logo)"/>
+    <rect width="64" height="64" rx="15" fill="url(#logoHi)"/>
+    <path d="M22 49 V15 H33 a9.5 9.5 0 0 1 0 19 H22 M27.5 34 L41 49" fill="none" stroke="#ffffff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="41" cy="49" r="4.2" fill="#67e8f9"/>
   </g>
   <text x="198" y="124" font-family="Arial, Helvetica, sans-serif" font-size="33" font-weight="600" fill="#c6ccff">Ropedia Academy</text>
   <text x="200" y="158" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="600" fill="#7f77dd" letter-spacing="0.5">INTERACTIVE · BILINGUAL · OPEN</text>
