@@ -53,6 +53,7 @@ export const S: Dict = {
   lessons: { en: "Lessons", zh: "课程" },
   lesson: { en: "Lesson", zh: "第" },
   lessonSuffix: { en: "", zh: "课" },
+  inPlainWords: { en: "In plain words", zh: "一句话直观理解" },
   interactive: { en: "Interactive — try it", zh: "交互演示 — 动手试试" },
   implementation: { en: "Implementation — see it in code", zh: "代码实现 — 看核心代码" },
   copyCode: { en: "Copy", zh: "复制" },

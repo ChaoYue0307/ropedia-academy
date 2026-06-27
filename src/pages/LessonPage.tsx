@@ -10,6 +10,7 @@ import { ReadingProgress } from "../components/ReadingProgress";
 import { lessonFigures } from "../components/figures/registry";
 import { lessonCode, colabUrl } from "../lib/curriculum/lessonCode";
 import { codeOutputs } from "../lib/curriculum/codeOutputs";
+import { lessonIntuition } from "../lib/curriculum/lessonIntuition";
 import { CodeExample } from "../components/CodeExample";
 import { ResourceLinks } from "../components/ResourceLinks";
 
@@ -75,6 +76,18 @@ export function LessonPage() {
         </h1>
         <p className="mt-2 text-[15px] text-ink/55 dark:text-stone-400">{pick(lesson.summary, mode)}</p>
       </header>
+
+      {lessonIntuition[lesson.id] && (
+        <aside className="rounded-2xl border border-amber-300/50 bg-amber-50/60 p-4 dark:border-amber-400/20 dark:bg-amber-400/[0.06]">
+          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.3 1 2.1V16h6v-.4c0-.8.4-1.5 1-2.1A6 6 0 0 0 12 3z" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            {t("inPlainWords", mode)}
+          </div>
+          <div className="text-[15px] leading-relaxed text-ink/80 dark:text-stone-200">
+            <BiText value={lessonIntuition[lesson.id]} mode={mode} />
+          </div>
+        </aside>
+      )}
 
       <BiText value={lesson.body} mode={mode} />
 
