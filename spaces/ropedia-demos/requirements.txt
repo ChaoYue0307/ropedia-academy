@@ -1,0 +1,5 @@
+torch
+gradio
+numpy
+matplotlib
+huggingface_hub
