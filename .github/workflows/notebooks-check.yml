@@ -1,0 +1,25 @@
+name: Notebooks check
+
+# Validates all notebooks are well-formed and that the generated notebooks match
+# their generator scripts (no drift). Runs on push / PR.
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate notebook JSON
+        run: node scripts/check-notebooks.mjs
+      - name: Regenerate and check for drift
+        run: |
+          node scripts/gen-training-notebooks.mjs
+          node scripts/gen-advanced-notebooks.mjs
+          node scripts/gen-colab-master.mjs
+          git diff --exit-code notebooks/ \
+            || (echo "::error::Generated notebooks are out of date — run the gen-*.mjs scripts and commit." && exit 1)
