@@ -206,11 +206,16 @@ class SDF(nn.Module):
 hist = []
 for step in range(STEPS + 1):
     p, gt = sample(4096)
-    pred = model(p)
-    loss = (pred - gt.clamp(-0.1, 0.1)).abs().mean()
+    fit = (model(p) - gt.clamp(-0.1, 0.1)).abs().mean()
+    # eikonal regularizer: a true distance field has gradient norm 1 everywhere
+    pe = ((torch.rand(2048, 3, device=device) * 2 - 1) * 1.1).requires_grad_(True)
+    g = torch.autograd.grad(model(pe).sum(), pe, create_graph=True)[0]
+    eik = ((g.norm(dim=-1) - 1) ** 2).mean()
+    loss = fit + 0.1 * eik
     opt.zero_grad(); loss.backward(); opt.step()
     if step % max(1, STEPS // 10) == 0:
-        hist.append((step, loss.item())); print(f"step {step:5d}  L1 {loss.item():.4f}")`),
+        hist.append((step, round(fit.item(), 4))); print(f"step {step:5d}  L1 {fit.item():.4f}  eikonal {eik.item():.3f}")`),
+
     md(`## 4 · Extract & compare the surface (marching cubes)`),
     code(`from skimage import measure
 res = 96
@@ -479,14 +484,21 @@ class Denoiser(nn.Module):
         te = self.tef(t[:, None].float() / Tdiff)
         return self.net(torch.cat([x, te], -1))`),
     md(`## 3 · Train — predict the added noise`),
-    code(`model = Denoiser(D).to(device); opt = torch.optim.Adam(model.parameters(), 2e-4); hist = []
+    code(`import math, copy
+model = Denoiser(D).to(device); opt = torch.optim.Adam(model.parameters(), 2e-4); hist = []
+ema = copy.deepcopy(model)
+for p in ema.parameters(): p.requires_grad_(False)
 for step in range(STEPS + 1):
+    for g in opt.param_groups: g["lr"] = 2e-4 * (0.1 + 0.45 * (1 + math.cos(math.pi * step / max(1, STEPS))))
     x0 = data[torch.randint(0, data.shape[0], (256,), device=device)]
     t = torch.randint(0, Tdiff, (256,), device=device); noise = torch.randn_like(x0)
     loss = ((model(q_sample(x0, t, noise), t) - noise) ** 2).mean()
     opt.zero_grad(); loss.backward(); opt.step()
+    with torch.no_grad():                                            # EMA of weights → smoother samples
+        for pe, pm in zip(ema.parameters(), model.parameters()): pe.mul_(0.999).add_(pm, alpha=0.001)
     if step % max(1, STEPS // 10) == 0:
-        hist.append((step, loss.item())); print(f"step {step:5d}  loss {loss.item():.4f}")`),
+        hist.append((step, round(loss.item(), 4))); print(f"step {step:5d}  loss {loss.item():.4f}")
+model.load_state_dict(ema.state_dict())                             # sample/save from the EMA weights`),
     md(`## 4 · Sample — reverse diffusion makes new motions`),
     code(`@torch.no_grad()
 def sample(n):
@@ -550,11 +562,27 @@ def render():
     return ((a[..., None] * color[None, None]).sum(2) / (a.sum(2, keepdim=True) + 1e-6)).clamp(0, 1)`),
     md(`## 3 · Optimize — minimise reconstruction error`),
     code(`opt = torch.optim.Adam([pos, logs, rot, col, op], 0.02); hist = []
+def densify():                                       # clone Gaussians where the image error is high
+    global pos, logs, rot, col, op, opt
+    with torch.no_grad():
+        if pos.grad is None or pos.shape[0] > 2500: return
+        g = pos.grad.norm(dim=1); m = g > (g.mean() + g.std())
+        if int(m.sum()) == 0: return
+        npos = torch.cat([pos, pos[m] + 0.01 * torch.randn(int(m.sum()), 2, device=device)])
+        nlogs = torch.cat([logs, logs[m] - 0.3]); nrot = torch.cat([rot, rot[m]])
+        ncol = torch.cat([col, col[m]]); nop = torch.cat([op, op[m]])
+    pos = npos.detach().requires_grad_(True); logs = nlogs.detach().requires_grad_(True)
+    rot = nrot.detach().requires_grad_(True); col = ncol.detach().requires_grad_(True); op = nop.detach().requires_grad_(True)
+    opt = torch.optim.Adam([pos, logs, rot, col, op], 0.02)
 for step in range(STEPS + 1):
     img = render(); loss = ((img - target) ** 2).mean()
-    opt.zero_grad(); loss.backward(); opt.step()
+    opt.zero_grad(); loss.backward()
+    if step > 0 and step % max(1, STEPS // 5) == 0:
+        densify()
+    else:
+        opt.step()
     if step % max(1, STEPS // 10) == 0:
-        psnr = (-10 * torch.log10(loss)).item(); hist.append((step, psnr)); print(f"step {step:4d}  PSNR {psnr:5.2f} dB")`),
+        psnr = (-10 * torch.log10(loss)).item(); hist.append((step, round(psnr, 2))); print(f"step {step:4d}  N {pos.shape[0]:4d}  PSNR {psnr:5.2f} dB")`),
     md(`## 4 · Compare — target vs. splatted reconstruction + Gaussian centres`),
     code(`with torch.no_grad(): img = render().cpu()
 fig, ax = plt.subplots(1, 3, figsize=(11, 3.6))
@@ -666,12 +694,17 @@ for step in range(STEPS + 1):
         hist.append((step, loss.item())); print(f"step {step:5d}  dyn MSE {loss.item():.5f}")`),
     md(`## 4 · Plan inside the model (random-shooting MPC)\nAt each step, imagine many random action sequences *with the learned model*, keep the first action of the best one, execute it in the real environment, repeat.`),
     code(`@torch.no_grad()
-def plan(s0, horizon=15, K=1000):
-    acts = torch.rand(K, horizon, 2, device=device) * 2 - 1
-    s = s0.repeat(K, 1); total = torch.zeros(K, device=device)
-    for h in range(horizon):
-        s = s + model(s, acts[:, h]); total = total + reward(s)
-    return acts[total.argmax(), 0]
+def plan(s0, horizon=15, K=400, iters=4, elite=40):
+    # Cross-Entropy Method: refit a Gaussian over action sequences toward the elites
+    mu = torch.zeros(horizon, 2, device=device); std = torch.ones(horizon, 2, device=device)
+    for _ in range(iters):
+        acts = (mu + std * torch.randn(K, horizon, 2, device=device)).clamp(-1, 1)
+        s = s0.repeat(K, 1); total = torch.zeros(K, device=device)
+        for h in range(horizon):
+            s = s + model(s, acts[:, h]); total = total + reward(s)
+        idx = total.topk(elite).indices
+        mu = acts[idx].mean(0); std = acts[idx].std(0) + 1e-3
+    return mu[0]
 
 def run(policy, n=40):
     s = torch.tensor([1.8, -1.6, 0.0, 0.0], device=device); traj = [s[:2].clone()]
@@ -765,18 +798,28 @@ class GPT(nn.Module):
             idx = torch.cat([idx, torch.multinomial(F.softmax(logits[:, -1, :], -1), 1)], 1)
         return idx`),
     md(`## 3 · Train — next-token cross-entropy (watch train & val fall)`),
-    code(`model = GPT().to(device); opt = torch.optim.AdamW(model.parameters(), 3e-4)
+    code(`import math
+model = GPT().to(device)
+opt = torch.optim.AdamW(model.parameters(), 3e-4, weight_decay=0.1)   # decoupled weight decay
+warm = max(10, STEPS // 50)
+def lr_at(s):                                                         # warmup → cosine decay
+    if s < warm: return 3e-4 * s / warm
+    r = (s - warm) / max(1, STEPS - warm); return 3e-4 * (0.1 + 0.45 * (1 + math.cos(math.pi * r)))
 print("parameters:", round(sum(p.numel() for p in model.parameters()) / 1e6, 2), "M")
-hist = []
+hist = []; best_val = float("inf"); best_state = None
 for step in range(STEPS + 1):
+    for g in opt.param_groups: g["lr"] = lr_at(step)
     xb, yb = get_batch("train"); _, loss = model(xb, yb)
     opt.zero_grad(); loss.backward(); opt.step()
-    if step % max(1, STEPS // 10) == 0:
+    if step % max(1, STEPS // 20) == 0:
         model.eval()
         with torch.no_grad(): _, vl = model(*get_batch("val"))
-        model.train()
-        hist.append((step, round(loss.item(), 3), round(vl.item(), 3)))
-        print(f"step {step:5d}  train {loss.item():.3f}  val {vl.item():.3f}")`),
+        model.train(); hist.append((step, round(loss.item(), 3), round(vl.item(), 3)))
+        if vl.item() < best_val:                                     # keep the BEST checkpoint
+            best_val = vl.item(); best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        print(f"step {step:5d}  train {loss.item():.3f}  val {vl.item():.3f}  (best {best_val:.3f})")
+if best_state: model.load_state_dict(best_state)                     # restore best before saving/sampling
+print("restored best val:", round(best_val, 3))`),
     md(`## 4 · Generate — sample text from the trained model`),
     code(`ctx = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(model.generate(ctx, 500)[0].tolist()))`),
@@ -831,15 +874,21 @@ def coords_from(hm):                          # hard peak location -> (B,K,2) as
     idx = hm.reshape(B, Kk, -1).argmax(-1)
     return torch.stack([idx % w, idx // w], -1).float()`),
     md(`## 3 · Train — MSE on the heatmaps`),
-    code(`model = PoseNet().to(device); opt = torch.optim.Adam(model.parameters(), 1e-3); hist = []
+    code(`import math
+model = PoseNet().to(device); opt = torch.optim.Adam(model.parameters(), 1e-3)
+hist = []; best = 0.0; best_state = None; thr = 0.1 * (H ** 2 + W ** 2) ** 0.5
 for step in range(STEPS + 1):
+    for g in opt.param_groups: g["lr"] = 1e-3 * (0.1 + 0.45 * (1 + math.cos(math.pi * step / max(1, STEPS))))
     x, hm, co = make_batch(16)
-    pred = model(x); loss = ((pred - hm) ** 2).mean()
+    loss = ((model(x) - hm) ** 2).mean()
     opt.zero_grad(); loss.backward(); opt.step()
     if step % max(1, STEPS // 10) == 0:
+        xv, hmv, cov = make_batch(64)                              # PCK on a fresh batch
         with torch.no_grad():
-            pck = ((coords_from(pred) - co).norm(dim=-1) < 0.1 * (H ** 2 + W ** 2) ** 0.5).float().mean().item()
-        hist.append((step, round(pck, 3))); print(f"step {step:4d}  loss {loss.item():.4f}  PCK@0.1 {pck:.3f}")`),
+            pck = ((coords_from(model(xv)) - cov).norm(dim=-1) < thr).float().mean().item()
+        if pck > best: best = pck; best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        hist.append((step, round(pck, 3))); print(f"step {step:4d}  loss {loss.item():.4f}  PCK@0.1 {pck:.3f}  (best {best:.3f})")
+if best_state: model.load_state_dict(best_state)`),
     md(`## 4 · Compare — predicted joints vs. ground truth`),
     code(`x, hm, co = make_batch(1)
 with torch.no_grad(): pr = model(x); pj = coords_from(pr)[0].cpu()
@@ -1039,8 +1088,10 @@ print("example:", [verbs[i] for i in batch(1)[0].tolist()])`),
     def forward(self, x): return self.head(self.lstm(self.emb(x))[0])
 model = Antic().to(device); opt = torch.optim.Adam(model.parameters(), 3e-3)`),
     md(`## 3 · Train — predict token t+1 from tokens ≤ t`),
-    code(`hist = []
+    code(`import math
+hist = []; best = 0.0; best_state = None
 for step in range(STEPS + 1):
+    for g in opt.param_groups: g["lr"] = 3e-3 * (0.1 + 0.45 * (1 + math.cos(math.pi * step / max(1, STEPS))))
     x = batch(128); logits = model(x[:, :-1])
     loss = nn.functional.cross_entropy(logits.reshape(-1, V), x[:, 1:].reshape(-1))
     opt.zero_grad(); loss.backward(); opt.step()
@@ -1049,7 +1100,9 @@ for step in range(STEPS + 1):
             xv = batch(512); lg = model(xv[:, :-1]); tgt = xv[:, 1:]
             top1 = (lg.argmax(-1) == tgt).float().mean().item()
             top2 = (lg.topk(2, -1).indices == tgt.unsqueeze(-1)).any(-1).float().mean().item()
-        hist.append((step, top1)); print(f"step {step:4d}  top-1 {top1:.3f}  top-2 {top2:.3f}  (chance {1/V:.3f})")`),
+        if top1 > best: best = top1; best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        hist.append((step, round(top1, 3))); print(f"step {step:4d}  top-1 {top1:.3f}  top-2 {top2:.3f}  (chance {1/V:.3f})")
+if best_state: model.load_state_dict(best_state)`),
     md(`## 4 · Compare — accuracy vs. chance`),
     code(`fig, ax = plt.subplots(figsize=(6, 3.6))
 ax.plot(*zip(*hist), "-o", label="top-1"); ax.axhline(1 / V, ls="--", c="C7", label="chance")
@@ -1171,29 +1224,36 @@ def feat(pos):
     v = torch.zeros(2 * N, device=device); v[pos[0]] = 1.0; v[N + pos[1]] = 1.0; return v`),
     md(`## 2 · Policy network + REINFORCE update`),
     code(`policy = nn.Sequential(nn.Linear(2 * N, 64), nn.ReLU(), nn.Linear(64, 4)).to(device)
-opt = torch.optim.Adam(policy.parameters(), 1e-3)
+value = nn.Sequential(nn.Linear(2 * N, 64), nn.ReLU(), nn.Linear(64, 1)).to(device)   # critic baseline
+opt = torch.optim.Adam(list(policy.parameters()) + list(value.parameters()), 2e-3)
 def episode():
     pos = (torch.randint(0, N, (1,)).item(), torch.randint(0, N, (1,)).item())
-    logps, rews = [], []
+    states, logps, ents, rews = [], [], [], []
     for _ in range(40):
         if pos == GOAL: break
-        d = torch.distributions.Categorical(logits=policy(feat(pos))); a = d.sample()
-        logps.append(d.log_prob(a)); pos, r, done = step(pos, a.item()); rews.append(r)
+        f = feat(pos); d = torch.distributions.Categorical(logits=policy(f)); a = d.sample()
+        states.append(f); logps.append(d.log_prob(a)); ents.append(d.entropy())
+        pos, r, done = step(pos, a.item()); rews.append(r)
         if done: break
-    return logps, rews`),
+    return states, logps, ents, rews`),
     md(`## 3 · Train — push up high-return actions`),
     code(`hist = []
 for step_i in range(STEPS + 1):
     batch_loss, rets = [], []
     for _ in range(16):
-        logps, rews = episode()
+        states, logps, ents, rews = episode()
         if not logps: continue
         G = 0; returns = []
         for r in reversed(rews): G = r + GAMMA * G; returns.insert(0, G)
-        returns = torch.tensor(returns, device=device); returns = (returns - returns.mean()) / (returns.std(unbiased=False) + 1e-6)
-        batch_loss.append(-(torch.stack(logps) * returns).sum()); rets.append(sum(rews))
+        returns = torch.tensor(returns, device=device)
+        V = value(torch.stack(states)).squeeze(-1)                 # state-value baseline
+        adv = (returns - V).detach(); adv = (adv - adv.mean()) / (adv.std(unbiased=False) + 1e-6)
+        pg = -(torch.stack(logps) * adv).sum()                     # policy gradient with advantage
+        vloss = ((V - returns) ** 2).mean()                        # critic regression
+        ent = -0.01 * torch.stack(ents).sum()                      # entropy bonus (exploration)
+        batch_loss.append(pg + 0.5 * vloss + ent); rets.append(sum(rews))
     loss = torch.stack(batch_loss).mean(); opt.zero_grad(); loss.backward()
-    torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0); opt.step()
+    torch.nn.utils.clip_grad_norm_(list(policy.parameters()) + list(value.parameters()), 1.0); opt.step()
     if step_i % max(1, STEPS // 10) == 0:
         ar = sum(rets) / len(rets); hist.append((step_i, round(ar, 2))); print(f"step {step_i:4d}  avg return {ar:6.2f}")`),
     md(`## 4 · Compare — return climbs as the policy learns`),
@@ -1354,9 +1414,12 @@ def nt_xent(z, tau=0.5):
     targets = torch.arange(2 * B, device=device); targets = (targets + B) % (2 * B)
     return F.cross_entropy(sim, targets)`),
     md(`## 3 · Pretrain — contrastive, no labels`),
-    code(`opt = torch.optim.Adam([*enc.parameters(), *proj.parameters()], 1e-3); hist = []
+    code(`import math
+opt = torch.optim.Adam([*enc.parameters(), *proj.parameters()], 1e-3); hist = []
+B = 256                                              # contrastive learning loves a big batch
 for step in range(STEPS + 1):
-    x, _ = gen(64); v1 = augment(x).to(device); v2 = augment(x).to(device)
+    for g in opt.param_groups: g["lr"] = 1e-3 * (0.1 + 0.45 * (1 + math.cos(math.pi * step / max(1, STEPS))))
+    x, _ = gen(B); v1 = augment(x).to(device); v2 = augment(x).to(device)
     z = proj(torch.cat([enc(v1), enc(v2)], 0)); loss = nt_xent(z)
     opt.zero_grad(); loss.backward(); opt.step()
     if step % max(1, STEPS // 10) == 0: hist.append((step, round(loss.item(), 3))); print(f"step {step:4d}  NT-Xent {loss.item():.3f}")`),
