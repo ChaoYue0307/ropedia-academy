@@ -9,32 +9,32 @@ tags:
 
 # Knowledge distillation
 
-A small student trained on a teacher's soft predictions beats one trained on only a few hard labels.
+On real handwritten digits, a small student trained on a teacher's soft predictions over all data nearly matches the teacher and beats one trained on only a few hard labels.
 
 Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/)** — an interactive, bilingual course on embodied & spatial AI. **Educational model:** small and quick to train; the value is the *method* and a reproducible pipeline, not a leaderboard score.
 
 | | |
 |---|---|
 | **Task** | model compression |
-| **Data** | two-spiral classification |
+| **Data** | real handwritten digits (sklearn) |
 | **Track** | LM · Language & models |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_distillation.ipynb) |
 
 ## Dataset
 
-- **Name:** Two interleaved spirals
-- **Type:** synthetic — procedural
-- **Size / stats:** 2 classes; 2,000 train / 1,000 test (2-D); the student sees only 80 labels
-- **Split:** 2,000 train / 1,000 test
-- **Source:** procedural
+- **Name:** Handwritten digits (UCI / scikit-learn)
+- **Type:** real — public dataset
+- **Size / stats:** 1,797 real 8×8 digit images (64-D), 10 classes; the plain student sees only 100 labels, the distilled one learns from the teacher's soft targets over all 1,257
+- **Split:** 1,257 train / 540 test
+- **Source:** scikit-learn load_digits (UCI Optical Recognition of Handwritten Digits)
 
 ## Results
 
 | metric | value |
 |---|---|
-| teacher | 1.0 |
-| student_plain (final) | 0.938 |
-| student_distill (final) | 0.96 |
+| teacher | 0.9704 |
+| student_plain (final) | 0.9056 |
+| student_distill (final) | 0.9685 |
 
 
 ![figure](figure.png)

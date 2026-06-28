@@ -9,30 +9,31 @@ tags:
 
 # Masked Autoencoder (MAE)
 
-Masks most image patches and reconstructs them — the MAE / VideoMAE pretraining objective.
+Masks half the image patches and reconstructs them on real handwritten digits — the MAE / VideoMAE pretraining objective; reports held-out reconstruction error.
 
 Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/)** — an interactive, bilingual course on embodied & spatial AI. **Educational model:** small and quick to train; the value is the *method* and a reproducible pipeline, not a leaderboard score.
 
 | | |
 |---|---|
 | **Task** | self-supervised pretraining |
-| **Data** | synthetic images |
+| **Data** | real handwritten digits (sklearn) |
 | **Track** | B · 3D & rendering |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_mae_pretrain.ipynb) |
 
 ## Dataset
 
-- **Name:** Synthetic images
-- **Type:** synthetic — procedural
-- **Size / stats:** 24×24 grayscale (random discs); 36 patches of 4×4, 60% masked; 64/batch
-- **Split:** generative (infinite)
-- **Source:** procedural
+- **Name:** Handwritten digits (UCI / scikit-learn)
+- **Type:** real — public dataset
+- **Size / stats:** 1,797 real 8×8 grayscale digit images; 16 patches of 2×2, 50% masked; 128/batch
+- **Split:** 1,257 train / 540 test (held-out reconstruction)
+- **Source:** scikit-learn load_digits (UCI Optical Recognition of Handwritten Digits)
 
 ## Results
 
 | metric | value |
 |---|---|
-| recon_mse (final) | 0.1236 |
+| recon_mse (final) | 0.1393 |
+| test_recon_mse | 0.1365 |
 
 
 ![figure](figure.png)

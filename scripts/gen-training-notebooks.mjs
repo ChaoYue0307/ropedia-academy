@@ -1375,63 +1375,55 @@ plt.tight_layout(); plt.show()`),
 // ---------------------------------------------------------------------------
 const simclr = {
   file: "C_simclr_pretrain.ipynb", title: "SimCLR self-supervised pretraining", track: "C · Egocentric Vision", tag: "PyTorch",
-  what: "contrastive self-supervised pretraining, then a linear probe (how CLIP/DINO are made)",
+  what: "contrastive self-supervised pretraining on real handwritten digits, then a linear probe (how CLIP/DINO are made)",
   cells: [
-    md(`# SimCLR — learn features with no labels\n\n**Foundation-model recipe** (supports track C and lesson on self-supervision).\n\nSelf-supervised contrastive learning is how backbones like SimCLR/DINO/CLIP are pretrained: pull two augmentations of the same image together, push different images apart (**NT-Xent**). We then freeze the encoder and train a **linear probe** to show the features became useful — beating a random-init encoder.\n\n> CPU is fine (small synthetic images).`),
-    code(`import os, torch, torch.nn as nn, torch.nn.functional as F, matplotlib.pyplot as plt
+    md(`# SimCLR — learn features with no labels\n\n**Foundation-model recipe** (supports track C and the lesson on self-supervision).\n\nSelf-supervised contrastive learning is how backbones like SimCLR/DINO/CLIP are pretrained: pull two augmentations of the same image together, push different images apart (**NT-Xent**). We pretrain on **real handwritten digits with no labels**, then freeze the encoder and train a small **linear probe** on a handful of labels — beating a random-init encoder on held-out test digits.\n\n> Real data: scikit-learn \`load_digits\` (1,797 real 8×8 images, 10 classes). CPU is fine.`),
+    code(`import os, math, torch, torch.nn as nn, torch.nn.functional as F, matplotlib.pyplot as plt
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
 device = "cuda" if torch.cuda.is_available() else "cpu"
-STEPS = int(os.environ.get("STEPS", 800)); C = 6; S = 20`),
-    md(`## 1 · Synthetic images — 6 shape classes at random position/scale (hard for raw features)`),
-    code(`def gen(n):
-    x = torch.zeros(n, 1, S, S); y = torch.randint(0, C, (n,))
-    base = torch.linspace(-1, 1, S)
-    for i in range(n):
-        cls = y[i].item(); cx, cy = (torch.rand(2) - 0.5) * 0.7; r = (0.25 + 0.3 * torch.rand(1)).item()
-        gx, gy = torch.meshgrid(base - cx, base - cy, indexing="ij")
-        if cls == 0: m = (gx ** 2 + gy ** 2) < r ** 2                                  # disc
-        elif cls == 1: m = (gx.abs() < r) & (gy.abs() < r)                              # square
-        elif cls == 2: m = (gx.abs() + gy.abs()) < r                                    # diamond
-        elif cls == 3: m = ((gx ** 2 + gy ** 2) < r ** 2) & ((gx ** 2 + gy ** 2) > (0.55 * r) ** 2)  # ring
-        elif cls == 4: m = (gx.abs() < 0.22 * r) | (gy.abs() < 0.22 * r)               # cross
-        else: m = (gx.abs() < 0.18 * r)                                                 # bar
-        x[i, 0] = m.float()
-    x = (x + 0.1 * torch.randn_like(x)).clamp(0, 1)
-    return x, y
-def augment(x):
-    x = x + 0.15 * torch.randn_like(x)
-    if torch.rand(1) < 0.5: x = x.flip(-1)
-    return (x * (0.6 + 0.8 * torch.rand(1))).clamp(0, 1)
-xb, yb = gen(6)
-plt.imshow(torch.cat([xb[i, 0] for i in range(6)], 1)); plt.title("synthetic shapes"); plt.axis("off"); plt.show()`),
+STEPS = int(os.environ.get("STEPS", 1000)); torch.manual_seed(0)`),
+    md(`## 1 · Real handwritten digits — pretrain unlabeled, hold out a test split`),
+    code(`d = load_digits()
+X = torch.tensor(d.images / 16.0, dtype=torch.float32).unsqueeze(1)   # (1797,1,8,8) in [0,1]
+y = torch.tensor(d.target, dtype=torch.long)
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.3, stratify=y, random_state=0)
+Xtr, Xte = Xtr.to(device), Xte.to(device)
+print("train", tuple(Xtr.shape), "test", tuple(Xte.shape), "classes", int(y.max()) + 1)
+plt.imshow(torch.cat([Xtr[i, 0].cpu() for i in range(10)], 1), cmap="gray"); plt.title("real handwritten digits"); plt.axis("off"); plt.show()`),
     md(`## 2 · Encoder + projection head; NT-Xent contrastive loss`),
     code(`def make_enc():
-    return nn.Sequential(nn.Conv2d(1, 16, 3, 2, 1), nn.ReLU(), nn.Conv2d(16, 32, 3, 2, 1), nn.ReLU(),
-                         nn.AdaptiveAvgPool2d(1), nn.Flatten()).to(device)   # -> 32-d feature
-enc = make_enc(); proj = nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Linear(32, 16)).to(device)
+    return nn.Sequential(nn.Conv2d(1, 32, 3, 1, 1), nn.ReLU(), nn.MaxPool2d(2),                       # 8 -> 4
+                         nn.Conv2d(32, 64, 3, 1, 1), nn.ReLU(), nn.AdaptiveAvgPool2d(1), nn.Flatten()).to(device)  # -> 64-d
+enc = make_enc(); proj = nn.Sequential(nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 32)).to(device)
+def augment(x):                                       # label-preserving views (no flips — digits aren't flip-invariant)
+    x = x + 0.12 * torch.randn_like(x)
+    x = x * (0.7 + 0.6 * torch.rand(x.shape[0], 1, 1, 1, device=x.device))
+    x = torch.roll(x, shifts=(int(torch.randint(-1, 2, (1,))), int(torch.randint(-1, 2, (1,)))), dims=(-2, -1))
+    return x.clamp(0, 1)
 def nt_xent(z, tau=0.5):
     z = F.normalize(z, dim=1); B = z.shape[0] // 2
     sim = z @ z.T / tau; sim.fill_diagonal_(-9e9)
-    targets = torch.arange(2 * B, device=device); targets = (targets + B) % (2 * B)
+    targets = (torch.arange(2 * B, device=device) + B) % (2 * B)
     return F.cross_entropy(sim, targets)`),
     md(`## 3 · Pretrain — contrastive, no labels`),
-    code(`import math
-opt = torch.optim.Adam([*enc.parameters(), *proj.parameters()], 1e-3); hist = []
+    code(`opt = torch.optim.Adam([*enc.parameters(), *proj.parameters()], 1e-3); hist = []
 B = 256                                              # contrastive learning loves a big batch
 for step in range(STEPS + 1):
     for g in opt.param_groups: g["lr"] = 1e-3 * (0.1 + 0.45 * (1 + math.cos(math.pi * step / max(1, STEPS))))
-    x, _ = gen(B); v1 = augment(x).to(device); v2 = augment(x).to(device)
-    z = proj(torch.cat([enc(v1), enc(v2)], 0)); loss = nt_xent(z)
+    idx = torch.randint(0, Xtr.shape[0], (B,)); x = Xtr[idx]
+    z = proj(torch.cat([enc(augment(x)), enc(augment(x))], 0)); loss = nt_xent(z)
     opt.zero_grad(); loss.backward(); opt.step()
     if step % max(1, STEPS // 10) == 0: hist.append((step, round(loss.item(), 3))); print(f"step {step:4d}  NT-Xent {loss.item():.3f}")`),
-    md(`## 4 · Linear probe — SimCLR features vs. a random encoder`),
-    code(`def probe(encoder, ntr=40):                       # few-shot probe: where self-supervision wins
-    encoder.eval(); xtr, ytr = gen(ntr); xte, yte = gen(600)
-    with torch.no_grad(): ftr = encoder(xtr.to(device)); fte = encoder(xte.to(device))
-    clf = nn.Linear(32, C).to(device); o = torch.optim.Adam(clf.parameters(), 1e-2)
-    for _ in range(300): o.zero_grad(); F.cross_entropy(clf(ftr), ytr.to(device)).backward(); o.step()
+    md(`## 4 · Linear probe — SimCLR features vs. a random encoder (few-shot, real labels)`),
+    code(`def probe(encoder, ntr=100):                      # only 100 labels: where self-supervision wins
+    encoder.eval(); idx = torch.randperm(Xtr.shape[0])[:ntr]
+    with torch.no_grad(): ftr = encoder(Xtr[idx]); fte = encoder(Xte)
+    clf = nn.Linear(ftr.shape[1], 10).to(device); o = torch.optim.Adam(clf.parameters(), 1e-2)
+    for _ in range(400): o.zero_grad(); F.cross_entropy(clf(ftr), ytr[idx].to(device)).backward(); o.step()
     return (clf(fte).argmax(1).cpu() == yte).float().mean().item()
 simclr_acc = probe(enc); rand_acc = probe(make_enc())
-print(f"linear-probe accuracy — SimCLR {simclr_acc:.3f}  vs  random encoder {rand_acc:.3f}")
+print(f"linear-probe accuracy on real test digits — SimCLR {simclr_acc:.3f}  vs  random encoder {rand_acc:.3f}")
 fig, ax = plt.subplots(figsize=(5, 3.4)); ax.bar(["random", "SimCLR"], [rand_acc, simclr_acc], color=["C7", "C0"])
 ax.set_ylim(0, 1); ax.set_ylabel("probe accuracy"); ax.set_title("self-supervision learns useful features"); plt.show()`),
     md(`### Where to go next\n- This is the recipe behind **SimCLR / MoCo / DINO**; CLIP adds text as the other view.\n- Pretrain on real (unlabeled) egocentric frames, then probe/fine-tune for actions (track C).`),
@@ -1443,30 +1435,30 @@ ax.set_ylim(0, 1); ax.set_ylabel("probe accuracy"); ax.set_title("self-supervisi
 // ---------------------------------------------------------------------------
 const mae = {
   file: "B_mae_pretrain.ipynb", title: "Masked Autoencoder (MAE) pretraining", track: "B · 3D & Neural Rendering", tag: "PyTorch",
-  what: "mask image patches and reconstruct them — the MAE / VideoMAE pretraining objective",
+  what: "mask image patches and reconstruct them on real handwritten digits — the MAE / VideoMAE pretraining objective",
   cells: [
-    md(`# Masked Autoencoder — reconstruct what's hidden\n\n**Foundation-model recipe** (the objective behind **MAE** and **VideoMAE**, lesson C3).\n\nHide most of an image's patches and train an encoder–decoder to reconstruct them. The model must learn structure to fill the gaps — a powerful self-supervised signal.\n\n> CPU is fine.`),
+    md(`# Masked Autoencoder — reconstruct what's hidden\n\n**Foundation-model recipe** (the objective behind **MAE** and **VideoMAE**, lesson C3).\n\nHide half of an image's patches and train an encoder–decoder to reconstruct them. The model must learn structure to fill the gaps — a powerful self-supervised signal — and we report the reconstruction error on a **held-out test split**.\n\n> Real data: scikit-learn \`load_digits\` (1,797 real 8×8 images). CPU is fine.`),
     code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
 device = "cuda" if torch.cuda.is_available() else "cpu"
-STEPS = int(os.environ.get("STEPS", 1000)); S, P = 24, 4; NP = (S // P) ** 2; MASK = 0.6`),
-    md(`## 1 · Synthetic images + patchify`),
-    code(`def gen(n):
-    gx, gy = torch.meshgrid(torch.linspace(-1, 1, S), torch.linspace(-1, 1, S), indexing="ij")
-    imgs = []
-    for _ in range(n):
-        cx, cy, r = torch.rand(1) - .5, torch.rand(1) - .5, 0.3 + 0.3 * torch.rand(1)
-        imgs.append((((gx - cx) ** 2 + (gy - cy) ** 2) < r ** 2).float())
-    return torch.stack(imgs).unsqueeze(1)
+STEPS = int(os.environ.get("STEPS", 1200)); S, P = 8, 2; NP = (S // P) ** 2; MASK = 0.5; torch.manual_seed(0)`),
+    md(`## 1 · Real digit images + patchify (16 patches of 2×2)`),
+    code(`d = load_digits()
+X = torch.tensor(d.images / 16.0, dtype=torch.float32).unsqueeze(1)   # (1797,1,8,8)
+Xtr, Xte = train_test_split(X, test_size=0.3, random_state=0)
+Xtr, Xte = Xtr.to(device), Xte.to(device)
+print("train", tuple(Xtr.shape), "test", tuple(Xte.shape), "| patches/img", NP, "masked", int(MASK * NP))
 def patchify(x): return x.unfold(2, P, P).unfold(3, P, P).reshape(x.shape[0], NP, P * P)
 def unpatchify(p):
     g = S // P
     return p.reshape(p.shape[0], g, g, P, P).permute(0, 1, 3, 2, 4).reshape(p.shape[0], 1, S, S)`),
     md(`## 2 · Encoder–decoder over patch tokens`),
     code(`class MAE(nn.Module):
-    def __init__(self, d=64):
-        super().__init__(); self.emb = nn.Linear(P * P, d); self.pos = nn.Parameter(torch.randn(1, NP, d))
-        self.enc = nn.TransformerEncoder(nn.TransformerEncoderLayer(d, 4, 128, batch_first=True), 2)
-        self.dec = nn.Sequential(nn.Linear(d, d), nn.ReLU(), nn.Linear(d, P * P))
+    def __init__(self, dim=64):
+        super().__init__(); self.emb = nn.Linear(P * P, dim); self.pos = nn.Parameter(torch.randn(1, NP, dim))
+        self.enc = nn.TransformerEncoder(nn.TransformerEncoderLayer(dim, 4, 128, batch_first=True), 2)
+        self.dec = nn.Sequential(nn.Linear(dim, dim), nn.ReLU(), nn.Linear(dim, P * P))
     def forward(self, patches, mask):
         tok = self.emb(patches) + self.pos
         tok = tok * (~mask).unsqueeze(-1)                       # zero out masked tokens
@@ -1475,19 +1467,23 @@ model = MAE().to(device); opt = torch.optim.Adam(model.parameters(), 1e-3)`),
     md(`## 3 · Pretrain — reconstruct the masked patches`),
     code(`hist = []
 for step in range(STEPS + 1):
-    x = gen(64).to(device); p = patchify(x)
-    mask = torch.rand(x.shape[0], NP, device=device) < MASK
+    idx = torch.randint(0, Xtr.shape[0], (128,)); p = patchify(Xtr[idx])
+    mask = torch.rand(p.shape[0], NP, device=device) < MASK
     pred = model(p, mask); loss = (((pred - p) ** 2) * mask.unsqueeze(-1)).sum() / mask.sum() / (P * P)
     opt.zero_grad(); loss.backward(); opt.step()
     if step % max(1, STEPS // 10) == 0: hist.append((step, round(loss.item(), 4))); print(f"step {step:4d}  masked recon MSE {loss.item():.4f}")`),
-    md(`## 4 · Compare — input · masked · reconstruction`),
-    code(`x = gen(1).to(device); p = patchify(x); mask = torch.rand(1, NP, device=device) < MASK
+    md(`## 4 · Held-out reconstruction error + a qualitative example`),
+    code(`with torch.no_grad():
+    pte = patchify(Xte); m = torch.rand(Xte.shape[0], NP, device=device) < MASK
+    test_mse = ((((model(pte, m) - pte) ** 2) * m.unsqueeze(-1)).sum() / m.sum() / (P * P)).item()
+print(f"held-out masked-reconstruction MSE: {test_mse:.4f}")
+x = Xte[:1]; p = patchify(x); mask = torch.rand(1, NP, device=device) < MASK
 with torch.no_grad(): pred = model(p, mask)
 masked_in = unpatchify(p * (~mask).unsqueeze(-1)); recon = unpatchify(torch.where(mask.unsqueeze(-1), pred, p))
 fig, ax = plt.subplots(1, 4, figsize=(11, 3))
 for a, im, ttl in zip(ax, [x, masked_in, unpatchify(pred), recon], ["input", "masked", "decoded", "filled-in"]):
-    a.imshow(im[0, 0].cpu().clamp(0, 1)); a.set_title(ttl); a.axis("off")
-ax = plt.gcf().axes; plt.show()`),
+    a.imshow(im[0, 0].cpu().clamp(0, 1), cmap="gray"); a.set_title(ttl); a.axis("off")
+plt.show()`),
     md(`### Where to go next\n- Extend masking across time → **VideoMAE** (tube masking, lesson C3).\n- After pretraining, keep the encoder and fine-tune it for a downstream task.`),
   ],
 };
@@ -1497,43 +1493,42 @@ ax = plt.gcf().axes; plt.show()`),
 // ---------------------------------------------------------------------------
 const distill = {
   file: "LM_distillation.ipynb", title: "Knowledge distillation", track: "LM · Language models", tag: "PyTorch",
-  what: "train a small student to match a large teacher's soft predictions",
+  what: "train a small student to match a large teacher's soft predictions on real handwritten digits",
   cells: [
-    md(`# Knowledge distillation — small student, big teacher\n\n**Model compression** (applies to every track's foundation models).\n\nA small **student** learns from a larger **teacher**'s *soft* probabilities (richer than hard labels). We show the distilled student beats an identical student trained on labels alone.\n\n> CPU is fine.`),
+    md(`# Knowledge distillation — small student, big teacher\n\n**Model compression** (applies to every track's foundation models).\n\nA small **student** learns from a larger **teacher**'s *soft* probabilities (richer than hard labels). On **real handwritten digits**, the distilled student — trained on the teacher's soft targets over all (unlabeled) data — nearly matches the teacher and beats an identical student trained on only a few hard labels.\n\n> Real data: scikit-learn \`load_digits\` (1,797 real 8×8 images, 10 classes). CPU is fine.`),
     code(`import os, math, torch, torch.nn as nn, torch.nn.functional as F, matplotlib.pyplot as plt
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
 device = "cuda" if torch.cuda.is_available() else "cpu"
-STEPS = int(os.environ.get("STEPS", 1500)); C = 2`),
-    md(`## 1 · A hard nonlinear problem (two interleaved spirals)\nA tiny student underfits this on hard labels — exactly where the teacher's soft targets help.`),
-    code(`def gen(n):
-    m = n // 2; t = torch.linspace(0.3, 2.6 * math.pi, m); r = t / (2.6 * math.pi)
-    a = torch.stack([r * torch.cos(t), r * torch.sin(t)], 1)
-    b = torch.stack([r * torch.cos(t + math.pi), r * torch.sin(t + math.pi)], 1)
-    X = torch.cat([a, b]) + 0.03 * torch.randn(2 * m, 2)
-    Y = torch.cat([torch.zeros(m), torch.ones(m)]).long(); p = torch.randperm(2 * m)
-    return X[p].to(device), Y[p].to(device)
-Xtr, Ytr = gen(2000); Xte, Yte = gen(1000)`),
-    md(`## 2 · Train a big teacher`),
-    code(`teacher = nn.Sequential(nn.Linear(2, 128), nn.ReLU(), nn.Linear(128, 128), nn.ReLU(), nn.Linear(128, C)).to(device)
-o = torch.optim.Adam(teacher.parameters(), 3e-3)
-for _ in range(1500): o.zero_grad(); F.cross_entropy(teacher(Xtr), Ytr).backward(); o.step()
-teacher_acc = (teacher(Xte).argmax(1) == Yte).float().mean().item(); print(f"teacher acc {teacher_acc:.3f}")`),
-    md(`## 3 · A tiny student: a few hard labels vs. distillation over all data\nThe student only sees **80 labels**. Distillation instead trains it on the teacher's *soft* predictions across **all** data — transferring "dark knowledge" the hard labels don't carry.`),
-    code(`def small(): return nn.Sequential(nn.Linear(2, 16), nn.ReLU(), nn.Linear(16, C)).to(device)
-Xsmall, Ysmall = Xtr[:80], Ytr[:80]
+STEPS = int(os.environ.get("STEPS", 1500)); torch.manual_seed(0)`),
+    md(`## 1 · Real handwritten digits (10-class), held-out test split`),
+    code(`d = load_digits()
+X = torch.tensor(d.data / 16.0, dtype=torch.float32); Y = torch.tensor(d.target, dtype=torch.long)
+Xtr, Xte, Ytr, Yte = train_test_split(X, Y, test_size=0.3, stratify=Y, random_state=0)
+Xtr, Xte, Ytr, Yte = Xtr.to(device), Xte.to(device), Ytr.to(device), Yte.to(device)
+print("train", tuple(Xtr.shape), "test", tuple(Xte.shape), "classes", int(Y.max()) + 1)`),
+    md(`## 2 · Train a big teacher on the full labelled training set`),
+    code(`teacher = nn.Sequential(nn.Linear(64, 256), nn.ReLU(), nn.Linear(256, 256), nn.ReLU(), nn.Linear(256, 10)).to(device)
+o = torch.optim.Adam(teacher.parameters(), 2e-3)
+for _ in range(800): o.zero_grad(); F.cross_entropy(teacher(Xtr), Ytr).backward(); o.step()
+teacher_acc = (teacher(Xte).argmax(1) == Yte).float().mean().item(); print(f"teacher test acc {teacher_acc:.3f}")`),
+    md(`## 3 · A tiny student: a few hard labels vs. distillation over all data\nThe student only sees **100 labels**. Distillation instead trains it on the teacher's *soft* predictions across **all** training data — transferring "dark knowledge" the hard labels don't carry.`),
+    code(`def small(): return nn.Sequential(nn.Linear(64, 32), nn.ReLU(), nn.Linear(32, 10)).to(device)
+nlab = 100; Xs, Ys = Xtr[:nlab], Ytr[:nlab]
 with torch.no_grad(): soft = F.softmax(teacher(Xtr) / 4.0, 1)        # teacher's dark knowledge over ALL data
 def train_student(distill):
-    s = small(); o = torch.optim.Adam(s.parameters(), 5e-3); h = []
+    s = small(); o = torch.optim.Adam(s.parameters(), 3e-3); h = []
     for step in range(STEPS + 1):
         loss = (16.0 * F.kl_div(F.log_softmax(s(Xtr) / 4.0, 1), soft, reduction="batchmean")
-                if distill else F.cross_entropy(s(Xsmall), Ysmall))
+                if distill else F.cross_entropy(s(Xs), Ys))
         o.zero_grad(); loss.backward(); o.step()
         if step % max(1, STEPS // 10) == 0: h.append((step, (s(Xte).argmax(1) == Yte).float().mean().item()))
     return s, h
 _, h_plain = train_student(False); _, h_distill = train_student(True)
-print(f"student acc — 80 labels {h_plain[-1][1]:.3f}  vs  distilled (teacher over all data) {h_distill[-1][1]:.3f}")`),
+print(f"student test acc — {nlab} labels {h_plain[-1][1]:.3f}  vs  distilled (teacher over all data) {h_distill[-1][1]:.3f}")`),
     md(`## 4 · Compare`),
     code(`fig, ax = plt.subplots(figsize=(6, 3.6))
-ax.plot(*zip(*h_plain), label="80 labels"); ax.plot(*zip(*h_distill), label="distilled (all data)")
+ax.plot(*zip(*h_plain), label=f"{nlab} labels"); ax.plot(*zip(*h_distill), label="distilled (all data)")
 ax.axhline(teacher_acc, ls="--", c="C7", label="teacher"); ax.set_xlabel("step"); ax.set_ylabel("student test acc"); ax.legend(); ax.grid(alpha=.3)
 plt.show()`),
     md(`### Where to go next\n- Distill a large fine-tuned LLM into a small one for cheap deployment; combine with **quantization** (the serving lab).\n- Feature/attention distillation transfers more than just logits.`),
@@ -1565,7 +1560,7 @@ const SAVE = {
   AG_behavior_cloning: [`torch.save(policy.state_dict(), f"{run}/policy.pt")`, `json.dump({"imitation_acc": hist, "rollout_success": succ}, open(f"{run}/metrics.json", "w"), indent=2)`],
   AG_agent_harness: [`json.dump({"success_rate": acc, "results": [{"task": r["task"], "pred": str(r["pred"]), "ok": r["ok"]} for r in results]}, open(f"{run}/results.json", "w"), indent=2)`],
   C_simclr_pretrain: [`torch.save(enc.state_dict(), f"{run}/encoder.pt")`, `json.dump({"nt_xent": hist, "probe_simclr": simclr_acc, "probe_random": rand_acc}, open(f"{run}/metrics.json", "w"), indent=2)`],
-  B_mae_pretrain: [`torch.save(model.state_dict(), f"{run}/mae.pt")`, `json.dump({"recon_mse": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  B_mae_pretrain: [`torch.save(model.state_dict(), f"{run}/mae.pt")`, `json.dump({"recon_mse": hist, "test_recon_mse": test_mse}, open(f"{run}/metrics.json", "w"), indent=2)`],
   LM_distillation: [`torch.save(teacher.state_dict(), f"{run}/teacher.pt")`, `json.dump({"teacher": teacher_acc, "student_plain": h_plain, "student_distill": h_distill}, open(f"{run}/metrics.json", "w"), indent=2)`],
 };
 const VIDEOMAE_NOTE = md(`## Save & persist\nThe 🤗 Trainer already writes checkpoints, \`trainer_state.json\` (the full loss/eval history) and logs to its \`output_dir\` ("videomae-ucf101"). Also call \`trainer.save_model("videomae-final")\` (and optionally \`trainer.push_to_hub()\`). Colab is ephemeral, so zip + download the folder or mount Google Drive to keep it.`);
