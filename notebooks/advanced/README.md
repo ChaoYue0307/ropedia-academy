@@ -4,6 +4,11 @@ Real research-repo pipelines — **training, fine-tuning, and inference on actua
 
 > ⚠️ **Read me.** These are authored to each project's **official recipe** and are **not pre-executed here** (they need a GPU + multi-GB downloads, and some need gated data). Treat them as ready-to-run scaffolds: open in Colab, set **Runtime → GPU**, and expect to pin a version or two. Each notebook has a *Troubleshooting* section. For pipelines verified end-to-end, use the [Training labs](../training/).
 
+Every lab includes a **Compute · storage · time** table near the top — which / how
+many GPUs, VRAM, dataset & checkpoint/disk sizes, and time estimates (per unit and
+for a full run) — plus the **full-scale pipeline** command and a *How this links to
+tracks A–D* note.
+
 | Lab | Track | Kind | Open |
 |---|---|---|---|
 | MDM — text-to-motion | A · Human | Generate | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/A_mdm_text_to_motion.ipynb) |

@@ -18,6 +18,12 @@ const code = (s) => ({ kind: "code", src: s });
 const banner = (what, gpu, time, repo, url) =>
   `> 🔥 **Advanced / heavy lab.** ${what}\n>\n> **Runtime → Change runtime type → ${gpu} required.** Est. **${time}** including downloads. Built on the official **[${repo}](${url})** and authored to its documented recipe — **not pre-executed here** (needs a GPU + large downloads). If a step fails, see *Troubleshooting* at the bottom; pin versions as noted.`;
 
+// A "Compute · storage · time" table + the full-scale pipeline command, spliced
+// near the top of each advanced lab so requirements are visible before running.
+function computeCell(c) {
+  return md(`## Compute · storage · time\n\n| Resource | Demo (this notebook, free Colab T4) | Full / production run |\n|---|---|---|\n| **GPU** | ${c.demoGpu} | ${c.fullGpu} |\n| **Storage** | ${c.storageDemo} | ${c.storageFull} |\n| **Time** | ${c.timeDemo} | ${c.timeFull} |\n\n**Full pipeline (scale-up):** ${c.full}\n\n> Rough estimates — real numbers depend on hardware, data size and library versions.`);
+}
+
 // ===========================================================================
 // TRACK A — Human modeling & motion
 // ===========================================================================
@@ -780,6 +786,36 @@ for (const lab of labs) {
   if (LINK_NOTES[id]) lab.cells.splice(lab.cells.length - 1, 0, md(`## How this links to tracks A–D\n${LINK_NOTES[id]}`));
 }
 
+// Compute / storage / time guidance per advanced lab (rough, hardware-dependent).
+const COMPUTE = {
+  A_mdm_text_to_motion: { demoGpu: "T4 16 GB — generate from a pretrained checkpoint", fullGpu: "1× A100 40 GB (or V100 32 GB) to train from scratch", storageDemo: "~3 GB (SMPL + GloVe + 1 checkpoint)", storageFull: "HumanML3D ~4 GB + checkpoints ~1 GB; ~20 GB disk", timeDemo: "~1–2 min / sample", timeFull: "~1–2 days for ~500k steps", full: "`python -m train.train_mdm --dataset humanml --save_dir save/run --num_steps 500000` (single GPU)." },
+  A_4dhumans_mesh: { demoGpu: "T4 16 GB (~6 GB used) — inference / tracking", fullGpu: "4–8× A100 40 GB to retrain HMR 2.0", storageDemo: "checkpoints ~1 GB + your video", storageFull: "training sets (H36M, MPI-INF-3DHP, COCO, InstaVariety…) ~ hundreds of GB", timeDemo: "a few FPS per video", timeFull: "~2–4 days on 8× A100", full: "use the repo's training configs with multi-GPU DDP (`torchrun` / Lightning)." },
+  B_gaussian_splatting_3d: { demoGpu: "T4 16 GB — small scene, 7k iters", fullGpu: "1× RTX 3090/4090 or A100 24–40 GB — large scenes, 30k iters", storageDemo: "photos + COLMAP + .ply ~ 1–3 GB", storageFull: "~5–20 GB / scene; .ply 50–400 MB", timeDemo: "7k iters ~ 7–15 min (+ COLMAP minutes)", timeFull: "30k iters ~ 30–60 min / scene on a 3090/A100", full: "`python train.py -s data/scene -m out --iterations 30000` (COLMAP cost grows with photo count)." },
+  B_nerfstudio_nerfacto: { demoGpu: "T4 16 GB", fullGpu: "1× RTX 3090/4090 / A100 ≥ 24 GB", storageDemo: "video/images + outputs ~ 1–5 GB", storageFull: "~10 GB / scene", timeDemo: "15k iters ~ 10–20 min", timeFull: "30k iters ~ 20–30 min (splatfacto similar)", full: "`ns-train nerfacto --data data/mine --max-num-iterations 30000` (or `splatfacto`)." },
+  C_videomae_egocentric: { demoGpu: "T4 16 GB — videomae-base, small subset, fp16", fullGpu: "4–8× A100 40 GB for EPIC-100 / Ego4D", storageDemo: "UCF subset ~ 1 GB", storageFull: "EPIC-Kitchens-100 ~ 0.5–1 TB (RGB frames); Ego4D multi-TB", timeDemo: "300–600 steps ~ 20–40 min", timeFull: "full fine-tune ~ 1–3 days on 4–8× A100", full: "`torchrun --nproc_per_node=8 train.py …` over the full frame dataset, many epochs." },
+  C_sam2_video_segmentation: { demoGpu: "T4 16 GB (hiera-large ~ 4–6 GB) — inference", fullGpu: "same; A100 for long / high-res video", storageDemo: "checkpoint ~ 0.9 GB + frames", storageFull: "scales with clip length / resolution", timeDemo: "~ a few FPS propagation on T4", timeFull: "real-time on A100; batch many clips", full: "inference only; to fine-tune SAM 2 use the repo's (multi-GPU) training code." },
+  D_splatam_slam: { demoGpu: "RTX 3090/4090 or A100 ≥ 24 GB (12–16 GB for small)", fullGpu: "1× A100 40 GB for long sequences", storageDemo: "Replica scene ~ 2–5 GB + outputs", storageFull: "~10–20 GB / sequence (maps + renders)", timeDemo: "1 Replica scene ~ 1–2 h", timeFull: "~ 2–4 h / sequence (longer for real captures)", full: "`python scripts/splatam.py configs/<dataset>/splatam.py` per sequence." },
+  D_dreamerv3_world_model: { demoGpu: "1× T4 / 24 GB — Crafter, partial budget", fullGpu: "1× A100 40 GB", storageDemo: "replay buffer + logs ~ few GB", storageFull: "replay buffer 10–50 GB (pixel envs) + logs", timeDemo: "~ hours for 1e5 steps", timeFull: "~ 1–3 days for 1e6–5e6 steps", full: "`python dreamerv3/main.py --configs <task> --run.steps 5e6 --logdir …`." },
+  LM_qlora_finetune_llm: { demoGpu: "T4 16 GB — 0.5B–7B in 4-bit", fullGpu: "A100 40/80 GB; 70B ≈ 2× 48 GB or offload", storageDemo: "base (4-bit) 0.5–4 GB + adapter ~ tens of MB", storageFull: "70B 4-bit ~ 35–40 GB; 50–150 GB disk", timeDemo: "200 steps / 1k samples ~ 10–30 min", timeFull: "full dataset (100k+) ~ several hours–1 day", full: "`accelerate launch --multi_gpu sft.py …` over the full dataset; raise rank/seq-len." },
+  LM_dpo_alignment: { demoGpu: "T4 16 GB — small model", fullGpu: "A100 40/80 GB (policy + reference)", storageDemo: "model + preference subset", storageFull: "UltraFeedback ~ GBs; 50–100 GB disk", timeDemo: "200 steps ~ 15–30 min", timeFull: "full set ~ several hours (≈1.5–2× SFT)", full: "`accelerate launch dpo.py …` on full preference data after SFT." },
+  LM_vlm_finetune: { demoGpu: "T4 16 GB — SmolVLM 2B, 4-bit", fullGpu: "A100 40 GB — Qwen2-VL-7B / PaliGemma", storageDemo: "ChartQA subset ~ 1 GB + model", storageFull: "VQA datasets 10–100 GB; 50–150 GB disk", timeDemo: "200 steps ~ 30–60 min", timeFull: "full dataset ~ hours–1 day", full: "`accelerate launch --multi_gpu vlm_sft.py …`; larger backbone, full VQA." },
+  LM_videolm_qwen2vl: { demoGpu: "T4 16 GB — Qwen2-VL-2B inference, low fps/res", fullGpu: "A100 40 GB — 2B fine-tune / 7B inference", storageDemo: "model ~ 4 GB + a clip", storageFull: "video-instruction datasets 100 GB+; ~200 GB disk", timeDemo: "inference seconds–min / clip", timeFull: "LoRA fine-tune ~ hours–1 day", full: "LoRA SFT over a video-instruction dataset (multi-GPU)." },
+  LM_rag_pipeline: { demoGpu: "T4 16 GB (or CPU for a small corpus)", fullGpu: "1× 24 GB for a larger generator", storageDemo: "tiny", storageFull: "FAISS index ≈ 1.5 KB × #vectors (1M docs ≈ 1.5 GB)", timeDemo: "index instantly; query ~ ms", timeFull: "indexing thousands of docs/s on GPU", full: "swap FAISS for a vector DB (Qdrant / pgvector), add a reranker, batch-ingest." },
+  LM_eval_harness: { demoGpu: "matches the model (T4 for ≤ 7B)", fullGpu: "A100 for 13–70B", storageDemo: "task data + model", storageFull: "benchmark suites a few–tens of GB", timeDemo: "`--limit 100`, 2 tasks ~ 5–15 min", timeFull: "full MMLU + GSM8K + … ~ 1–4 h (model-dependent)", full: "drop `--limit`, add tasks, `--num_fewshot`, batch on multi-GPU (`accelerate`)." },
+  LM_unsloth_finetune: { demoGpu: "T4 16 GB — up to ~8B 4-bit (≈2× faster)", fullGpu: "A100 40/80 GB for bigger models / longer ctx", storageDemo: "base + adapter; GGUF export ~ 0.3–4 GB", storageFull: "as QLoRA; 50–150 GB", timeDemo: "60 steps ~ 5–15 min", timeFull: "full dataset ~ a few hours", full: "raise max_steps / full dataset; export merged or GGUF for serving." },
+  LM_rlhf_ppo: { demoGpu: "T4 16 GB — GPT-2 sentiment demo", fullGpu: "multi-GPU 40–80 GB (policy + ref + reward + value for 7B)", storageDemo: "small", storageFull: "3–4 model copies + rollout logs; 100 GB+", timeDemo: "~ tens of minutes", timeFull: "7B RLHF ~ days on 8× A100", full: "train a reward model, then `accelerate launch ppo.py …` on full prompts (DPO is a cheaper alternative)." },
+  LM_stable_diffusion_lora: { demoGpu: "T4 16 GB — SD 1.5 LoRA / DreamBooth", fullGpu: "RTX 4090 / A100 ≥ 24 GB for SDXL", storageDemo: "SD 1.5 ~ 4–5 GB + LoRA ~ tens of MB", storageFull: "SDXL ~ 14 GB; datasets; 30–60 GB disk", timeDemo: "400–1500 steps ~ 15–40 min", timeFull: "SDXL LoRA ~ 1–3 h; full fine-tune longer", full: "`accelerate launch train_dreambooth_lora_sdxl.py …`; add prior preservation." },
+  LM_controlnet: { demoGpu: "T4 16 GB — SD 1.5 + ControlNet inference", fullGpu: "24 GB for SDXL ControlNet; multi-GPU to train one", storageDemo: "SD + ControlNet ~ 6–10 GB", storageFull: "to train a new ControlNet: paired dataset 10–100 GB", timeDemo: "~ 5–30 s / image (T4)", timeFull: "training a ControlNet ~ days on multi-GPU", full: "to train: `accelerate launch train_controlnet.py …` on (condition, image) pairs." },
+  C_whisper_finetune: { demoGpu: "T4 16 GB — whisper-tiny / base", fullGpu: "A100 40 GB — whisper-large-v3", storageDemo: "MINDS-14 subset ~ 0.5 GB + model", storageFull: "Common Voice / LibriSpeech 10–60 GB; large-v3 ~ 3 GB", timeDemo: "300 steps ~ 30–60 min", timeFull: "large-v3 full ~ 1–3 days multi-GPU", full: "`accelerate launch run_speech_recognition_seq2seq.py …` on the full corpus." },
+  AG_llm_agent_tooluse: { demoGpu: "T4 16 GB — 1.5B model inference", fullGpu: "24 GB for a 7–14B agent", storageDemo: "model ~ 3 GB", storageFull: "models 14–30 GB; tool / state stores small", timeDemo: "seconds–min / task (multiple LLM calls)", timeFull: "depends on steps / tools; serve via vLLM for throughput", full: "wrap in LangGraph / smolagents; serve the LLM with vLLM (serving lab)." },
+  AG_habitat_navigation: { demoGpu: "1× T4 / 24 GB — small budget (10–50M steps)", fullGpu: "many GPUs — DD-PPO scales to 8–64", storageDemo: "Habitat test scenes ~ small", storageFull: "HM3D ~ tens of GB, MP3D ~ 15 GB, Gibson; 50–150 GB disk", timeDemo: "10–50M steps ~ hours–1 day on 1 GPU", timeFull: "PointNav SOTA = 2.5B steps, days on 64 GPUs", full: "multi-node DD-PPO (`torchrun` / SLURM), full scene dataset, billions of steps." },
+  LM_vllm_serving: { demoGpu: "T4 16 GB — ≤ 7B (0.5B trivial)", fullGpu: "A100 / H100 80 GB; 70B ≈ 2–4× 80 GB (or 4-bit)", storageDemo: "model 0.5–4 GB", storageFull: "70B fp16 ~ 140 GB (4-bit ~ 35 GB); size disk to model", timeDemo: "startup ~ 1 min; query ~ ms", timeFull: "batched throughput thousands of tok/s on A100", full: "`vllm serve <model> --tensor-parallel-size N`; add `--enable-lora`, AWQ/GPTQ quantization." },
+};
+for (const lab of labs) {
+  const id = lab.file.replace(/\.ipynb$/, "");
+  if (COMPUTE[id]) lab.cells.splice(1, 0, computeCell(COMPUTE[id]));   // right after the banner
+}
+
 function splitLines(s) {
   const lines = s.split("\n");
   return lines.map((l, i) => (i < lines.length - 1 ? l + "\n" : l));
@@ -814,6 +850,11 @@ const readme = `# Advanced labs · heavy GPU pipelines
 Real research-repo pipelines — **training, fine-tuning, and inference on actual foundation models** — two per track. Unlike the [Training labs](../training/), these clone official repos, download large checkpoints/datasets, and **require a GPU**.
 
 > ⚠️ **Read me.** These are authored to each project's **official recipe** and are **not pre-executed here** (they need a GPU + multi-GB downloads, and some need gated data). Treat them as ready-to-run scaffolds: open in Colab, set **Runtime → GPU**, and expect to pin a version or two. Each notebook has a *Troubleshooting* section. For pipelines verified end-to-end, use the [Training labs](../training/).
+
+Every lab includes a **Compute · storage · time** table near the top — which / how
+many GPUs, VRAM, dataset & checkpoint/disk sizes, and time estimates (per unit and
+for a full run) — plus the **full-scale pipeline** command and a *How this links to
+tracks A–D* note.
 
 | Lab | Track | Kind | Open |
 |---|---|---|---|
