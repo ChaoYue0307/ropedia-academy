@@ -7,7 +7,7 @@ sdk: gradio
 app_file: app.py
 pinned: false
 license: mit
-short_description: Real-model demos for embodied & spatial AI — LLM chat, diffusion, RL, world models
+short_description: Real-model demos for embodied & spatial AI
 models:
   - HuggingFaceTB/SmolLM2-360M-Instruct
   - cy0307/ropedia-nanogpt-shakespeare
