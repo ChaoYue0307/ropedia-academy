@@ -424,19 +424,40 @@ THEME = gr.themes.Soft(
     radius_size="lg",
 )
 CSS = """
-.gradio-container {max-width: 1040px !important; margin: 0 auto !important;}
-#hdr {background: linear-gradient(135deg,#8b80ff 0%,#5a44d6 55%,#4c37b0 100%); color:#fff;
-      border-radius:18px; padding:22px 26px; margin-bottom:10px;
-      box-shadow:0 18px 44px -18px rgba(76,55,176,.75);}
-#hdr h1 {font-size:1.7rem; font-weight:800; margin:0 0 5px; color:#fff; letter-spacing:-.01em;}
-#hdr p {opacity:.93; margin:0; font-size:.93rem; line-height:1.5;}
-#hdr a {color:#67e8f9; font-weight:700; text-decoration:none;}
-#hdr a:hover {text-decoration:underline;}
-.tab-nav button {font-weight:600 !important;}
-.tip {font-size:.92rem; opacity:.8; margin:2px 0 10px;}
-#gstat {font-weight:800; font-size:1.05rem; margin:4px 0 2px;}
-#modelgrid {display:grid !important; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)) !important; gap:8px !important; margin-top:8px;}
-#modelgrid button {width:100% !important; justify-content:flex-start !important; font-weight:500 !important; text-align:left; border-radius:12px !important;}
+.gradio-container {max-width: 1060px !important; margin: 0 auto !important;}
+
+/* Header — deep gradient so white text always has strong contrast */
+#hdr {background: linear-gradient(135deg,#5a44d6 0%,#4c37b0 52%,#352a6e 100%); color:#fff;
+      border-radius:20px; padding:24px 28px; margin-bottom:14px; border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 20px 48px -20px rgba(53,42,110,.85);}
+#hdr h1 {font-size:1.75rem; font-weight:800; margin:0 0 6px; color:#fff; letter-spacing:-.01em;
+         text-shadow:0 1px 2px rgba(0,0,0,.28);}
+#hdr p {color:rgba(255,255,255,.97); margin:0; font-size:.95rem; line-height:1.6; max-width:72ch;
+        text-shadow:0 1px 1px rgba(0,0,0,.2);}
+#hdr b {color:#fff;}
+#hdr a {color:#8af0ff; font-weight:700; text-decoration:none; border-bottom:1px solid rgba(138,240,255,.5);}
+#hdr a:hover {color:#c7f7ff; border-bottom-color:#c7f7ff;}
+
+/* Tabs */
+.tab-nav button {font-weight:600 !important; font-size:.98rem !important;}
+
+/* Tip line under each tab — readable in light AND dark (theme-aware, no faint opacity) */
+.tip {color:var(--body-text-color-subdued) !important; opacity:1 !important; font-size:.92rem; line-height:1.5; margin:2px 0 12px;}
+.tip strong, .tip b {color:var(--body-text-color) !important;}
+
+/* Gallery */
+#gstat {font-weight:800; font-size:1.08rem; margin:6px 0 2px; color:var(--body-text-color);}
+#modelgrid {display:grid !important; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)) !important; gap:9px !important; margin-top:10px;}
+#modelgrid button {width:100% !important; justify-content:flex-start !important; text-align:left;
+   font-weight:600 !important; border-radius:12px !important; padding:9px 12px !important;
+   border:1px solid var(--border-color-primary) !important; background:var(--background-fill-primary) !important;
+   color:var(--body-text-color) !important; transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;}
+#modelgrid button:hover {border-color:#6a5ef0 !important; transform:translateY(-1px);
+   box-shadow:0 8px 18px -10px rgba(106,94,240,.6) !important;}
+
+/* Result tables — comfortable spacing */
+table {font-size:.92rem;}
+th {color:var(--body-text-color) !important;}
 """
 LOGO = """<svg width="46" height="46" viewBox="0 0 64 64" style="flex:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.25))" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="rl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b80ff"/><stop offset="1" stop-color="#4c37b0"/></linearGradient></defs>
