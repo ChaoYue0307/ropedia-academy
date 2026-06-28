@@ -211,30 +211,44 @@ def gallery_fn(slug):
     return img, info, f"https://huggingface.co/{repo(slug)}"
 
 # ───────────────────── UI ─────────────────────
+BRAND = gr.themes.Color(  # Ropedia Academy palette (matches the site's tailwind `brand`)
+    c50="#eef0ff", c100="#e0e3ff", c200="#c6ccff", c300="#a3a8ff", c400="#827ef9",
+    c500="#6a5ef0", c600="#5a44d6", c700="#4c37b0", c800="#3f308d", c900="#372d71", c950="#221a43",
+    name="ropebrand",
+)
 THEME = gr.themes.Soft(
-    primary_hue="indigo", secondary_hue="violet", neutral_hue="slate",
+    primary_hue=BRAND, secondary_hue=BRAND, neutral_hue="slate",
     font=[gr.themes.GoogleFont("Inter"), "system-ui", "sans-serif"],
     radius_size="lg",
 )
 CSS = """
 .gradio-container {max-width: 1040px !important; margin: 0 auto !important;}
-#hdr {background: linear-gradient(135deg,#6366f1,#a855f7); color:#fff;
-      border-radius:18px; padding:24px 28px; margin-bottom:10px;
-      box-shadow:0 18px 40px -18px rgba(99,102,241,.7);}
-#hdr h1 {font-size:1.75rem; font-weight:800; margin:0 0 6px; color:#fff;}
-#hdr p {opacity:.94; margin:0; font-size:.95rem; line-height:1.5;}
-#hdr a {color:#fff; font-weight:700; text-decoration:underline;}
+#hdr {background: linear-gradient(135deg,#8b80ff 0%,#5a44d6 55%,#4c37b0 100%); color:#fff;
+      border-radius:18px; padding:22px 26px; margin-bottom:10px;
+      box-shadow:0 18px 44px -18px rgba(76,55,176,.75);}
+#hdr h1 {font-size:1.7rem; font-weight:800; margin:0 0 5px; color:#fff; letter-spacing:-.01em;}
+#hdr p {opacity:.93; margin:0; font-size:.93rem; line-height:1.5;}
+#hdr a {color:#67e8f9; font-weight:700; text-decoration:none;}
+#hdr a:hover {text-decoration:underline;}
 .tab-nav button {font-weight:600 !important;}
-footer {display:none !important;}
 .tip {font-size:.92rem; opacity:.8; margin:2px 0 10px;}
 """
-HEADER = """<div id="hdr">
-  <h1>🧪 Ropedia Academy · Models</h1>
-  <p>Interactive demos of models trained <b>from scratch</b> in
-  <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a> —
-  loaded live from <a href="https://huggingface.co/cy0307" target="_blank">cy0307/ropedia-*</a>.
-  Small educational models: the value is the method, not a leaderboard.</p>
-</div>"""
+LOGO = """<svg width="46" height="46" viewBox="0 0 64 64" style="flex:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.25))" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="rl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b80ff"/><stop offset="1" stop-color="#4c37b0"/></linearGradient></defs>
+  <rect width="64" height="64" rx="15" fill="url(#rl)"/>
+  <path d="M22 49 V15 H33 a9.5 9.5 0 0 1 0 19 H22 M27.5 34 L41 49" fill="none" stroke="#fff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="41" cy="49" r="4.2" fill="#67e8f9"/>
+</svg>"""
+HEADER = f"""<div id="hdr"><div style="display:flex;align-items:center;gap:15px;">
+  {LOGO}
+  <div>
+    <h1>Ropedia Academy · Models</h1>
+    <p>Interactive demos of models trained <b>from scratch</b> in
+    <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a> —
+    loaded live from <a href="https://huggingface.co/cy0307" target="_blank">cy0307/ropedia-*</a>.
+    Small educational models — the value is the method, not a leaderboard.</p>
+  </div>
+</div></div>"""
 FOOTER = ('<p style="text-align:center;opacity:.6;font-size:.85rem;margin-top:14px;">'
           'Part of <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a>'
           ' · models &amp; collection on <a href="https://huggingface.co/cy0307" target="_blank">Hugging Face 🤗</a></p>')

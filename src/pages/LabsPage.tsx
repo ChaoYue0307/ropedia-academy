@@ -40,7 +40,7 @@ export function LabsPage() {
           href={hfSpace}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-3.5 py-1.5 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 px-3.5 py-1.5 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5"
         >
           🚀 {t("liveDemos", mode)} <span aria-hidden>↗</span>
         </a>
