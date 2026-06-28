@@ -49,6 +49,20 @@ Teacher: Adam (lr 2e-3), 800 steps. Student: Adam (lr 3e-3), 1500 steps; KL dist
 
 ![figure](figure.png)
 
+## Robustness (mean ± std over 5 seeds)
+
+Single-run numbers above are one seed; this is the distribution over independent re-trains (honest variance — no cherry-picking).
+
+
+| metric | mean ± std |
+|---|---|
+| `teacher` | 0.9707 ± 0.0018 |
+| `student_plain` | 0.9 ± 0.0026 |
+| `student_distill` | 0.9681 ± 0.003 |
+
+
+![seeds](seeds.png)
+
 ## Inference example
 
 ```python
@@ -86,6 +100,7 @@ jupyter nbconvert --to notebook --execute notebooks/training/LM_distillation.ipy
 
 - `figure.png`
 - `metrics.json`
+- `seeds.png`
 - `teacher.pt`
 
 

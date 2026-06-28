@@ -49,6 +49,18 @@ Actor-critic; Adam (lr 3e-3), 600 episodes, γ=0.99, entropy 0.01, value baselin
 
 ![figure](figure.png)
 
+## Robustness (mean ± std over 5 seeds)
+
+Single-run numbers above are one seed; this is the distribution over independent re-trains (honest variance — no cherry-picking).
+
+
+| metric | mean ± std |
+|---|---|
+| `greedy_eval` | 461.8 ± 76 |
+
+
+![seeds](seeds.png)
+
 ## Inference example
 
 ```python
@@ -88,6 +100,7 @@ jupyter nbconvert --to notebook --execute notebooks/training/AG_reinforce_gridwo
 - `figure.png`
 - `metrics.json`
 - `policy.pt`
+- `seeds.png`
 
 
 ## License

@@ -48,6 +48,18 @@ Adam (lr 1e-3), 1200 steps, batch 128; 16 patches of 2×2, 50% masked; 2-layer t
 
 ![figure](figure.png)
 
+## Robustness (mean ± std over 5 seeds)
+
+Single-run numbers above are one seed; this is the distribution over independent re-trains (honest variance — no cherry-picking).
+
+
+| metric | mean ± std |
+|---|---|
+| `test_recon_mse` | 0.1349 ± 0.00074 |
+
+
+![seeds](seeds.png)
+
 ## Inference example
 
 ```python
@@ -86,6 +98,7 @@ jupyter nbconvert --to notebook --execute notebooks/training/B_mae_pretrain.ipyn
 - `figure.png`
 - `mae.pt`
 - `metrics.json`
+- `seeds.png`
 
 
 ## License

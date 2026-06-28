@@ -50,6 +50,19 @@ Adam (lr 1e-3, cosine), 1000 steps, batch 256; NT-Xent τ=0.5; linear probe Adam
 
 ![figure](figure.png)
 
+## Robustness (mean ± std over 5 seeds)
+
+Single-run numbers above are one seed; this is the distribution over independent re-trains (honest variance — no cherry-picking).
+
+
+| metric | mean ± std |
+|---|---|
+| `probe_simclr` | 0.6174 ± 0.053 |
+| `probe_random` | 0.5393 ± 0.082 |
+
+
+![seeds](seeds.png)
+
 ## Inference example
 
 ```python
@@ -89,6 +102,7 @@ jupyter nbconvert --to notebook --execute notebooks/training/C_simclr_pretrain.i
 - `encoder.pt`
 - `figure.png`
 - `metrics.json`
+- `seeds.png`
 
 
 ## License
