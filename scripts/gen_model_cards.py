@@ -51,7 +51,7 @@ DATA = {
     "B_icp_registration": dict(name="Synthetic point clouds", kind="synthetic — procedural", stats="two linked rings (~800 points, 3-D); target = source under a known rigid transform + 0.01 noise", split="1 source/target pair", source="procedural"),
     "B_mae_pretrain": dict(name="Handwritten digits (UCI / scikit-learn)", kind="real — public dataset", stats="1,797 real 8×8 grayscale digit images; 16 patches of 2×2, 50% masked; 128/batch", split="1,257 train / 540 test (held-out reconstruction)", source="scikit-learn load_digits (UCI Optical Recognition of Handwritten Digits)"),
     "C_action_anticipation_lstm": dict(name="Synthetic action grammar", kind="synthetic — procedural", stats="length-12 sequences over 6 verbs (take/wash/cut/cook/pour/place) from a Markov matrix; 128/batch", split="fresh train + 512 eval", source="procedural"),
-    "C_simclr_pretrain": dict(name="Handwritten digits (UCI / scikit-learn)", kind="real — public dataset", stats="1,797 real 8×8 digit images, 10 classes; 256/batch contrastive (unlabeled); probe = 100 labelled / 540 test", split="1,257 train / 540 test; few-shot linear probe", source="scikit-learn load_digits (UCI Optical Recognition of Handwritten Digits)"),
+    "C_simclr_pretrain": dict(name="Handwritten digits (UCI / scikit-learn)", kind="real — public dataset", stats="1,797 real 8×8 digit images, 10 classes; 256/batch contrastive (unlabeled); probe = 60 labels, averaged over 8 random subsets / 540 test", split="1,257 train / 540 test; few-shot linear probe", source="scikit-learn load_digits (UCI Optical Recognition of Handwritten Digits)"),
     "D_world_model": dict(name="2D point-mass rollouts", kind="synthetic — procedural env", stats="60,000 transitions (3,000 random starts × 20 steps); state 4-D [x,y,vx,vy], action 2-D", split="train only", source="procedural env"),
     "D_tsdf_fusion": dict(name="Synthetic depth views", kind="synthetic — procedural", stats="1 scene (two spheres); 6 orthographic depth maps fused into a 64³ TSDF grid", split="single scene", source="procedural"),
     "D_semantic_mapping": dict(name="2D grid world", kind="synthetic — procedural", stats="32×32 cells, 4 semantic classes; ~60 noisy observations/step (p_occ=0.8, p_label=0.7)", split="single map", source="procedural"),
@@ -98,7 +98,7 @@ CONFIG = {
     "B_icp_registration": "Iterative Closest Point — nearest-neighbour correspondences + Kabsch SVD per iteration (no SGD).",
     "B_mae_pretrain": "Adam (lr 1e-3), 1200 steps, batch 128; 16 patches of 2×2, 50% masked; 2-layer transformer enc/dec.",
     "C_action_anticipation_lstm": "Adam (lr 3e-3), 1500 steps; LSTM over length-12 sequences, 6-verb vocab; best by top-1.",
-    "C_simclr_pretrain": "Adam (lr 1e-3, cosine), 1000 steps, batch 256; NT-Xent τ=0.5; linear probe Adam (lr 1e-2, 100 labels).",
+    "C_simclr_pretrain": "Adam (lr 1.5e-3, cosine), 2500 steps, batch 256; NT-Xent τ=0.5; proj 64→128→64 + light cutout. Probe: 60 labels, averaged over 8 subsets (Adam lr 1e-2).",
     "D_world_model": "Adam (lr 1e-3), 1500 steps for the dynamics model; planning by Cross-Entropy Method (CEM).",
     "D_tsdf_fusion": "No training — TSDF integration of 6 depth views into a 64³ grid; marching cubes for the mesh.",
     "D_semantic_mapping": "No gradient training — Bayesian log-odds occupancy + label counting over ~300 observation rounds.",
@@ -111,7 +111,7 @@ CONFIG = {
 
 # Per-metric one-liners so "Evaluation results" reads honestly.
 METRIC_HELP = {
-    "probe_simclr": "linear-probe accuracy on held-out digits using SimCLR features (higher = better)",
+    "probe_simclr": "few-shot linear-probe accuracy (60 labels, avg of 8 subsets) on held-out digits — higher = better",
     "probe_random": "same probe on an untrained encoder — the baseline SimCLR must beat",
     "test_recon_mse": "held-out masked-patch reconstruction MSE (lower = better)",
     "teacher": "teacher test accuracy on held-out digits",

@@ -1380,7 +1380,7 @@ const simclr = {
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 device = "cuda" if torch.cuda.is_available() else "cpu"
-STEPS = int(os.environ.get("STEPS", 1000)); torch.manual_seed(0)`),
+STEPS = int(os.environ.get("STEPS", 2500)); torch.manual_seed(0)`),
     md(`## 1 · Real handwritten digits — pretrain unlabeled, hold out a test split`),
     code(`d = load_digits()
 X = torch.tensor(d.images / 16.0, dtype=torch.float32).unsqueeze(1)   # (1797,1,8,8) in [0,1]
@@ -1393,11 +1393,13 @@ plt.imshow(torch.cat([Xtr[i, 0].cpu() for i in range(10)], 1), cmap="gray"); plt
     code(`def make_enc():
     return nn.Sequential(nn.Conv2d(1, 32, 3, 1, 1), nn.ReLU(), nn.MaxPool2d(2),                       # 8 -> 4
                          nn.Conv2d(32, 64, 3, 1, 1), nn.ReLU(), nn.AdaptiveAvgPool2d(1), nn.Flatten()).to(device)  # -> 64-d
-enc = make_enc(); proj = nn.Sequential(nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 32)).to(device)
+enc = make_enc(); proj = nn.Sequential(nn.Linear(64, 128), nn.ReLU(), nn.Linear(128, 64)).to(device)
 def augment(x):                                       # label-preserving views (no flips — digits aren't flip-invariant)
-    x = x + 0.12 * torch.randn_like(x)
-    x = x * (0.7 + 0.6 * torch.rand(x.shape[0], 1, 1, 1, device=x.device))
+    x = x + 0.10 * torch.randn_like(x)
+    x = x * (0.75 + 0.5 * torch.rand(x.shape[0], 1, 1, 1, device=x.device))
     x = torch.roll(x, shifts=(int(torch.randint(-1, 2, (1,))), int(torch.randint(-1, 2, (1,)))), dims=(-2, -1))
+    if torch.rand(1) < 0.3:                           # light cutout (still label-preserving)
+        i, j = torch.randint(0, 6, (2,)); x[..., i:i + 2, j:j + 2] = 0
     return x.clamp(0, 1)
 def nt_xent(z, tau=0.5):
     z = F.normalize(z, dim=1); B = z.shape[0] // 2
@@ -1405,25 +1407,30 @@ def nt_xent(z, tau=0.5):
     targets = (torch.arange(2 * B, device=device) + B) % (2 * B)
     return F.cross_entropy(sim, targets)`),
     md(`## 3 · Pretrain — contrastive, no labels`),
-    code(`opt = torch.optim.Adam([*enc.parameters(), *proj.parameters()], 1e-3); hist = []
+    code(`opt = torch.optim.Adam([*enc.parameters(), *proj.parameters()], 1.5e-3); hist = []
 B = 256                                              # contrastive learning loves a big batch
 for step in range(STEPS + 1):
-    for g in opt.param_groups: g["lr"] = 1e-3 * (0.1 + 0.45 * (1 + math.cos(math.pi * step / max(1, STEPS))))
+    for g in opt.param_groups: g["lr"] = 1.5e-3 * (0.1 + 0.45 * (1 + math.cos(math.pi * step / max(1, STEPS))))
     idx = torch.randint(0, Xtr.shape[0], (B,)); x = Xtr[idx]
     z = proj(torch.cat([enc(augment(x)), enc(augment(x))], 0)); loss = nt_xent(z)
     opt.zero_grad(); loss.backward(); opt.step()
     if step % max(1, STEPS // 10) == 0: hist.append((step, round(loss.item(), 3))); print(f"step {step:4d}  NT-Xent {loss.item():.3f}")`),
-    md(`## 4 · Linear probe — SimCLR features vs. a random encoder (few-shot, real labels)`),
-    code(`def probe(encoder, ntr=100):                      # only 100 labels: where self-supervision wins
-    encoder.eval(); idx = torch.randperm(Xtr.shape[0])[:ntr]
-    with torch.no_grad(): ftr = encoder(Xtr[idx]); fte = encoder(Xte)
-    clf = nn.Linear(ftr.shape[1], 10).to(device); o = torch.optim.Adam(clf.parameters(), 1e-2)
-    for _ in range(400): o.zero_grad(); F.cross_entropy(clf(ftr), ytr[idx].to(device)).backward(); o.step()
-    return (clf(fte).argmax(1).cpu() == yte).float().mean().item()
+    md(`## 4 · Linear probe — SimCLR features vs. a random encoder\nFew labels (where self-supervision wins), and the probe is **averaged over 8 random label subsets** so the estimate is low-variance, not a lucky draw.`),
+    code(`def probe(encoder, ntr=60, reps=8):               # 60 labels; average over subsets -> low variance
+    encoder.eval()
+    with torch.no_grad(): fte = encoder(Xte)
+    accs = []
+    for r in range(reps):
+        g = torch.Generator().manual_seed(r); idx = torch.randperm(Xtr.shape[0], generator=g)[:ntr]
+        with torch.no_grad(): ftr = encoder(Xtr[idx])
+        clf = nn.Linear(ftr.shape[1], 10).to(device); o = torch.optim.Adam(clf.parameters(), 1e-2)
+        for _ in range(500): o.zero_grad(); F.cross_entropy(clf(ftr), ytr[idx].to(device)).backward(); o.step()
+        accs.append((clf(fte).argmax(1).cpu() == yte).float().mean().item())
+    return sum(accs) / len(accs)
 simclr_acc = probe(enc); rand_acc = probe(make_enc())
 print(f"linear-probe accuracy on real test digits — SimCLR {simclr_acc:.3f}  vs  random encoder {rand_acc:.3f}")
 fig, ax = plt.subplots(figsize=(5, 3.4)); ax.bar(["random", "SimCLR"], [rand_acc, simclr_acc], color=["C7", "C0"])
-ax.set_ylim(0, 1); ax.set_ylabel("probe accuracy"); ax.set_title("self-supervision learns useful features"); plt.show()`),
+ax.set_ylim(0, 1); ax.set_ylabel("probe accuracy (60 labels, avg of 8)"); ax.set_title("self-supervision learns useful features"); plt.show()`),
     md(`### Where to go next\n- This is the recipe behind **SimCLR / MoCo / DINO**; CLIP adds text as the other view.\n- Pretrain on real (unlabeled) egocentric frames, then probe/fine-tune for actions (track C).`),
   ],
 };

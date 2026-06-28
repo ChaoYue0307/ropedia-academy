@@ -104,6 +104,8 @@ models per task: a small instruct **LLM** (chat · next-action · ReAct tool use
 class-conditional **DDPM** that generates digits, a **CartPole** agent, and a
 world-model **CEM** planner — plus a gallery of every trained model's figure + metrics.
 
+<p align="center"><img src="public/showcase.png" alt="Real outputs from Ropedia Academy models: 2D Gaussian Splatting on a photo, MAE reconstruction, REINFORCE solving CartPole, knowledge distillation, SimCLR multi-seed robustness, world-model CEM planning" width="900"></p>
+
 <!-- MODELS-INDEX:START -->
 _19 trained · 26 documented placeholders · 45 repos total — one click trains a placeholder into a real model._
 
@@ -143,7 +145,7 @@ _19 trained · 26 documented placeholders · 45 repos total — one click trains
 | DINOv2 features + probe | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-dinov2-features-probe) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_dinov2_features_probe.ipynb) |
 | Fine-tune VideoMAE | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-videomae-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_videomae_finetune.ipynb) |
 | SAM 2 — video segmentation | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-sam2-video-segmentation) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_sam2_video_segmentation.ipynb) |
-| SimCLR self-supervised pretraining | ✅ trained | probe acc 0.863 | [🤗](https://huggingface.co/cy0307/ropedia-c-simclr-pretrain) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_simclr_pretrain.ipynb) |
+| SimCLR self-supervised pretraining | ✅ trained | probe acc 0.683 | [🤗](https://huggingface.co/cy0307/ropedia-c-simclr-pretrain) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_simclr_pretrain.ipynb) |
 | VideoMAE — egocentric fine-tune | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-videomae-egocentric) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_videomae_egocentric.ipynb) |
 | Whisper — fine-tune ASR | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-whisper-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_whisper_finetune.ipynb) |
 

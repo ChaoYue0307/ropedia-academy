@@ -31,21 +31,21 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 
 - **Name:** Handwritten digits (UCI / scikit-learn)
 - **Type:** real — public dataset
-- **Size / stats:** 1,797 real 8×8 digit images, 10 classes; 256/batch contrastive (unlabeled); probe = 100 labelled / 540 test
+- **Size / stats:** 1,797 real 8×8 digit images, 10 classes; 256/batch contrastive (unlabeled); probe = 60 labels, averaged over 8 random subsets / 540 test
 - **Split:** 1,257 train / 540 test; few-shot linear probe
 - **Source:** scikit-learn load_digits (UCI Optical Recognition of Handwritten Digits)
 
 ## Training config
 
-Adam (lr 1e-3, cosine), 1000 steps, batch 256; NT-Xent τ=0.5; linear probe Adam (lr 1e-2, 100 labels).
+Adam (lr 1.5e-3, cosine), 2500 steps, batch 256; NT-Xent τ=0.5; proj 64→128→64 + light cutout. Probe: 60 labels, averaged over 8 subsets (Adam lr 1e-2).
 
 ## Evaluation results
 
 | metric | value | meaning |
 |---|---|---|
-| `nt_xent (final)` | 4.917 |  |
-| `probe_simclr` | 0.863 | linear-probe accuracy on held-out digits using SimCLR features (higher = better) |
-| `probe_random` | 0.5722 | same probe on an untrained encoder — the baseline SimCLR must beat |
+| `nt_xent (final)` | 5.412 |  |
+| `probe_simclr` | 0.6826 | few-shot linear-probe accuracy (60 labels, avg of 8 subsets) on held-out digits — higher = better |
+| `probe_random` | 0.5343 | same probe on an untrained encoder — the baseline SimCLR must beat |
 
 
 ![figure](figure.png)
@@ -57,8 +57,8 @@ Single-run numbers above are one seed; this is the distribution over independent
 
 | metric | mean ± std |
 |---|---|
-| `probe_simclr` | 0.6174 ± 0.053 |
-| `probe_random` | 0.5393 ± 0.082 |
+| `probe_simclr` | 0.6705 ± 0.04 |
+| `probe_random` | 0.5517 ± 0.031 |
 
 
 ![seeds](seeds.png)
