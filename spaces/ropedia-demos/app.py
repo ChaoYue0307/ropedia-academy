@@ -12,6 +12,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import gradio as gr
+from PIL import Image
 from huggingface_hub import hf_hub_download
 
 USER = "cy0307"
@@ -205,7 +206,7 @@ def gallery_fn(slug):
     base = f"https://huggingface.co/{repo(slug)}"
     title = slug.replace("-", " ").title()
     img, metrics, status = None, "", ""
-    try: img = dl(slug, "figure.png")
+    try: img = Image.open(dl(slug, "figure.png")).convert("RGB")   # load in-memory (avoids cache-path errors)
     except Exception: img = None
     try:
         metrics = json.dumps(json.load(open(dl(slug, "metrics.json"))), indent=2)[:1500]
@@ -263,7 +264,7 @@ FOOTER = ('<p style="text-align:center;opacity:.6;font-size:.85rem;margin-top:14
           'Part of <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a>'
           ' · models &amp; collection on <a href="https://huggingface.co/cy0307" target="_blank">Hugging Face 🤗</a></p>')
 
-with gr.Blocks(theme=THEME, css=CSS, title="Ropedia Academy · Models") as demo:
+with gr.Blocks(title="Ropedia Academy · Models") as demo:
     gr.HTML(HEADER)
     with gr.Tabs():
         with gr.Tab("✍️ nanoGPT"):
@@ -313,4 +314,4 @@ with gr.Blocks(theme=THEME, css=CSS, title="Ropedia Academy · Models") as demo:
     gr.HTML(FOOTER)
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(theme=THEME, css=CSS)

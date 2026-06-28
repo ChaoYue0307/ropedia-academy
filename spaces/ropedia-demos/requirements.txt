@@ -2,4 +2,5 @@ torch
 gradio>=5
 numpy
 matplotlib
+pillow
 huggingface_hub
