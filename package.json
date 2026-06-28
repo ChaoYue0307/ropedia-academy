@@ -14,7 +14,8 @@
     "gen-training-notebooks": "node scripts/gen-training-notebooks.mjs",
     "gen-advanced-notebooks": "node scripts/gen-advanced-notebooks.mjs",
     "gen-outputs": "node scripts/gen-outputs.mjs",
-    "check-links": "node scripts/check-links.mjs"
+    "check-links": "node scripts/check-links.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
@@ -44,6 +45,7 @@
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.4",
-    "vite": "^5.4.5"
+    "vite": "^5.4.5",
+    "vitest": "^3.2.6"
   }
 }

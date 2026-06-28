@@ -344,6 +344,22 @@ def leaderboard_fn():
     return ("### 🏆 Trained-model leaderboard\n\n_Headline metric per trained model (see each tile for full results)._\n\n"
             "| model | metric | value |\n|---|---|---|\n" + body)
 
+def live_status_fn():
+    """Live Hub check: which of the 45 repos are actually published (vs not yet)."""
+    try:
+        from huggingface_hub import HfApi
+        api = HfApi()
+    except Exception as e:
+        return f"(huggingface_hub unavailable: {e})"
+    rows, npub = [], 0
+    for slug in GALLERY:
+        try: ok = api.repo_exists(repo(slug), repo_type="model")
+        except Exception: ok = False
+        npub += int(ok)
+        rows.append((pretty(slug), "✅ published" if ok else "⚠️ not found"))
+    body = "".join(f"| {n} | {s} |\n" for n, s in rows)
+    return f"### 🔄 Live Hub status — {npub}/{len(rows)} published\n\n| model | status |\n|---|---|\n" + body
+
 # ───────────────────── UI ─────────────────────
 BRAND = gr.themes.Color(  # Ropedia Academy palette (matches the site's tailwind `brand`)
     c50="#eef0ff", c100="#e0e3ff", c200="#c6ccff", c300="#a3a8ff", c400="#827ef9",
@@ -412,7 +428,9 @@ with gr.Blocks(title="Ropedia Academy · Models") as demo:
                     gmd.render()
                     gt.render()
             lb = gr.Markdown()
-            gr.Button("🏆 Show leaderboard (headline metric per trained model)", size="sm").click(leaderboard_fn, None, lb)
+            with gr.Row():
+                gr.Button("🏆 Leaderboard (headline metric per trained model)", size="sm").click(leaderboard_fn, None, lb)
+                gr.Button("🔄 Live Hub status (which repos are published)", size="sm").click(live_status_fn, None, lb)
         with gr.Tab("💬 Language model"):
             gr.Markdown("A **real** small instruct LLM — **SmolLM2-360M-Instruct** — answers your prompt. "
                         "(The from-scratch *nanoGPT* is in the Gallery.) First call loads the model; CPU is slow — set the Space to **ZeroGPU** for speed.", elem_classes="tip")
