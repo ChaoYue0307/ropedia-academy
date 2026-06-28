@@ -221,6 +221,15 @@ def gallery_fn(slug):
     md = f"### {title}\n{status}\n\n[Open the repo ↗]({base})"
     return img, md, metrics
 
+TRAINED = {  # the 19 repos with real weights ("deployed"); everything else is a placeholder
+    "nanogpt-shakespeare", "a-smplify-fit", "a-motion-diffusion", "a-pose-heatmap", "a-rotation-6d",
+    "b-deepsdf-shape", "b-gaussian-splatting-2d", "b-hashgrid-instngp", "b-icp-registration", "b-mae-pretrain",
+    "c-action-anticipation-lstm", "c-simclr-pretrain", "d-world-model", "d-tsdf-fusion", "d-semantic-mapping",
+    "ag-reinforce-gridworld", "ag-behavior-cloning", "ag-agent-harness", "lm-distillation",
+}
+def pretty(slug): return slug.replace("-", " ").title()
+N_TRAINED = len(TRAINED); N_PH = len(GALLERY) - N_TRAINED
+
 # ───────────────────── UI ─────────────────────
 BRAND = gr.themes.Color(  # Ropedia Academy palette (matches the site's tailwind `brand`)
     c50="#eef0ff", c100="#e0e3ff", c200="#c6ccff", c300="#a3a8ff", c400="#827ef9",
@@ -243,6 +252,9 @@ CSS = """
 #hdr a:hover {text-decoration:underline;}
 .tab-nav button {font-weight:600 !important;}
 .tip {font-size:.92rem; opacity:.8; margin:2px 0 10px;}
+#gstat {font-weight:800; font-size:1.05rem; margin:4px 0 2px;}
+#modelgrid {display:grid !important; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)) !important; gap:8px !important; margin-top:8px;}
+#modelgrid button {width:100% !important; justify-content:flex-start !important; font-weight:500 !important; text-align:left; border-radius:12px !important;}
 """
 LOGO = """<svg width="46" height="46" viewBox="0 0 64 64" style="flex:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.25))" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="rl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b80ff"/><stop offset="1" stop-color="#4c37b0"/></linearGradient></defs>
@@ -267,6 +279,19 @@ FOOTER = ('<p style="text-align:center;opacity:.6;font-size:.85rem;margin-top:14
 with gr.Blocks(title="Ropedia Academy · Models") as demo:
     gr.HTML(HEADER)
     with gr.Tabs():
+        with gr.Tab("🖼️ Gallery"):
+            gr.HTML(f"<div id='gstat'>Models — ✅ {N_TRAINED} deployed · 🚧 {N_PH} placeholders &nbsp;(of {len(GALLERY)})</div>")
+            gr.Markdown("Click a model to view its result + metrics. ✅ trained · 🚧 placeholder (train on Colab to fill).", elem_classes="tip")
+            with gr.Row():
+                gi = gr.Image(show_label=False, scale=3)
+                with gr.Column(scale=2):
+                    gmd = gr.Markdown()
+                    gt = gr.Code(label="metrics.json", language="json")
+            with gr.Row(elem_id="modelgrid"):
+                for _slug in GALLERY:
+                    _badge = "✅" if _slug in TRAINED else "🚧"
+                    gr.Button(f"{_badge} {pretty(_slug)}", size="sm").click(
+                        (lambda s=_slug: gallery_fn(s)), None, [gi, gmd, gt])
         with gr.Tab("✍️ nanoGPT"):
             gr.Markdown("Character-level **GPT** on Tiny Shakespeare — type a prompt, it continues in the Bard's style.", elem_classes="tip")
             with gr.Row():
@@ -300,17 +325,7 @@ with gr.Blocks(title="Ropedia Academy · Models") as demo:
             gr.Markdown("A tool-using agent: `compute 2*(3+4)`, `length of robotics`, `reverse agent`.", elem_classes="tip")
             a6 = gr.Textbox(label="Task", value="compute sqrt(144)+2")
             gr.Button("Run agent", variant="primary").click(agent_fn, a6, (o6 := gr.Textbox(label="Answer")))
-        with gr.Tab("🖼️ Gallery"):
-            gr.Markdown("Every model's result figure + metrics — ✅ trained · 🚧 placeholder · ⚠️ not published yet.", elem_classes="tip")
-            g = gr.Dropdown(GALLERY, value="b-hashgrid-instngp", label="Model")
-            with gr.Row():
-                gi = gr.Image(label="Result", show_label=False, scale=3)
-                with gr.Column(scale=2):
-                    gmd = gr.Markdown()
-                    gt = gr.Code(label="metrics.json", language="json")
-            g.change(gallery_fn, g, [gi, gmd, gt])
-            gr.Button("Load", variant="primary").click(gallery_fn, g, [gi, gmd, gt])
-    demo.load(gallery_fn, g, [gi, gmd, gt])   # populate the default model on page load
+    demo.load((lambda: gallery_fn("b-hashgrid-instngp")), None, [gi, gmd, gt])   # show a default on load
     gr.HTML(FOOTER)
 
 if __name__ == "__main__":
