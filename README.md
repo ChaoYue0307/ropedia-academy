@@ -56,7 +56,9 @@ each stage:
 The twenty self-contained PyTorch labs are **verified to train** (each was run
 to confirm loss drops / PSNR climbs / metrics beat chance); the three foundation
 labs follow the official APIs and run on a Colab GPU. Every lab records its
-checkpoint + loss/eval history + figures to a downloadable `outputs/<lab>/`. Open them from the dashboard's **Training labs** section, or see
+checkpoint + loss/eval history + figures to a downloadable `outputs/<lab>/`, and an
+optional cell **publishes the run to the Hugging Face Hub** (a model repo with a
+metrics-and-plot model card) so you can gather them into a Collection. Open them from the dashboard's **Training labs** section, or see
 [`notebooks/training/README.md`](notebooks/training/README.md) for one-click Colab
 badges. Set **Runtime → T4 GPU** first.
 

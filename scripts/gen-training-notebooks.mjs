@@ -34,6 +34,23 @@ function saveCells(id, saveLines) {
       `# keep it past the session:  from google.colab import files; files.download(f"{run}.zip")`,
       `# or mount Drive:  from google.colab import drive; drive.mount('/content/drive')  # then shutil.copytree(run, "/content/drive/MyDrive/"+run)`,
     ].join("\n")),
+    md(`## (Optional) Publish to the Hugging Face Hub\nUpload this run as a **model repo** — the checkpoint, \`metrics.json\` (full loss/eval history) and the results figure, embedded in an auto-generated model card. Do it for each lab, then group them into a **Collection** on your HF profile (Profile → New collection), or with the commented \`add_collection_item\` call below. It needs a **write token**, so it only runs once you sign in.`),
+    code(`# (optional) publish this run as a Hugging Face model repo — checkpoint + metrics + plot
+!pip -q install huggingface_hub
+from huggingface_hub import HfApi, notebook_login
+import os
+notebook_login()   # paste a WRITE token from https://huggingface.co/settings/tokens
+api = HfApi(); user = api.whoami()["name"]
+lab = os.path.basename(run); repo_id = f"{user}/ropedia-" + lab.lower().replace("_", "-")
+fig = "\\n![results](figure.png)\\n" if os.path.exists(f"{run}/figure.png") else ""
+open(f"{run}/README.md", "w").write("---\\ntags: [ropedia-academy, education]\\n---\\n# " + lab + "\\n\\nTrained in **Ropedia Academy** (educational lab). Checkpoint, full loss/eval history (metrics.json) and the results figure are included." + fig)
+api.create_repo(repo_id, repo_type="model", exist_ok=True)
+api.upload_folder(folder_path=run, repo_id=repo_id, commit_message="Upload from Ropedia Academy")
+print("uploaded ->", "https://huggingface.co/" + repo_id)
+# group everything into one Collection (run once, after a few uploads):
+# from huggingface_hub import create_collection, add_collection_item
+# col = create_collection("Ropedia Academy - trained models", namespace=user, exists_ok=True)
+# add_collection_item(col.slug, item_id=repo_id, item_type="model")`),
   ];
 }
 
