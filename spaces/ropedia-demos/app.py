@@ -281,17 +281,22 @@ with gr.Blocks(title="Ropedia Academy · Models") as demo:
     with gr.Tabs():
         with gr.Tab("🖼️ Gallery"):
             gr.HTML(f"<div id='gstat'>Models — ✅ {N_TRAINED} deployed · 🚧 {N_PH} placeholders &nbsp;(of {len(GALLERY)})</div>")
-            gr.Markdown("Click a model to view its result + metrics. ✅ trained · 🚧 placeholder (train on Colab to fill).", elem_classes="tip")
-            with gr.Row():
-                gi = gr.Image(show_label=False, scale=3)
-                with gr.Column(scale=2):
-                    gmd = gr.Markdown()
-                    gt = gr.Code(label="metrics.json", language="json")
-            with gr.Row(elem_id="modelgrid"):
+            gr.Markdown("Click a model to view its result + metrics below. ✅ trained · 🚧 placeholder (train on Colab to fill).", elem_classes="tip")
+            # detail components defined first (so clicks can target them) but rendered lower
+            gi = gr.Image(show_label=False, render=False)
+            gmd = gr.Markdown(render=False)
+            gt = gr.Code(label="metrics.json", language="json", render=False)
+            with gr.Row(elem_id="modelgrid"):                       # the clickable grid — at the top
                 for _slug in GALLERY:
                     _badge = "✅" if _slug in TRAINED else "🚧"
                     gr.Button(f"{_badge} {pretty(_slug)}", size="sm").click(
                         (lambda s=_slug: gallery_fn(s)), None, [gi, gmd, gt])
+            gr.Markdown("---")
+            with gr.Row():                                          # detail — below the grid
+                gi.render()
+                with gr.Column():
+                    gmd.render()
+                    gt.render()
         with gr.Tab("✍️ nanoGPT"):
             gr.Markdown("Character-level **GPT** on Tiny Shakespeare — type a prompt, it continues in the Bard's style.", elem_classes="tip")
             with gr.Row():
