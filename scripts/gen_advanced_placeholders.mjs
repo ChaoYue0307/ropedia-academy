@@ -42,46 +42,110 @@ const ADV = [
   { id: "C_dinov2_features_probe", dir: "training", title: "DINOv2 features + probe", task: "self-supervised features", repo: "facebookresearch/dinov2", url: "https://github.com/facebookresearch/dinov2", track: "C · Egocentric vision", links: ["B", "D"], summary: "DINOv2 patch-feature PCA (objects emerge) + a linear probe on CLS features." },
 ];
 
+const SPACE = "https://huggingface.co/spaces/cy0307/ropedia-demos";
+const PROFILE = "https://huggingface.co/cy0307";
+
+// Per-lab professional fields: base model (+ HF id), objective, dataset+source,
+// the exact metric the lab reports, and the original-method citation.
+const PROF = {
+  A_mdm_text_to_motion: { base: "Pretrained MDM checkpoint (or train from scratch)", obj: "DDPM denoising of motion sequences conditioned on text (CLIP) embeddings.", data: "HumanML3D — text↔motion pairs (~14k motions).", metric: "FID · R-precision@1/2/3 · Diversity", cite: "Tevet et al., *MDM*, ICLR 2023 (arXiv:2209.14916)." },
+  A_4dhumans_mesh: { base: "HMR 2.0 / 4D-Humans (ViT-based, pretrained)", obj: "Regress SMPL pose+shape from image crops; track across video.", data: "Inference: your image/video. Training: H36M, 3DPW, COCO, InstaVariety.", metric: "PA-MPJPE / MPJPE (mm) · PCK", cite: "Goel et al., *Humans in 4D*, ICCV 2023." },
+  B_gaussian_splatting_3d: { base: "From scratch — per-scene optimization", obj: "Photometric loss over differentiably-rasterized 3D Gaussians (+ densification).", data: "Your photos + COLMAP camera poses.", metric: "PSNR · SSIM · LPIPS (held-out views)", cite: "Kerbl et al., *3D Gaussian Splatting*, SIGGRAPH 2023." },
+  B_nerfstudio_nerfacto: { base: "From scratch — per-scene (nerfacto / splatfacto)", obj: "Volumetric photometric loss with proposal sampling + hash encoding.", data: "Your phone video / image set.", metric: "PSNR · SSIM · LPIPS", cite: "Tancik et al., *Nerfstudio*, SIGGRAPH 2023." },
+  C_videomae_egocentric: { base: "MCG-NJU/videomae-base (Kinetics-pretrained)", bm: "MCG-NJU/videomae-base", obj: "Supervised video-clip classification (fine-tune the pretrained ViT).", data: "EPIC-Kitchens-100 / Ego4D (demo: UCF101 subset).", metric: "top-1 / top-5 accuracy", cite: "Tong et al., *VideoMAE*, NeurIPS 2022." },
+  C_sam2_video_segmentation: { base: "facebook/sam2-hiera-large (pretrained)", bm: "facebook/sam2-hiera-large", obj: "Promptable mask prediction + memory propagation across frames (inference).", data: "Your video + click/box prompts. Benchmark: DAVIS 2017 / SA-V.", metric: "J&F mean (region IoU + boundary F)", cite: "Ravi et al., *SAM 2*, 2024." },
+  C_whisper_finetune: { base: "openai/whisper-tiny|base|large-v3 (pretrained)", bm: "openai/whisper-tiny", obj: "Seq2seq cross-entropy — transcribe audio to text.", data: "PolyAI/minds14 (demo); Common Voice / LibriSpeech (full).", metric: "WER (word error rate)", cite: "Radford et al., *Whisper*, 2022." },
+  D_splatam_slam: { base: "From scratch — per-sequence", obj: "Joint camera tracking + Gaussian-map optimization (photometric + depth).", data: "Replica / TUM-RGBD / your RGB-D stream.", metric: "ATE RMSE (cm) · PSNR/SSIM/LPIPS", cite: "Keetha et al., *SplaTAM*, CVPR 2024." },
+  D_dreamerv3_world_model: { base: "From scratch", obj: "Learn a latent world model; train an actor-critic inside imagination.", data: "Online env interaction (Crafter / DMC / Atari).", metric: "mean evaluation-episode return", cite: "Hafner et al., *DreamerV3*, 2023 (arXiv:2301.04104)." },
+  LM_qlora_finetune_llm: { base: "Qwen/Qwen2.5-0.5B-Instruct in 4-bit (swap any base)", bm: "Qwen/Qwen2.5-0.5B-Instruct", obj: "Supervised instruction fine-tuning of LoRA adapters on a 4-bit base.", data: "mlabonne/guanaco-llama2-1k (or your own chat data).", metric: "held-out perplexity", cite: "Dettmers et al., *QLoRA*, NeurIPS 2023; Hu et al., *LoRA*, 2021." },
+  LM_dpo_alignment: { base: "An SFT'd LLM (e.g. Qwen2.5-0.5B-Instruct, 4-bit)", bm: "Qwen/Qwen2.5-0.5B-Instruct", obj: "Direct Preference Optimization on chosen/rejected pairs (no reward model).", data: "trl-lib/ultrafeedback_binarized.", metric: "preference accuracy (eval_rewards/accuracies)", cite: "Rafailov et al., *DPO*, NeurIPS 2023." },
+  LM_vlm_finetune: { base: "SmolVLM / Qwen2-VL (pretrained VLM)", bm: "HuggingFaceTB/SmolVLM-Instruct", obj: "Supervised fine-tuning for image-grounded question answering.", data: "HuggingFaceM4/ChartQA (or your VQA data).", metric: "held-out loss · VQA accuracy", cite: "Marafioti et al., *SmolVLM*, 2024; Wang et al., *Qwen2-VL*, 2024." },
+  LM_videolm_qwen2vl: { base: "Qwen/Qwen2-VL-2B|7B-Instruct (pretrained)", bm: "Qwen/Qwen2-VL-2B-Instruct", obj: "Video-grounded next-token prediction (inference; optional LoRA SFT).", data: "Your clip (inference); video-instruction data for LoRA.", metric: "Video-MME / MVBench / EgoSchema accuracy", cite: "Wang et al., *Qwen2-VL*, 2024." },
+  LM_rag_pipeline: { base: "BAAI/bge-small-en-v1.5 (embed) + Qwen2.5-0.5B-Instruct (gen)", bm: "BAAI/bge-small-en-v1.5", obj: "Embed → FAISS retrieve → ground the LLM's answer in retrieved passages.", data: "Your document corpus (demo: 6 docs).", metric: "retrieval recall@k", cite: "Lewis et al., *RAG*, NeurIPS 2020." },
+  LM_eval_harness: { base: "Any LLM under test", obj: "Standardized benchmarking (log-likelihood / generation scoring).", data: "ARC, HellaSwag, MMLU, GSM8K, … (downloaded by the harness).", metric: "per-benchmark accuracy", cite: "Gao et al., *lm-evaluation-harness*, EleutherAI." },
+  LM_unsloth_finetune: { base: "Unsloth 4-bit base (Llama / Qwen / Mistral …)", obj: "Fast LoRA SFT (~2× faster, less VRAM); GGUF export for serving.", data: "mlabonne/guanaco-llama2-1k (or your data).", metric: "held-out perplexity", cite: "Unsloth (Han et al.); Dettmers et al., *QLoRA*, 2023." },
+  LM_rlhf_ppo: { base: "An SFT LLM + a reward model (demo: GPT-2 sentiment)", bm: "lvwerra/gpt2-imdb", obj: "PPO — maximize reward-model score with a KL penalty to the reference.", data: "Prompt set (demo: IMDB).", metric: "mean reward (+ KL-to-reference)", cite: "Ouyang et al., *InstructGPT*, 2022; Schulman et al., *PPO*, 2017." },
+  LM_stable_diffusion_lora: { base: "runwayml/stable-diffusion-v1-5 (or SDXL)", bm: "runwayml/stable-diffusion-v1-5", obj: "LoRA / DreamBooth fine-tuning of the diffusion UNet on new concepts.", data: "Your subject/style images (a few–dozens).", metric: "FID · CLIP score (+ CLIP-I/DINO for subjects)", cite: "Rombach et al., *Latent Diffusion*, CVPR 2022; Hu et al., *LoRA*, 2021." },
+  LM_controlnet: { base: "SD 1.5 / SDXL + a ControlNet (pretrained)", bm: "lllyasviel/sd-controlnet-canny", obj: "Structure-conditioned generation (edges / depth / pose) — inference.", data: "Your condition maps + prompts.", metric: "condition fidelity (edge IoU / depth err) · CLIP score", cite: "Zhang et al., *ControlNet*, ICCV 2023." },
+  LM_vllm_serving: { base: "Any (fine-tuned) LLM you serve", obj: "High-throughput batched inference (PagedAttention) — no training.", data: "n/a (serving).", metric: "throughput (tok/s) · latency", cite: "Kwon et al., *vLLM / PagedAttention*, SOSP 2023." },
+  AG_llm_agent_tooluse: { base: "Qwen/Qwen2.5-1.5B-Instruct (tool-calling)", bm: "Qwen/Qwen2.5-1.5B-Instruct", obj: "ReAct loop — the LLM reasons, calls tools, observes, and iterates.", data: "Task suite (the self-contained AG_agent_harness).", metric: "task success rate", cite: "Yao et al., *ReAct*, ICLR 2023; Schick et al., *Toolformer*, 2023." },
+  AG_habitat_navigation: { base: "From scratch (DD-PPO policy)", obj: "On-policy RL (DD-PPO) for PointGoal navigation from sensors.", data: "HM3D / MP3D / Gibson scenes (+ Habitat test assets).", metric: "Success rate · SPL", cite: "Wijmans et al., *DD-PPO*, ICLR 2020; Savva et al., *Habitat*, ICCV 2019." },
+  B_nerf_from_scratch: { base: "From scratch", obj: "Volume-rendering photometric loss through a positional-encoded MLP.", data: "tiny_nerf (bmild) — a single Lego scene (106 views).", metric: "PSNR (held-out views)", cite: "Mildenhall et al., *NeRF*, ECCV 2020." },
+  CD_clip_zeroshot_probe: { base: "open_clip ViT-B/32 (pretrained)", obj: "Zero-shot classification via text prompts + a trained linear probe on frozen features.", data: "CIFAR-10 (probe / eval).", metric: "zero-shot accuracy · linear-probe accuracy", cite: "Radford et al., *CLIP*, ICML 2021." },
+  C_videomae_finetune: { base: "MCG-NJU/videomae-base (Kinetics-pretrained)", bm: "MCG-NJU/videomae-base", obj: "Supervised video-clip classification (fine-tune).", data: "A small action dataset (UCF101 subset).", metric: "top-1 accuracy", cite: "Tong et al., *VideoMAE*, NeurIPS 2022." },
+  C_dinov2_features_probe: { base: "facebook/dinov2 ViT (self-supervised, pretrained)", bm: "facebook/dinov2-base", obj: "Use frozen DINOv2 features: PCA of patch tokens + a linear probe on CLS.", data: "CIFAR-10 (probe / eval).", metric: "linear-probe accuracy", cite: "Oquab et al., *DINOv2*, 2023." },
+};
+
 function card(a) {
+  const p = PROF[a.id] || {};
   const colab = `https://colab.research.google.com/github/${REPO}/blob/main/notebooks/${a.dir || "advanced"}/${a.id}.ipynb`;
-  const tags = ["ropedia-academy", "advanced", "todo", ...a.links.map((t) => "track-" + t.toLowerCase())];
+  const tags = ["ropedia-academy", "advanced", "gpu", "todo", "embodied-ai", ...a.links.map((t) => "track-" + t.toLowerCase())];
   let fm = "---\nlicense: mit\n";
   if (a.pipeline) fm += `pipeline_tag: ${a.pipeline}\n`;
+  if (p.bm) fm += `base_model: ${p.bm}\n`;
   fm += "tags:\n" + tags.map((t) => `- ${t}\n`).join("") + "---\n\n";
   const body =
-`# ${a.title}  🚧 placeholder
+`# ${a.title}  🚧 not trained yet
 
-> **Status — not trained yet.** This is a *documented placeholder* for an advanced, GPU-heavy pipeline from **[Ropedia Academy](${ROPEDIA})**. The checkpoint, metrics and plots are **TODO** — train it on a GPU (link below) and the weights + a full results card land here.
+> ${a.summary}
 
-${a.summary}
+**Status — documented recipe (placeholder).** A production-grade pipeline from **[Ropedia Academy](${ROPEDIA})** for an advanced, GPU-heavy task. Everything below — base model, objective, dataset, config, the exact evaluation — is specified; the **weights / metrics / figures** land here automatically when you run the notebook on a GPU (one click below). Try the trained models live in the **[Ropedia demos Space](${SPACE})**.
+
+## At a glance
 
 | | |
 |---|---|
+| **Base model** | ${p.base || "see notebook"} |
 | **Task** | ${a.task} |
-| **Built on** | [${a.repo}](${a.url}) |
+| **Training objective** | ${p.obj || "see notebook"} |
 | **Track** | ${a.track} |
+| **Built on** | [${a.repo}](${a.url}) |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](${colab}) |
-| **Compute / storage / time** | see the *Compute · storage · time* table inside the notebook (GPU required) |
+| **Compute / storage / time** | GPU required — see the *Compute · storage · time* table in the notebook |
+
+## Dataset
+- **Source:** ${p.data || "see the notebook's data cell"}
+
+## Training config
+GPU-scale — the notebook ships a **demo** profile (free Colab T4) and a **full** profile, with an exact *Compute · storage · time* table. Hyperparameters (optimizer, steps, batch, LoRA rank, …) are in the training cell.
+
+## Evaluation results
+⏳ **Pending** — run the notebook on a GPU to fill this in. This lab reports **${p.metric || "its standard task metric"}** on a held-out split (see its *Evaluate* cell).
+
+## Inference example
+No weights are published yet. After a GPU run, load the checkpoint/adapter the notebook saves (it also has a ready inference cell). Base model: **${p.base || "see notebook"}**.
 
 ## How to fill this repo
-1. Open the [notebook in Colab](${colab}) → **Runtime → GPU → Run all** (trains/runs the real pipeline).
-2. Run its **Publish to the Hugging Face Hub** step (or \`HfApi().upload_folder(...)\`) to push the checkpoint + metrics + plots here, replacing this placeholder.
+1. Open the [notebook in Colab](${colab}) → **Runtime → GPU → Run all** (runs the real pipeline).
+2. Run its **Publish to the Hugging Face Hub** step (or \`HfApi().upload_folder(...)\`) — the checkpoint + \`metrics.json\` + figures replace this placeholder.
 
-## TODO
-- [ ] Train / run on a GPU (see the notebook)
-- [ ] Upload the checkpoint / adapter weights
-- [ ] Add \`metrics.json\` (loss / eval history)
-- [ ] Add result figures & sample outputs
-- [ ] Replace this placeholder card with the real results
+- [ ] Train / run on a GPU · [ ] upload weights · [ ] add \`metrics.json\` · [ ] add figures · [ ] swap in the real results card
 
-## Results
-_TODO — add final metrics and plots after training. (Placeholder.)_
+## Limitations
+Not yet trained — no numbers to report. The pipeline is **GPU-heavy** (see the compute table); on free Colab use the demo-scale settings. This is an educational, reproducible recipe, not a tuned production release.
 
-## Links to tracks A–D
-Relates to: **${a.links.join(" · ")}** — see the *How this links to tracks A–D* note in the notebook.
+## License
+Code: **MIT** (this repository). The **base model** ([${a.repo}](${a.url})) and **dataset** are each under their own licenses — check the upstream source before redistribution.
+
+## Citation
+\`\`\`bibtex
+@misc{ropedia_academy,
+  title  = {Ropedia Academy: an interactive course on embodied & spatial AI},
+  author = {Ropedia Academy},
+  year   = {2026},
+  howpublished = {\\url{${ROPEDIA}}}
+}
+\`\`\`
+${p.cite ? `\n**Method / original work:** ${p.cite}\n` : ""}
+## Related assets
+- 🚀 **Live demos:** [${SPACE}](${SPACE})
+- 🤗 **All models + collection:** [${PROFILE}](${PROFILE})
+- 📚 **Course & all labs:** [${ROPEDIA}](${ROPEDIA}) · [Labs tab](${ROPEDIA}labs)
+- 💻 **Source / notebooks:** [github.com/${REPO}](https://github.com/${REPO})
+- 🔗 **Relates to tracks:** ${a.links.join(" · ")}
 
 ---
-*Placeholder in the [Ropedia Academy](${ROPEDIA}) trained-model collection. Browse all labs in the [Labs tab](${ROPEDIA}labs).*
+*Documented placeholder in the [Ropedia Academy](${ROPEDIA}) collection — train it on a GPU to publish the real model. Contributions welcome on [GitHub](https://github.com/${REPO}).*
 `;
   return fm + body;
 }
