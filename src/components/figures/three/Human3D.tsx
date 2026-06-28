@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import * as THREE from "three";
+import { Line } from "@react-three/drei";
 import { FigureFrame, Slider } from "../FigureFrame";
 import { useStore } from "../../../lib/store";
 import { useResizeKick } from "./kick";
@@ -7,6 +8,8 @@ import { Frame, Dot, tag, GROUND, GRID2, type V } from "./Geometry3D";
 
 const add = (a: V, b: V): V => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const rx = (v: V, a: number): V => [v[0], v[1] * Math.cos(a) - v[2] * Math.sin(a), v[1] * Math.sin(a) + v[2] * Math.cos(a)];
+const hn = (s: number) => (Math.sin(s * 127.1) * 43758.5) % 1;   // deterministic noise in [-1,1]
+const lerp3 = (a: V, b: V, u: number): V => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
 
 function Bone({ a, b, r = 0.055, c = "#6a5ef0" }: { a: V; b: V; r?: number; c?: string }) {
   const { pos, quat, len } = useMemo(() => {
@@ -169,6 +172,42 @@ export function SmplifyPrior3D() {
         <div className={"text-xs font-semibold " + (ok ? "text-emerald-600" : "text-red-500")}>{ok ? (zh ? "✓ 合理姿态" : "✓ plausible pose") : (zh ? "✗ 不可能的关节角" : "✗ impossible joint angle")}</div>
         <Slider label={zh ? "先验权重" : "prior weight"} value={prior} min={0} max={1} step={0.02} onChange={setPrior} format={(v) => `${Math.round(v * 100)}%`} />
       </div>
+    </FigureFrame>
+  );
+}
+
+// ── A7 · Motion diffusion — denoise pure noise into a coherent pose ───────────
+export function MotionDiffusion3D() {
+  const zh = useStore((s) => s.lang) === "zh";
+  const [t, setT] = useState(0.5);
+  useResizeKick();
+  const H = 1.7, off = 0.83 * H, leg = 0.18, arm = 0.22;
+  const clean = useMemo<V[]>(() => {
+    const pelvis: V = [0, 0, 0], chest: V = [0, 0.46 * H, 0], neck: V = [0, 0.6 * H, 0], head: V = [0, 0.74 * H, 0];
+    const hipL: V = [-0.09, 0, 0], hipR: V = [0.09, 0, 0];
+    const kneeL = add(hipL, rx([0, -0.42 * H, 0], leg)), kneeR = add(hipR, rx([0, -0.42 * H, 0], -leg));
+    const footL = add(kneeL, rx([0, -0.4 * H, 0], leg * 0.5)), footR = add(kneeR, rx([0, -0.4 * H, 0], -leg * 0.5));
+    const shL: V = [-0.17, 0.52 * H, 0], shR: V = [0.17, 0.52 * H, 0];
+    const elL = add(shL, rx([-0.02, -0.27 * H, 0], arm)), elR = add(shR, rx([0.02, -0.27 * H, 0], -arm));
+    const haL = add(elL, rx([-0.01, -0.24 * H, 0], arm * 1.2)), haR = add(elR, rx([0.01, -0.24 * H, 0], -arm * 1.2));
+    return [pelvis, chest, neck, head, hipL, hipR, kneeL, kneeR, footL, footR, shL, shR, elL, elR, haL, haR].map((p) => [p[0], p[1] + off, p[2]] as V);
+  }, []);
+  const noise = useMemo<V[]>(() => clean.map((_, i) => [hn(i + 1) * 1.3, off + 0.2 + hn(i + 6) * 1.3, hn(i + 11) * 1.3]), [clean]);
+  const cur = clean.map((p, i) => lerp3(noise[i], p, t));
+  const bones = [[0, 1], [1, 2], [2, 3], [0, 4], [0, 5], [4, 6], [6, 8], [5, 7], [7, 9], [1, 10], [1, 11], [10, 12], [12, 14], [11, 13], [13, 15], [10, 11]];
+  return (
+    <FigureFrame
+      title={{ en: "Motion diffusion — denoise into a pose (3D)", zh: "运动扩散——去噪生成姿态（三维）" }}
+      caption={{ en: "Diffusion models generate motion by starting from pure noise and iteratively DENOISING it into a plausible pose (and, over a window, a whole sequence) — the same DDPM recipe as image diffusion, applied to human motion (MDM). Scrub the denoising steps: a cloud of random joints organizes into a coherent body. Orbit to inspect.", zh: "扩散模型从纯噪声出发，迭代去噪，生成合理的姿态（在一个时间窗内则是整段序列）——与图像扩散相同的 DDPM 方法，用于人体运动（MDM）。拖动去噪步数：随机关节云逐渐组织成连贯的人体。旋转查看。" }}
+      onReset={() => setT(0.5)}
+    >
+      <Frame cam={[3.8, 1.7, 4.4]} target={[0, 1.25, 0]}>
+        <gridHelper args={[6, 12, GROUND, GRID2]} />
+        {bones.map(([a, b], i) => <Line key={i} points={[cur[a], cur[b]]} color="#6a5ef0" lineWidth={4} transparent opacity={0.15 + 0.85 * t} />)}
+        {cur.map((p, i) => <Dot key={i} p={p} r={0.055} c={t > 0.5 ? "#6a5ef0" : "#a3a8ff"} />)}
+        {tag("#6a5ef0", t < 0.15 ? (zh ? "噪声" : "noise") : t > 0.85 ? (zh ? "姿态 ✓" : "pose ✓") : (zh ? "去噪中…" : "denoising…"), [0, 2.7, 0])}
+      </Frame>
+      <div className="mt-3"><Slider label={zh ? "去噪步数" : "denoising steps"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} /></div>
     </FigureFrame>
   );
 }

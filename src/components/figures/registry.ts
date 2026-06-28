@@ -3,7 +3,7 @@ import { NerfRay } from "./NerfRay";
 import { AnticipationTopK } from "./AnticipationTopK";
 import { SceneGraphDemo } from "./SceneGraphDemo";
 import { GazeTimeline } from "./GazeTimeline";
-import { PoseHeatmap, MotionDiffusion } from "./extraA";
+import { PoseHeatmap } from "./extraA";
 import { LongTail, HandPrior, ActionGrammar, BaselineMetric } from "./extraC";
 import { MapParadigms, Pipeline } from "./extraD";
 
@@ -34,6 +34,7 @@ const SlamLoop3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: 
 const SemanticFusion3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.SemanticFusion3D })));
 const WorldRollout3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.WorldRollout3D })));
 const ActiveObject3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.ActiveObject3D })));
+const MotionDiffusion3D = lazy(() => import("./three/Human3D").then((m) => ({ default: m.MotionDiffusion3D })));
 
 // Maps a lesson id to interactive demo components rendered in that lesson.
 // Every one of the 36 lessons now has at least one hands-on figure.
@@ -45,7 +46,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   A4: [SmplBody3D],
   A5: [Hand3D],
   A6: [RotationContinuity3D],
-  A7: [MotionDiffusion],
+  A7: [MotionDiffusion3D],
   A8: [ContactScene3D],
   A9: [SmplifyPrior3D],
   // Track B — 3D / Neural Rendering
