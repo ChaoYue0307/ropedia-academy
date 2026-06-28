@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | D · Scene & world models |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_semantic_mapping.ipynb) |
 
+## Dataset
+
+- **Name:** 2D grid world
+- **Type:** synthetic — procedural
+- **Size / stats:** 32×32 cells, 4 semantic classes; ~60 noisy observations/step (p_occ=0.8, p_label=0.7)
+- **Split:** single map
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

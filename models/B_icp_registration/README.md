@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | B · 3D & rendering |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_icp_registration.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic point clouds
+- **Type:** synthetic — procedural
+- **Size / stats:** two linked rings (~800 points, 3-D); target = source under a known rigid transform + 0.01 noise
+- **Split:** 1 source/target pair
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

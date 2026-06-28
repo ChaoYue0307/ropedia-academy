@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | B · 3D & rendering |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_deepsdf_shape.ipynb) |
 
+## Dataset
+
+- **Name:** Analytic torus SDF
+- **Type:** synthetic — procedural
+- **Size / stats:** 4,096 samples/step (½ uniform in [-1.1,1.1]³, ½ near-surface); SD targets clamped to ±0.1
+- **Split:** generative (infinite)
+- **Source:** procedural (analytic torus)
+
 ## Results
 
 | metric | value |

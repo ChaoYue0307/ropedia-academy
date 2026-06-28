@@ -21,6 +21,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | C · Egocentric vision |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_simclr_pretrain.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic shapes
+- **Type:** synthetic — procedural
+- **Size / stats:** 6 shape classes at random position & scale, 20×20; 256/batch contrastive; probe = 40 labelled / 600 test
+- **Split:** self-supervised + few-shot probe
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

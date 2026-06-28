@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | B · 3D & rendering |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_mae_pretrain.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic images
+- **Type:** synthetic — procedural
+- **Size / stats:** 24×24 grayscale (random discs); 36 patches of 4×4, 60% masked; 64/batch
+- **Split:** generative (infinite)
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

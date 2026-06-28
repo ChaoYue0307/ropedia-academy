@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | D · Scene & world models |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_tsdf_fusion.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic depth views
+- **Type:** synthetic — procedural
+- **Size / stats:** 1 scene (two spheres); 6 orthographic depth maps fused into a 64³ TSDF grid
+- **Split:** single scene
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

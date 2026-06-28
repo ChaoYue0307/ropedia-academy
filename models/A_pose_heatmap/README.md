@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | A · Human modeling |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_pose_heatmap.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic 3-joint arm
+- **Type:** synthetic — procedural
+- **Size / stats:** 48×48 grayscale images, 3 joints; fresh 16-image batches per step (effectively unlimited)
+- **Split:** fresh train + held-out eval batches
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

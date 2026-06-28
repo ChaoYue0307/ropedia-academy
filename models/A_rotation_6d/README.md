@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | A · Human modeling |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_rotation_6d.ipynb) |
 
+## Dataset
+
+- **Name:** Random SO(3) rotations
+- **Type:** synthetic — procedural
+- **Size / stats:** uniform rotations via random quaternions; input = rotation applied to 8 fixed 3D points (24-D); 256/batch
+- **Split:** generative (infinite)
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | AG · Agents & RL |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_reinforce_gridworld.ipynb) |
 
+## Dataset
+
+- **Name:** 5×5 gridworld (RL env)
+- **Type:** synthetic env — no fixed dataset
+- **Size / stats:** agent learns from its own rollouts; reward −0.1/step, +5 at goal
+- **Split:** online RL
+- **Source:** procedural env
+
 ## Results
 
 | metric | value |

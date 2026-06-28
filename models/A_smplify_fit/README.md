@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | A · Human modeling |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_smplify_fit.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic 2D keypoints
+- **Type:** synthetic — procedural, generated in the notebook
+- **Size / stats:** 1 articulated skeleton (12 joints) → 12 projected 2D keypoints + Gaussian noise
+- **Split:** single instance (per-image optimization)
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

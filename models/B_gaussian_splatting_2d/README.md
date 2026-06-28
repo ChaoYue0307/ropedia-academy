@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | B · 3D & rendering |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_gaussian_splatting_2d.ipynb) |
 
+## Dataset
+
+- **Name:** Procedural target image
+- **Type:** synthetic — procedural
+- **Size / stats:** 1 RGB image, 64×64 (gradient + 3 coloured blobs)
+- **Split:** single image (overfit)
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

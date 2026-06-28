@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | C · Egocentric vision |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_action_anticipation_lstm.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic action grammar
+- **Type:** synthetic — procedural
+- **Size / stats:** length-12 sequences over 6 verbs (take/wash/cut/cook/pour/place) from a Markov matrix; 128/batch
+- **Split:** fresh train + 512 eval
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

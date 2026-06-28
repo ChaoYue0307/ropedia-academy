@@ -22,6 +22,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | LM · Language & models |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_nanogpt_pretrain.ipynb) |
 
+## Dataset
+
+- **Name:** Tiny Shakespeare
+- **Type:** real (public-domain text)
+- **Size / stats:** 1,115,394 characters (~1.1 MB); 65-character vocabulary
+- **Split:** 90% train / 10% val
+- **Source:** https://github.com/karpathy/char-rnn (data/tinyshakespeare)
+
 ## Results
 
 | metric | value |

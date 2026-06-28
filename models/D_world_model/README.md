@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | D · Scene & world models |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_world_model.ipynb) |
 
+## Dataset
+
+- **Name:** 2D point-mass rollouts
+- **Type:** synthetic — procedural env
+- **Size / stats:** 60,000 transitions (3,000 random starts × 20 steps); state 4-D [x,y,vx,vy], action 2-D
+- **Split:** train only
+- **Source:** procedural env
+
 ## Results
 
 | metric | value |

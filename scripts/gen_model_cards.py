@@ -32,6 +32,28 @@ META = {
     "nanogpt-shakespeare": dict(title="nanoGPT — Tiny Shakespeare", task="text-generation", data="Tiny Shakespeare (~1 MB)", track="LM · Language & models", tags=["text-generation", "gpt"], summary="A character-level GPT (decoder-only transformer) trained from scratch; best-checkpoint by validation loss.", pipeline="text-generation"),
 }
 
+DATA = {
+    "nanogpt-shakespeare": dict(name="Tiny Shakespeare", kind="real (public-domain text)", stats="1,115,394 characters (~1.1 MB); 65-character vocabulary", split="90% train / 10% val", source="https://github.com/karpathy/char-rnn (data/tinyshakespeare)"),
+    "A_smplify_fit": dict(name="Synthetic 2D keypoints", kind="synthetic — procedural, generated in the notebook", stats="1 articulated skeleton (12 joints) → 12 projected 2D keypoints + Gaussian noise", split="single instance (per-image optimization)", source="procedural"),
+    "A_motion_diffusion": dict(name="Synthetic motion trajectories", kind="synthetic — procedural", stats="4,096 looping 2D trajectories, 32 timesteps × 2 = 64-D each (varied radius/phase/noise)", split="train only (generative model)", source="procedural"),
+    "A_pose_heatmap": dict(name="Synthetic 3-joint arm", kind="synthetic — procedural", stats="48×48 grayscale images, 3 joints; fresh 16-image batches per step (effectively unlimited)", split="fresh train + held-out eval batches", source="procedural"),
+    "A_rotation_6d": dict(name="Random SO(3) rotations", kind="synthetic — procedural", stats="uniform rotations via random quaternions; input = rotation applied to 8 fixed 3D points (24-D); 256/batch", split="generative (infinite)", source="procedural"),
+    "B_deepsdf_shape": dict(name="Analytic torus SDF", kind="synthetic — procedural", stats="4,096 samples/step (½ uniform in [-1.1,1.1]³, ½ near-surface); SD targets clamped to ±0.1", split="generative (infinite)", source="procedural (analytic torus)"),
+    "B_gaussian_splatting_2d": dict(name="Procedural target image", kind="synthetic — procedural", stats="1 RGB image, 64×64 (gradient + 3 coloured blobs)", split="single image (overfit)", source="procedural"),
+    "B_hashgrid_instngp": dict(name="Procedural target image", kind="synthetic — procedural", stats="1 RGB image, 96×96", split="single image (overfit)", source="procedural"),
+    "B_icp_registration": dict(name="Synthetic point clouds", kind="synthetic — procedural", stats="two linked rings (~800 points, 3-D); target = source under a known rigid transform + 0.01 noise", split="1 source/target pair", source="procedural"),
+    "B_mae_pretrain": dict(name="Synthetic images", kind="synthetic — procedural", stats="24×24 grayscale (random discs); 36 patches of 4×4, 60% masked; 64/batch", split="generative (infinite)", source="procedural"),
+    "C_action_anticipation_lstm": dict(name="Synthetic action grammar", kind="synthetic — procedural", stats="length-12 sequences over 6 verbs (take/wash/cut/cook/pour/place) from a Markov matrix; 128/batch", split="fresh train + 512 eval", source="procedural"),
+    "C_simclr_pretrain": dict(name="Synthetic shapes", kind="synthetic — procedural", stats="6 shape classes at random position & scale, 20×20; 256/batch contrastive; probe = 40 labelled / 600 test", split="self-supervised + few-shot probe", source="procedural"),
+    "D_world_model": dict(name="2D point-mass rollouts", kind="synthetic — procedural env", stats="60,000 transitions (3,000 random starts × 20 steps); state 4-D [x,y,vx,vy], action 2-D", split="train only", source="procedural env"),
+    "D_tsdf_fusion": dict(name="Synthetic depth views", kind="synthetic — procedural", stats="1 scene (two spheres); 6 orthographic depth maps fused into a 64³ TSDF grid", split="single scene", source="procedural"),
+    "D_semantic_mapping": dict(name="2D grid world", kind="synthetic — procedural", stats="32×32 cells, 4 semantic classes; ~60 noisy observations/step (p_occ=0.8, p_label=0.7)", split="single map", source="procedural"),
+    "AG_reinforce_gridworld": dict(name="5×5 gridworld (RL env)", kind="synthetic env — no fixed dataset", stats="agent learns from its own rollouts; reward −0.1/step, +5 at goal", split="online RL", source="procedural env"),
+    "AG_behavior_cloning": dict(name="Expert gridworld demos", kind="synthetic — procedural", stats="~2,000 (state → expert action) pairs on a 6×6 grid (greedy expert)", split="train; eval = rollout success from every cell", source="procedural"),
+    "AG_agent_harness": dict(name="Tool-use task suite", kind="synthetic — procedural", stats="5 graded tasks (arithmetic + string ops) with ground-truth answers", split="eval suite", source="procedural"),
+    "LM_distillation": dict(name="Two interleaved spirals", kind="synthetic — procedural", stats="2 classes; 2,000 train / 1,000 test (2-D); the student sees only 80 labels", split="2,000 train / 1,000 test", source="procedural"),
+}
+
 USAGE = """## How to use
 
 ```python
@@ -87,6 +109,12 @@ def card(folder):
     b.append("| | |\n|---|---|\n"
              f"| **Task** | {meta['task']} |\n| **Data** | {meta['data']} |\n| **Track** | {meta['track']} |\n"
              f"| **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({colab}) |\n")
+
+    d = DATA.get(name)
+    if d:
+        b.append("## Dataset\n")
+        b.append(f"- **Name:** {d['name']}\n- **Type:** {d['kind']}\n- **Size / stats:** {d['stats']}\n"
+                 f"- **Split:** {d['split']}\n- **Source:** {d['source']}\n")
 
     if fin:
         b.append("## Results\n")

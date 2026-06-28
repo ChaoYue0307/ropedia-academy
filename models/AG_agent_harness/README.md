@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | AG · Agents & RL |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_agent_harness.ipynb) |
 
+## Dataset
+
+- **Name:** Tool-use task suite
+- **Type:** synthetic — procedural
+- **Size / stats:** 5 graded tasks (arithmetic + string ops) with ground-truth answers
+- **Split:** eval suite
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

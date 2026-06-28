@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | A · Human modeling |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_motion_diffusion.ipynb) |
 
+## Dataset
+
+- **Name:** Synthetic motion trajectories
+- **Type:** synthetic — procedural
+- **Size / stats:** 4,096 looping 2D trajectories, 32 timesteps × 2 = 64-D each (varied radius/phase/noise)
+- **Split:** train only (generative model)
+- **Source:** procedural
+
 ## Results
 
 | metric | value |

@@ -20,6 +20,14 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | **Track** | LM · Language & models |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_distillation.ipynb) |
 
+## Dataset
+
+- **Name:** Two interleaved spirals
+- **Type:** synthetic — procedural
+- **Size / stats:** 2 classes; 2,000 train / 1,000 test (2-D); the student sees only 80 labels
+- **Split:** 2,000 train / 1,000 test
+- **Source:** procedural
+
 ## Results
 
 | metric | value |
