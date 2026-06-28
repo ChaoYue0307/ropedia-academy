@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Line, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -161,6 +161,152 @@ export function ReferenceFrames3D() {
       <div className="mt-3">
         <Slider label={zh ? "椅子朝向" : "chair orientation"} value={deg} min={0} max={360} onChange={setDeg} format={(v) => `${v}°`} />
       </div>
+    </FigureFrame>
+  );
+}
+
+// ── A6 · 6D vs Euler rotation (the discontinuity is in the representation) ────
+export function RotationContinuity3D() {
+  const zh = useStore((s) => s.lang) === "zh";
+  const [t, setT] = useState(0.5);
+  useResizeKick();
+  const yawDeg = -170 + t * 360;                       // sweeps past ±180 (the wrap)
+  const yaw = (yawDeg * Math.PI) / 180;
+  const euler = (((yawDeg + 180) % 360) + 360) % 360 - 180;   // wrapped → jumps at ±180
+  return (
+    <FigureFrame
+      title={{ en: "6D vs Euler rotation (in 3D)", zh: "6D 与欧拉角旋转（三维）" }}
+      caption={{
+        en: "Drag the angle: the object rotates perfectly smoothly, yet the Euler angle JUMPS as it wraps past ±180° — a discontinuity a network can't fit. The 6D representation (the rotation matrix's first two columns, the red & green arrows) stays continuous, which is why it's far easier to regress.",
+        zh: "拖动角度：物体平滑旋转，但欧拉角越过 ±180° 时会跳变——这种不连续网络无法拟合。6D 表示（旋转矩阵前两列，红、绿箭头）始终连续，所以更易回归。",
+      }}
+      onReset={() => setT(0.5)}
+    >
+      <Frame cam={[2.6, 1.7, 2.9]}>
+        <gridHelper args={[6, 12, GROUND, GRID2]} position={[0, -1, 0]} />
+        <group rotation={[0, yaw, 0]}>
+          <mesh><boxGeometry args={[0.95, 0.6, 0.6]} /><meshStandardMaterial color="#6a5ef0" roughness={0.5} /></mesh>
+          <mesh position={[0.49, 0, 0]}><boxGeometry args={[0.05, 0.64, 0.64]} /><meshStandardMaterial color="#f59e0b" /></mesh>
+          <Line points={[[0, 0, 0], [1.4, 0, 0]]} color="#ef4444" lineWidth={3} />
+          <Line points={[[0, 0, 0], [0, 1.3, 0]]} color="#1d9e75" lineWidth={3} />
+        </group>
+      </Frame>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-lg border border-red-300/50 bg-red-50/60 px-2 py-1.5 dark:border-red-400/20 dark:bg-red-500/10">
+          <b className="text-red-500">Euler</b><div className="font-mono text-ink/70 dark:text-stone-300">{euler.toFixed(0)}° {Math.abs(euler) > 168 ? (zh ? "← 即将跳变" : "← about to jump") : ""}</div>
+        </div>
+        <div className="rounded-lg border border-emerald-300/50 bg-emerald-50/60 px-2 py-1.5 dark:border-emerald-400/20 dark:bg-emerald-500/10">
+          <b className="text-emerald-600">6D</b><div className="font-mono text-ink/70 dark:text-stone-300">[{Math.cos(yaw).toFixed(2)}, {Math.sin(yaw).toFixed(2)}] {zh ? "连续" : "continuous"} ✓</div>
+        </div>
+      </div>
+      <div className="mt-2"><Slider label={zh ? "旋转" : "rotation"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${(-170 + v * 360).toFixed(0)}°`} /></div>
+    </FigureFrame>
+  );
+}
+
+// ── B4 · Neural SDF — the surface is a level set ─────────────────────────────
+function torusSDF(p: V, R: number, r: number) {
+  const qx = Math.hypot(p[0], p[2]) - R;
+  return Math.hypot(qx, p[1]) - r;
+}
+export function SdfField3D() {
+  const zh = useStore((s) => s.lang) === "zh";
+  const [iso, setIso] = useState(0);
+  useResizeKick();
+  const R = 0.7, r = 0.24 + iso * 0.16;
+  const samples = useMemo<V[]>(() => [[0, 0, 0], [1.1, 0.2, 0], [0.7, 0, 0.7], [-0.9, 0.4, 0.3], [0, 0.9, -0.2], [0.45, -0.1, 0]], []);
+  return (
+    <FigureFrame
+      title={{ en: "Neural SDF — the surface is a level set (3D)", zh: "神经 SDF——表面是一个等值面（三维）" }}
+      caption={{
+        en: "A signed-distance field stores, at every 3D point, the distance to the surface (− inside, + outside). The shape is its zero level set. Raise the level and the surface inflates to the SDF = c offset surface. Dots show the sign at sample points; orbit to inspect.",
+        zh: "有符号距离场在每个三维点存储到表面的距离（内部为负，外部为正）。形状就是它的零等值面。提高水平值，表面膨胀为 SDF = c 的偏移面。圆点显示采样点的符号；旋转查看。",
+      }}
+      onReset={() => setIso(0)}
+    >
+      <Frame cam={[2.3, 1.7, 2.4]}>
+        <gridHelper args={[6, 12, GROUND, GRID2]} position={[0, -1, 0]} />
+        <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[R, r, 28, 56]} /><meshStandardMaterial color="#6a5ef0" roughness={0.35} metalness={0.1} transparent opacity={0.92} /></mesh>
+        {samples.map((p, i) => { const d = torusSDF(p, R, r); return <Dot key={i} p={p} r={0.07} c={d < 0 ? "#ef4444" : "#3b82f6"} />; })}
+        {tag("#ef4444", zh ? "内部 (−)" : "inside (−)", [1.6, 1.0, 0])}
+        {tag("#3b82f6", zh ? "外部 (+)" : "outside (+)", [1.6, 0.6, 0])}
+      </Frame>
+      <div className="mt-3"><Slider label={zh ? "等值面水平 c" : "level set c"} value={iso} min={-0.5} max={1} step={0.05} onChange={setIso} format={(v) => v.toFixed(2)} /></div>
+    </FigureFrame>
+  );
+}
+
+// ── C3 · VideoMAE tube masking (a space-time cube) ───────────────────────────
+export function TubeMasking3D() {
+  const zh = useStore((s) => s.lang) === "zh";
+  const [ratio, setRatio] = useState(0.6);
+  useResizeKick();
+  const SX = 4, SY = 4, T = 6;
+  const order = useMemo(() => {
+    const a = Array.from({ length: SX * SY }, (_, i) => i);
+    for (let i = a.length - 1; i > 0; i--) { const j = (i * 7 + 3) % (i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }, []);
+  const nMask = Math.round(ratio * SX * SY);
+  const masked = new Set(order.slice(0, nMask));
+  const cubes: React.ReactNode[] = [];
+  for (let sy = 0; sy < SY; sy++) for (let sx = 0; sx < SX; sx++) {
+    const tube = sy * SX + sx, isM = masked.has(tube);
+    for (let ti = 0; ti < T; ti++) {
+      const pos: V = [sx - 1.5, ti * 0.34 - 0.85, sy - 1.5];
+      cubes.push(isM
+        ? <mesh key={`${tube}-${ti}`} position={pos}><boxGeometry args={[0.28, 0.28, 0.28]} /><meshStandardMaterial color="#94a3b8" transparent opacity={0.12} /></mesh>
+        : <mesh key={`${tube}-${ti}`} position={pos}><boxGeometry args={[0.3, 0.3, 0.3]} /><meshStandardMaterial color={`hsl(${250 - ti * 18}, 70%, 62%)`} roughness={0.5} /></mesh>);
+    }
+  }
+  return (
+    <FigureFrame
+      title={{ en: "VideoMAE tube masking (3D)", zh: "VideoMAE 管状掩码（三维）" }}
+      caption={{
+        en: "A video is a space-time cube (height × width × time). Tube masking hides whole spatio-temporal tubes — the same spatial patches across ALL frames (the vertical = time axis) — so the model can't cheat by copying an adjacent frame; it must learn real motion. Raise the mask ratio.",
+        zh: "视频是一个时空立方体（高 × 宽 × 时间）。管状掩码遮挡整条时空管——在所有帧上遮挡相同的空间块（竖直方向 = 时间轴）——所以模型无法靠复制相邻帧作弊，必须学习真实运动。调高掩码比例。",
+      }}
+      onReset={() => setRatio(0.6)}
+    >
+      <Frame cam={[4.4, 3.2, 4.4]}>
+        {cubes}
+        {tag("#6a5ef0", zh ? "时间 →" : "time →", [-2.1, 0.3, -1.5])}
+      </Frame>
+      <div className="mt-3"><Slider label={zh ? "掩码比例" : "mask ratio"} value={ratio} min={0} max={0.9} step={0.05} onChange={setRatio} format={(v) => `${Math.round(v * 100)}%`} /></div>
+    </FigureFrame>
+  );
+}
+
+// ── D3 · TSDF fusion — multi-view depth completes a surface ───────────────────
+export function TsdfFusion3D() {
+  const zh = useStore((s) => s.lang) === "zh";
+  const [views, setViews] = useState(3);
+  useResizeKick();
+  const pts = useMemo<V[]>(() => {
+    const out: V[] = [], N = 220, gold = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = gold * i; out.push([Math.cos(th) * r, y, Math.sin(th) * r]); }
+    return out;
+  }, []);
+  const camDirs = useMemo<V[]>(() => Array.from({ length: 6 }, (_, k) => { const a = (k / 6) * Math.PI * 2; return [Math.cos(a), 0.25, Math.sin(a)]; }), []);
+  const seen = (n: V) => camDirs.slice(0, views).some((c) => { const L = Math.hypot(...c); return (n[0] * c[0] + n[1] * c[1] + n[2] * c[2]) / L > 0.35; });
+  return (
+    <FigureFrame
+      title={{ en: "TSDF fusion — depth → surface (3D)", zh: "TSDF 融合——深度 → 表面（三维）" }}
+      caption={{
+        en: "Each depth camera sees only the surface facing it. TSDF fusion averages many views into one volume, and the surface emerges where the signed distance crosses zero. Add views and watch the shell complete — more views convert a partial scan into a closed surface.",
+        zh: "每个深度相机只能看到朝向它的表面。TSDF 融合把多视角平均进一个体素体，表面在有符号距离过零处浮现。增加视角，观察外壳逐渐补全——更多视角把局部扫描变成闭合表面。",
+      }}
+      onReset={() => setViews(3)}
+    >
+      <Frame cam={[2.8, 2.0, 2.8]}>
+        <gridHelper args={[6, 12, GROUND, GRID2]} position={[0, -1.2, 0]} />
+        {pts.map((p, i) => seen(p)
+          ? <mesh key={i} position={p}><boxGeometry args={[0.1, 0.1, 0.1]} /><meshStandardMaterial color="#e2e8f0" roughness={0.4} /></mesh>
+          : <mesh key={i} position={p}><boxGeometry args={[0.07, 0.07, 0.07]} /><meshStandardMaterial color="#6a5ef0" transparent opacity={0.12} /></mesh>)}
+        {camDirs.slice(0, views).map((c, i) => { const L = Math.hypot(...c); const p: V = [c[0] / L * 2, c[1] / L * 2, c[2] / L * 2]; return <Dot key={i} p={p} r={0.09} c="#1d9e75" />; })}
+        {tag("#1d9e75", zh ? "深度相机" : "depth cams", [0, 2.3, 0])}
+      </Frame>
+      <div className="mt-3"><Slider label={zh ? "融合的视角数" : "views fused"} value={views} min={1} max={6} step={1} onChange={setViews} format={(v) => `${v}`} /></div>
     </FigureFrame>
   );
 }

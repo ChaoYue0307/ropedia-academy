@@ -1,14 +1,11 @@
 import { lazy, type ComponentType } from "react";
 import { NerfRay } from "./NerfRay";
-import { TsdfFusion } from "./TsdfFusion";
 import { SlamLoop } from "./SlamLoop";
-import { TubeMasking } from "./TubeMasking";
 import { AnticipationTopK } from "./AnticipationTopK";
-import { SdfField } from "./SdfField";
 import { SmplBody } from "./SmplBody";
 import { SceneGraphDemo } from "./SceneGraphDemo";
 import { GazeTimeline } from "./GazeTimeline";
-import { PoseHeatmap, MotionSequence, ParametricHand, RotationContinuity, MotionDiffusion, ContactScene, SmplifyPrior } from "./extraA";
+import { PoseHeatmap, MotionSequence, ParametricHand, MotionDiffusion, ContactScene, SmplifyPrior } from "./extraA";
 import { BundleAdjust, HashGrid, Deformation4D, NerfFloaters } from "./extraB";
 import { LongTail, HandPrior, ActiveObject, ActionGrammar, BaselineMetric } from "./extraC";
 import { PnpTracking, SemanticFusion, MapParadigms, WorldModelRollout, Pipeline } from "./extraD";
@@ -22,6 +19,10 @@ const EgoView3D = lazy(() => import("./three/EgoView3D"));
 const Pinhole3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.Pinhole3D })));
 const Triangulation3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.Triangulation3D })));
 const ReferenceFrames3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.ReferenceFrames3D })));
+const RotationContinuity3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.RotationContinuity3D })));
+const SdfField3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.SdfField3D })));
+const TubeMasking3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.TubeMasking3D })));
+const TsdfFusion3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.TsdfFusion3D })));
 
 // Maps a lesson id to interactive demo components rendered in that lesson.
 // Every one of the 36 lessons now has at least one hands-on figure.
@@ -32,7 +33,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   A3: [MotionSequence],
   A4: [SmplBody3D],
   A5: [ParametricHand],
-  A6: [RotationContinuity],
+  A6: [RotationContinuity3D],
   A7: [MotionDiffusion],
   A8: [ContactScene],
   A9: [SmplifyPrior],
@@ -40,7 +41,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   B1: [Pinhole3D],
   B2: [Triangulation3D],
   B3: [BundleAdjust],
-  B4: [SdfField],
+  B4: [SdfField3D],
   B5: [NerfRay, NerfVolume3D],
   B6: [HashGrid],
   B7: [GaussianSplat3D],
@@ -49,7 +50,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   // Track C — Egocentric Vision
   C1: [EgoView3D],
   C2: [LongTail],
-  C3: [TubeMasking],
+  C3: [TubeMasking3D],
   C4: [AnticipationTopK],
   C5: [HandPrior],
   C6: [ActiveObject],
@@ -59,7 +60,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   // Track D — Scene & World Models
   D1: [SlamLoop],
   D2: [PnpTracking],
-  D3: [TsdfFusion],
+  D3: [TsdfFusion3D],
   D4: [SemanticFusion],
   D5: [SceneGraphDemo],
   D6: [MapParadigms],
