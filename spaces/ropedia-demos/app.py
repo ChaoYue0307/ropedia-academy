@@ -234,31 +234,73 @@ def _fmt(v):
     if isinstance(v, float): return f"{v:.4g}"
     return str(v)
 
-def _metric_rows(d, prefix=""):
-    """Flatten metrics to (label, tidy_value) rows; summarize curves instead of dumping them."""
+# friendly label · direction (↑ higher better / ↓ lower better) · plain-English meaning
+_METRIC_INFO = {
+    "loss": ("Training loss", "↓", "how wrong the model is on its objective"),
+    "nt_xent": ("Contrastive loss", "↓", "SimCLR's training loss — lower = better-separated features"),
+    "recon_mse": ("Reconstruction error", "↓", "pixel error on masked patches (training)"),
+    "test_recon_mse": ("Held-out recon error", "↓", "reconstruction error on unseen images"),
+    "probe_simclr": ("Probe accuracy — SimCLR", "↑", "few-shot accuracy using the learned features"),
+    "probe_random": ("Probe accuracy — random", "↑", "same probe on an untrained encoder (the baseline to beat)"),
+    "teacher": ("Teacher accuracy", "↑", "the large model's test accuracy"),
+    "student_plain": ("Student — few labels", "↑", "small model trained on 100 labels only"),
+    "student_distill": ("Student — distilled", "↑", "small model taught by the teacher (should beat 'few labels')"),
+    "greedy_eval": ("Eval return (greedy)", "↑", "reward per CartPole episode, greedy policy (max 500)"),
+    "return": ("Training return", "↑", "reward per episode during training"),
+    "psnr": ("Image quality (PSNR)", "↑", "reconstruction sharpness in dB"),
+    "rmse": ("Alignment error", "↓", "distance between the aligned point clouds"),
+    "top1": ("Top-1 accuracy", "↑", "fraction of next-actions predicted correctly"),
+    "pck": ("Keypoint accuracy (PCK)", "↑", "fraction of joints localized within tolerance"),
+    "geo_6d": ("Rotation error — 6D", "↓", "angle error using the continuous 6D representation"),
+    "geo_euler": ("Rotation error — Euler", "↓", "same error with Euler angles (should be worse)"),
+    "l1": ("Surface error (L1)", "↓", "signed-distance error of the reconstructed shape"),
+    "dyn_mse": ("Dynamics error", "↓", "how well the world model predicts the next state"),
+    "final_dist": ("Distance to goal", "↓", "how close the planned path ends to the goal (vs random)"),
+    "history": ("Map accuracy", "↑", "occupancy/label accuracy of the built map"),
+    "verts": ("Mesh vertices", "", "size of the reconstructed mesh"),
+    "best_val": ("Best validation loss", "↓", "lowest val loss reached (text model)"),
+    "final_train": ("Final training loss", "↓", "training loss at the end"),
+    "steps": ("Training steps", "", "number of optimization steps"),
+    "params": ("Parameters", "", "model size (weights)"),
+    "train_seconds": ("Train time (s)", "", "wall-clock training time"),
+    "imitation_acc": ("Imitation accuracy", "↑", "agreement with the expert's actions"),
+    "rollout_success": ("Rollout success", "↑", "fraction of start states solved (1 = all)"),
+    "success_rate": ("Task success rate", "↑", "fraction of agent tasks solved correctly"),
+    "zero_shot": ("Zero-shot accuracy", "↑", "accuracy with no training, via text prompts"),
+    "linear_probe": ("Probe accuracy", "↑", "linear classifier on frozen features"),
+    "reproj": ("Reprojection error", "↓", "2D-keypoint fitting error"),
+}
+_SKIP = {"seeds", "config", "history_step_train_val", "faces"}   # internal / redundant keys
+
+def _metric_rows(d):
+    """(friendly label, value, meaning) rows — final value with where it started, no jargon."""
     rows = []
     for k, v in d.items():
-        key = prefix + str(k)
+        if k in _SKIP: continue
+        label, arrow, meaning = _METRIC_INFO.get(k, (str(k).replace("_", " ").capitalize(), "", ""))
+        lab = f"{label} {arrow}".strip()
         if isinstance(v, bool):
-            rows.append((key, "✓" if v else "✗"))
+            rows.append((lab, "✓" if v else "✗", meaning))
         elif isinstance(v, (int, float)):
-            rows.append((key, f"**{_fmt(v)}**"))
+            rows.append((lab, f"**{_fmt(v)}**", meaning))
         elif isinstance(v, dict):
-            rows += _metric_rows(v, key + ".")
+            if k == "final_dist" and "planner" in v:
+                extra = f"  ·  _random {_fmt(v['random'])}_" if "random" in v else ""
+                rows.append((lab, f"**{_fmt(v['planner'])}**{extra}", meaning))
         elif isinstance(v, list) and v:
-            last = v[-1]
-            if isinstance(last, (list, tuple)) and len(last) >= 2 and isinstance(last[-1], (int, float)):
-                rows.append((key, f"{_fmt(v[0][-1])} → **{_fmt(last[-1])}**  ·  {len(v)} pts"))   # [step,value] curve
+            last, first = v[-1], v[0]
+            if isinstance(last, (list, tuple)) and last and isinstance(last[-1], (int, float)):
+                fv, sv = last[-1], first[-1]
             elif isinstance(last, (int, float)):
-                rows.append((key, f"{_fmt(v[0])} → **{_fmt(last)}**  ·  {len(v)} pts"))
+                fv, sv = last, first
             else:
-                rows.append((key, f"{len(v)} items"))
-        elif isinstance(v, str):
-            rows.append((key, v[:80]))
+                continue
+            val = f"**{_fmt(fv)}**" + (f"  ·  _from {_fmt(sv)}_" if _fmt(sv) != _fmt(fv) else "")
+            rows.append((lab, val, meaning))
     return rows
 
 def _metrics_md(slug):
-    """A tidy metrics table (or None). Reads metrics.json, falling back to results.json."""
+    """A readable results table (or None). Reads metrics.json, falling back to results.json."""
     data = None
     for fn in ("metrics.json", "results.json"):
         try: data = json.load(open(dl(slug, fn))); break
@@ -266,7 +308,17 @@ def _metrics_md(slug):
     if not isinstance(data, dict): return None
     rows = _metric_rows(data)
     if not rows: return None
-    return "#### 📊 Results\n\n| metric | value |\n|---|---|\n" + "".join(f"| `{k}` | {val} |\n" for k, val in rows)
+    out = ("#### 📊 Results\n\n_↑ = higher is better · ↓ = lower is better · a curve shows the **final** value (and where it started)._\n\n"
+           "| metric | value | what it means |\n|---|---|---|\n"
+           + "".join(f"| {lab} | {val} | {meaning} |\n" for lab, val, meaning in rows))
+    seeds = data.get("seeds")
+    if isinstance(seeds, dict):
+        n = seeds.get("n", "?")
+        parts = [f"**{_METRIC_INFO.get(k, (k, '', ''))[0]}** {v['mean']:.3g} ± {v['std']:.2g}"
+                 for k, v in seeds.items() if isinstance(v, dict) and "mean" in v]
+        if parts:
+            out += f"\n_Robustness over {n} seeds: " + " · ".join(parts) + "._\n"
+    return out
 
 def gallery_fn(slug):
     """Never raises — always returns (image_or_None, header_markdown, metrics_markdown)."""
