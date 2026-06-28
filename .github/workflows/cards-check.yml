@@ -1,0 +1,30 @@
+name: Cards & repo health
+
+# Regenerates the model cards, advanced placeholders and README models index, and
+# fails if anything drifts; plus a local repo-health check (bundles ↔ Space gallery).
+on:
+  push:
+  pull_request:
+
+jobs:
+  cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Repo health (bundles ↔ gallery)
+        run: python scripts/check_repo_health.py
+      - name: Regenerate cards + placeholders + README index
+        run: |
+          python scripts/gen_model_cards.py
+          node scripts/gen_advanced_placeholders.mjs
+          python scripts/gen_readme_models.py
+      - name: Check for drift
+        run: |
+          git diff --exit-code models/ README.md \
+            || (echo "::error::Cards/placeholders/README index are out of date — run gen_model_cards.py, gen_advanced_placeholders.mjs and gen_readme_models.py, then commit." && exit 1)

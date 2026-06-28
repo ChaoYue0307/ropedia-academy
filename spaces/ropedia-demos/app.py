@@ -298,6 +298,52 @@ _NAME_OVERRIDE = {"ag-reinforce-gridworld": "REINFORCE · CartPole", "nanogpt-sh
 def pretty(slug): return _NAME_OVERRIDE.get(slug, slug.replace("-", " ").title())
 N_TRAINED = len(TRAINED); N_PH = len(GALLERY) - N_TRAINED
 
+_HEAD_PRIORITY = ["greedy_eval", "success_rate", "rollout_success", "probe_simclr", "zero_shot",
+                  "linear_probe", "top1", "pck", "student_distill", "best_val", "test_recon_mse",
+                  "psnr", "rmse", "final_dist", "history", "geo_6d", "reproj", "dyn_mse", "l1",
+                  "recon_mse", "return", "loss", "verts"]
+_HEAD_NICE = {"greedy_eval": "greedy return", "probe_simclr": "probe acc", "student_distill": "distilled acc",
+              "test_recon_mse": "test MSE", "psnr": "PSNR", "top1": "top-1", "pck": "PCK", "rmse": "RMSE",
+              "success_rate": "success", "geo_6d": "geodesic err", "recon_mse": "recon MSE", "return": "return",
+              "best_val": "val loss", "final_dist": "goal dist", "history": "map acc", "dyn_mse": "dyn MSE",
+              "l1": "L1 err", "verts": "mesh verts", "rollout_success": "rollout", "reproj": "reproj err"}
+
+def _headline(slug):
+    data = None
+    for fn in ("metrics.json", "results.json"):
+        try: data = json.load(open(dl(slug, fn))); break
+        except Exception: continue
+    if not isinstance(data, dict): return None
+    fin = {}
+    def fl(d, pre=""):
+        for k, v in d.items():
+            if k == "seeds": continue
+            if isinstance(v, bool): continue
+            if isinstance(v, (int, float)): fin[pre + k] = v
+            elif isinstance(v, dict): fl(v, pre + k + ".")
+            elif isinstance(v, list) and v:
+                last = v[-1]
+                if isinstance(last, (list, tuple)) and last and isinstance(last[-1], (int, float)): fin[pre + k] = last[-1]
+                elif isinstance(last, (int, float)): fin[pre + k] = last
+    fl(data)
+    for p in _HEAD_PRIORITY:
+        for k, v in fin.items():
+            if k.split(".")[0] == p:
+                return _HEAD_NICE.get(p, p), v
+    for k, v in fin.items():
+        return k.split(".")[0], v
+    return None
+
+def leaderboard_fn():
+    rows = []
+    for slug in GALLERY:
+        if slug not in TRAINED: continue
+        h = _headline(slug)
+        if h: rows.append((pretty(slug), h[0], f"{h[1]:.4g}" if isinstance(h[1], float) else str(h[1])))
+    body = "".join(f"| {name} | {k} | **{v}** |\n" for name, k, v in rows)
+    return ("### 🏆 Trained-model leaderboard\n\n_Headline metric per trained model (see each tile for full results)._\n\n"
+            "| model | metric | value |\n|---|---|---|\n" + body)
+
 # ───────────────────── UI ─────────────────────
 BRAND = gr.themes.Color(  # Ropedia Academy palette (matches the site's tailwind `brand`)
     c50="#eef0ff", c100="#e0e3ff", c200="#c6ccff", c300="#a3a8ff", c400="#827ef9",
@@ -365,6 +411,8 @@ with gr.Blocks(title="Ropedia Academy · Models") as demo:
                 with gr.Column():
                     gmd.render()
                     gt.render()
+            lb = gr.Markdown()
+            gr.Button("🏆 Show leaderboard (headline metric per trained model)", size="sm").click(leaderboard_fn, None, lb)
         with gr.Tab("💬 Language model"):
             gr.Markdown("A **real** small instruct LLM — **SmolLM2-360M-Instruct** — answers your prompt. "
                         "(The from-scratch *nanoGPT* is in the Gallery.) First call loads the model; CPU is slow — set the Space to **ZeroGPU** for speed.", elem_classes="tip")

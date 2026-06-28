@@ -131,7 +131,7 @@ _19 trained · 26 documented placeholders · 45 repos total — one click trains
 | Multiresolution hash grid (Instant-NGP) | ✅ trained | PSNR 64.2 | [🤗](https://huggingface.co/cy0307/ropedia-b-hashgrid-instngp) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_hashgrid_instngp.ipynb) |
 | NeRF from scratch (tiny_nerf) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-b-nerf-from-scratch) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_nerf_from_scratch.ipynb) |
 | Nerfstudio nerfacto | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-b-nerfstudio-nerfacto) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/B_nerfstudio_nerfacto.ipynb) |
-| Neural SDF (DeepSDF-style) | ✅ trained | l1 0.016 | [🤗](https://huggingface.co/cy0307/ropedia-b-deepsdf-shape) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_deepsdf_shape.ipynb) |
+| Neural SDF (DeepSDF-style) | ✅ trained | L1 err 0.016 | [🤗](https://huggingface.co/cy0307/ropedia-b-deepsdf-shape) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_deepsdf_shape.ipynb) |
 
 
 **C · Egocentric vision**
@@ -152,11 +152,11 @@ _19 trained · 26 documented placeholders · 45 repos total — one click trains
 
 | Model | Status | Headline result | Links |
 |---|---|---|---|
-| Bayesian semantic mapping | ✅ trained | history 1 | [🤗](https://huggingface.co/cy0307/ropedia-d-semantic-mapping) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_semantic_mapping.ipynb) |
+| Bayesian semantic mapping | ✅ trained | map acc 1 | [🤗](https://huggingface.co/cy0307/ropedia-d-semantic-mapping) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_semantic_mapping.ipynb) |
 | DreamerV3 — world-model RL | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-d-dreamerv3-world-model) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/D_dreamerv3_world_model.ipynb) |
 | SplaTAM — Gaussian-Splatting SLAM | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-d-splatam-slam) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/D_splatam_slam.ipynb) |
-| TSDF fusion → mesh | ✅ trained | verts 27362 | [🤗](https://huggingface.co/cy0307/ropedia-d-tsdf-fusion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_tsdf_fusion.ipynb) |
-| World model + planning (CEM) | ✅ trained | dyn_mse 8.76e-08 | [🤗](https://huggingface.co/cy0307/ropedia-d-world-model) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_world_model.ipynb) |
+| TSDF fusion → mesh | ✅ trained | mesh verts 27362 | [🤗](https://huggingface.co/cy0307/ropedia-d-tsdf-fusion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_tsdf_fusion.ipynb) |
+| World model + planning (CEM) | ✅ trained | dyn MSE 8.76e-08 | [🤗](https://huggingface.co/cy0307/ropedia-d-world-model) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_world_model.ipynb) |
 
 
 **LM · Language & multimodal**
@@ -175,7 +175,7 @@ _19 trained · 26 documented placeholders · 45 repos total — one click trains
 | Stable Diffusion — LoRA / DreamBooth | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-stable-diffusion-lora) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_stable_diffusion_lora.ipynb) |
 | Unsloth — fast LLM fine-tune | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-unsloth-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_unsloth_finetune.ipynb) |
 | Video-LM (Qwen2-VL) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-videolm-qwen2vl) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_videolm_qwen2vl.ipynb) |
-| nanoGPT — Tiny Shakespeare | ✅ trained | history_step_train_val 1.84 | [🤗](https://huggingface.co/cy0307/ropedia-nanogpt-shakespeare) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_nanogpt_pretrain.ipynb) |
+| nanoGPT — Tiny Shakespeare | ✅ trained | val loss 1.81 | [🤗](https://huggingface.co/cy0307/ropedia-nanogpt-shakespeare) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_nanogpt_pretrain.ipynb) |
 
 
 **AG · Agents & RL**

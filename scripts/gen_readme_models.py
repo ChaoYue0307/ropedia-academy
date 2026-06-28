@@ -12,14 +12,17 @@ START, END = "<!-- MODELS-INDEX:START -->", "<!-- MODELS-INDEX:END -->"
 GROUPS = [("A", "A · Human modeling & motion"), ("B", "B · 3D / 4D & neural rendering"),
           ("C", "C · Egocentric vision"), ("D", "D · Scene & world models"),
           ("LM", "LM · Language & multimodal"), ("AG", "AG · Agents & RL")]
-PRIORITY = ["greedy_eval", "probe_simclr", "zero_shot", "linear_probe", "top1", "pck",
-            "student_distill", "test_recon_mse", "psnr", "rmse", "success_rate",
-            "rollout_success", "geo_6d", "reproj", "recon_mse", "return", "loss"]
+PRIORITY = ["greedy_eval", "success_rate", "rollout_success", "probe_simclr", "zero_shot",
+            "linear_probe", "top1", "pck", "student_distill", "best_val", "test_recon_mse",
+            "psnr", "rmse", "final_dist", "history", "geo_6d", "reproj", "dyn_mse", "l1",
+            "recon_mse", "return", "loss", "verts"]
 NICE = {"greedy_eval": "greedy return", "probe_simclr": "probe acc", "student_distill": "distilled acc",
         "test_recon_mse": "test MSE", "psnr": "PSNR", "top1": "top-1", "pck": "PCK",
         "rmse": "RMSE", "success_rate": "success", "rollout_success": "rollout",
         "geo_6d": "geodesic err", "reproj": "reproj err", "recon_mse": "recon MSE",
-        "return": "return", "loss": "final loss", "zero_shot": "zero-shot acc", "linear_probe": "probe acc"}
+        "return": "return", "loss": "final loss", "zero_shot": "zero-shot acc", "linear_probe": "probe acc",
+        "best_val": "val loss", "final_dist": "goal dist", "history": "map acc", "dyn_mse": "dyn MSE",
+        "l1": "L1 err", "verts": "mesh verts"}
 
 
 def slug(folder): return "ropedia-" + folder.lower().replace("_", "-")

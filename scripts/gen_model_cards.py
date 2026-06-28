@@ -224,6 +224,8 @@ def finals(d, prefix=""):
     """Flatten metrics to {label: final_scalar}."""
     out = {}
     for k, v in d.items():
+        if k == "seeds":   # rendered separately as a Robustness section
+            continue
         if isinstance(v, bool):
             out[prefix + k] = v
         elif isinstance(v, (int, float)):
@@ -300,9 +302,21 @@ def card(folder):
             f"| `{k}` | {round(v, 4) if isinstance(v, float) else v} | {METRIC_HELP.get(k.split(' ')[0], '')} |\n"
             for k, v in fin.items())
         b.append("| metric | value | meaning |\n|---|---|---|\n" + rows)
-    pngs = sorted(os.path.basename(p) for p in glob.glob(os.path.join(folder, "*.png")))
+    pngs = sorted(os.path.basename(p) for p in glob.glob(os.path.join(folder, "*.png")) if os.path.basename(p) != "seeds.png")
     if pngs:
         b.append("\n" + "\n".join(f"![{os.path.splitext(p)[0]}]({p})" for p in pngs) + "\n")
+
+    seeds = metrics.get("seeds")
+    if isinstance(seeds, dict):
+        n = seeds.get("n", "?")
+        b.append(f"## Robustness (mean ± std over {n} seeds)\n")
+        b.append("Single-run numbers above are one seed; this is the distribution over independent re-trains "
+                 "(honest variance — no cherry-picking).\n\n")
+        rows = "".join(f"| `{k}` | {v['mean']:.4g} ± {v['std']:.2g} |\n"
+                       for k, v in seeds.items() if isinstance(v, dict) and "mean" in v)
+        b.append("| metric | mean ± std |\n|---|---|\n" + rows)
+        if os.path.exists(os.path.join(folder, "seeds.png")):
+            b.append("\n![seeds](seeds.png)\n")
 
     sp = os.path.join(folder, "sample.txt")
     if os.path.exists(sp):

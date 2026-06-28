@@ -7,8 +7,22 @@ sdk: gradio
 app_file: app.py
 pinned: false
 license: mit
+short_description: Real-model demos for embodied & spatial AI — LLM chat, diffusion, RL, world models
+models:
+  - HuggingFaceTB/SmolLM2-360M-Instruct
+  - cy0307/ropedia-nanogpt-shakespeare
+  - cy0307/ropedia-c-simclr-pretrain
+  - cy0307/ropedia-b-mae-pretrain
+  - cy0307/ropedia-lm-distillation
+  - cy0307/ropedia-ag-reinforce-gridworld
+  - cy0307/ropedia-d-world-model
 tags:
 - ropedia-academy
+- embodied-ai
+- llm
+- diffusion
+- reinforcement-learning
+- educational
 ---
 
 # Ropedia Academy · Models
