@@ -1,0 +1,30 @@
+{
+  "success_rate": 1.0,
+  "results": [
+    {
+      "task": "compute 2*(3+4)",
+      "pred": "14",
+      "ok": true
+    },
+    {
+      "task": "compute sqrt(144)",
+      "pred": "12.0",
+      "ok": true
+    },
+    {
+      "task": "length of robotics",
+      "pred": "8",
+      "ok": true
+    },
+    {
+      "task": "reverse agent",
+      "pred": "tnega",
+      "ok": true
+    },
+    {
+      "task": "compute 10*10-1",
+      "pred": "99",
+      "ok": true
+    }
+  ]
+}
