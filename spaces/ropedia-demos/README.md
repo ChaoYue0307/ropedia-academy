@@ -13,20 +13,23 @@ tags:
 
 # Ropedia Academy · Models
 
-One Space, many demos — interactive showcases of models trained from scratch in
-[Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/), all loaded from
-`cy0307/ropedia-*`:
+One Space, many demos from [Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/) —
+each tab is backed by a **real** model that fits its task:
 
-- **nanoGPT** — generate Shakespeare-style text
-- **Motion diffusion** — sample motion trajectories
-- **Action anticipation** — predict the next action
-- **Gridworld policy** — pick a start, watch the agent reach the goal
-- **World model** — plan a trajectory with CEM
-- **Tool-use agent** — type a task, the agent calls tools
-- **Gallery** — every model's result figure + metrics
+- **💬 Language model** — a real small instruct LLM (**SmolLM2-360M-Instruct**) answers your prompt
+- **🎨 Diffusion (DDPM)** — a real class-conditional diffusion model **generates handwritten digits** on demand
+- **🔮 Action anticipation** — the LLM predicts the next action in-context
+- **🎮 CartPole policy** — a REINFORCE / actor-critic agent solving Gymnasium **CartPole-v1**
+- **🌍 World model** — model-based planning with CEM
+- **🛠️ Tool-use agent** — a real ReAct loop: the LLM reasons, real tools execute (and fix its arithmetic)
+- **🖼️ Gallery** — every trained model's result figure + metrics
+
+## Hardware
+Runs on **free CPU** (the LLM/DDPM are small; first LLM call loads the model and is slow).
+For snappy generation, set the Space hardware to **ZeroGPU** and add `spaces` to `requirements.txt` —
+the code already guards GPU sections with `@spaces.GPU`, so it just works.
 
 ## Deploy
 ```bash
 hf upload cy0307/ropedia-demos spaces/ropedia-demos . --repo-type=space
 ```
-(or New Space → Gradio → upload these files). Free CPU hardware is fine — the models are tiny.

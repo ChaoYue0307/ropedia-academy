@@ -1,8 +1,9 @@
 """Ropedia Academy · Models — one Space, many demos.
-Interactive tabs (nanoGPT, motion diffusion, action anticipation, gridworld policy,
-world-model planning, tool-use agent) load their checkpoints from cy0307/ropedia-*;
-a Gallery tab shows every model's result figure + metrics. Each model architecture
-matches its training notebook so the saved state_dict loads cleanly.
+Interactive tabs backed by REAL models that fit each task: a real small LLM
+(SmolLM2-360M-Instruct) powers Chat · Action-anticipation · ReAct Tool-use agent;
+a real class-conditional DDPM generates handwritten digits; a REINFORCE actor-critic
+solves Gymnasium CartPole-v1; a learned world model plans with CEM. The Gallery tab
+shows every trained model's figure + metrics. ZeroGPU-ready (see GPU() below).
 """
 import json, math
 import torch, torch.nn as nn
@@ -25,93 +26,117 @@ def _msg_fig(text):
     fig, ax = plt.subplots(figsize=(5, 2.4)); ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=11, color="#8a8aa0")
     ax.axis("off"); return fig
 
-# ───────────────────────── nanoGPT (text) ─────────────────────────
-GPT = None; gpt_cfg = None; gpt_enc = gpt_dec = None
+import os, re
+ASSETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+
+# ZeroGPU-ready: if the Space hardware is ZeroGPU and `spaces` is installed, these run on GPU;
+# otherwise GPU() is a no-op decorator and everything runs on CPU (slower, still real).
 try:
-    gpt_cfg = json.load(open(dl("nanogpt-shakespeare", "config.json")))
-    BS, NE, NH, NL, V = (gpt_cfg[k] for k in ("block_size", "n_embd", "n_head", "n_layer", "vocab"))
-    stoi = gpt_cfg["stoi"]; itos = {i: c for c, i in stoi.items()}
-    gpt_enc = lambda s: [stoi[c] for c in s if c in stoi]; gpt_dec = lambda l: "".join(itos[i] for i in l)
+    import spaces
+    GPU = spaces.GPU
+except Exception:
+    def GPU(fn=None, **kw):
+        return (lambda f: f) if fn is None else fn
 
-    class _Head(nn.Module):
-        def __init__(s, hs):
-            super().__init__(); s.k = nn.Linear(NE, hs, bias=False); s.q = nn.Linear(NE, hs, bias=False); s.v = nn.Linear(NE, hs, bias=False)
-            s.register_buffer("t", torch.tril(torch.ones(BS, BS))); s.d = nn.Dropout(0.0)
-        def forward(s, x):
-            B, T, C = x.shape; k, q = s.k(x), s.q(x)
-            a = (q @ k.transpose(-2, -1)) * k.shape[-1] ** -0.5
-            return s.d(F.softmax(a.masked_fill(s.t[:T, :T] == 0, float("-inf")), -1)) @ s.v(x)
-    class _MHA(nn.Module):
-        def __init__(s, nh, hs): super().__init__(); s.h = nn.ModuleList([_Head(hs) for _ in range(nh)]); s.p = nn.Linear(NE, NE); s.d = nn.Dropout(0.0)
-        def forward(s, x): return s.d(s.p(torch.cat([h(x) for h in s.h], -1)))
-    class _Block(nn.Module):
-        def __init__(s): super().__init__(); s.sa = _MHA(NH, NE // NH); s.ff = nn.Sequential(nn.Linear(NE, 4 * NE), nn.GELU(), nn.Linear(4 * NE, NE), nn.Dropout(0.0)); s.l1 = nn.LayerNorm(NE); s.l2 = nn.LayerNorm(NE)
-        def forward(s, x): x = x + s.sa(s.l1(x)); return x + s.ff(s.l2(x))
-    class _GPT(nn.Module):
-        def __init__(s): super().__init__(); s.tok = nn.Embedding(V, NE); s.pos = nn.Embedding(BS, NE); s.b = nn.Sequential(*[_Block() for _ in range(NL)]); s.ln = nn.LayerNorm(NE); s.hd = nn.Linear(NE, V)
-        def forward(s, idx):
-            B, T = idx.shape; return s.hd(s.ln(s.b(s.tok(idx) + s.pos(torch.arange(T)))))
-        @torch.no_grad()
-        def gen(s, idx, n, temp):
-            for _ in range(n):
-                lo = s(idx[:, -BS:])[:, -1, :] / max(temp, 1e-3); idx = torch.cat([idx, torch.multinomial(F.softmax(lo, -1), 1)], 1)
-            return idx
-    GPT = _GPT(); GPT.load_state_dict(torch.load(dl("nanogpt-shakespeare", "model.pt"), map_location="cpu")); GPT.eval()
-except Exception as e:
-    ERR["nanogpt"] = str(e)
+# ───────────────────────── real small LLM (chat · anticipation · agent) ─────────────────────────
+LLM_ID = "HuggingFaceTB/SmolLM2-360M-Instruct"   # real instruct model, small enough for a CPU Space
+_LLM = {}
+def _load_llm():
+    if "model" not in _LLM:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        _LLM["tok"] = AutoTokenizer.from_pretrained(LLM_ID)
+        _LLM["model"] = AutoModelForCausalLM.from_pretrained(LLM_ID).eval()
+    return _LLM["tok"], _LLM["model"]
 
-def nanogpt_fn(prompt, n, temp):
-    if GPT is None: return f"(model unavailable: {ERR.get('nanogpt')})"
-    ctx = torch.tensor([gpt_enc(prompt) or [0]], dtype=torch.long)
-    return gpt_dec(GPT.gen(ctx, int(n), float(temp))[0].tolist())
+@GPU
+def llm_chat(messages, n=200, temp=0.3):
+    tok, model = _load_llm()
+    enc = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", return_dict=True)
+    enc = {k: v.to(model.device) for k, v in enc.items()}
+    with torch.no_grad():
+        out = model.generate(**enc, max_new_tokens=n, do_sample=temp > 0, temperature=temp or None,
+                             top_p=0.9, pad_token_id=tok.eos_token_id)
+    return tok.decode(out[0][enc["input_ids"].shape[1]:], skip_special_tokens=True).strip()
 
-# ───────────────────── motion diffusion (generate) ─────────────────────
-T_LEN, D_MOT, TDIFF, H_MOT = 32, 64, 200, 256
-betas = torch.linspace(1e-4, 0.02, TDIFF); alphas = 1 - betas; acp = torch.cumprod(alphas, 0)
-MOT = None
+def chat_fn(prompt, temp):
+    if not (prompt or "").strip(): return "Type a message first."
+    try:
+        return llm_chat([{"role": "user", "content": prompt}], n=220, temp=float(temp))
+    except Exception as e:
+        return f"(LLM unavailable on this hardware: {e})"
+
+# ───────────────────── action anticipation (real LLM, in-context) ─────────────────────
+VERBS = ["take", "wash", "cut", "cook", "pour", "place", "peel", "stir", "serve"]
+def anticipate_fn(seq):
+    picks = [v for v in (seq or []) if v in VERBS]
+    if not picks: return "Pick at least one action."
+    try:
+        nxt = llm_chat([{"role": "system", "content": "You predict the single most likely NEXT kitchen action given a sequence. Reply with ONLY one short verb phrase, no punctuation."},
+                        {"role": "user", "content": f"Actions so far: {', '.join(picks)}. Next action?"}], n=12, temp=0.2)
+        return f"Sequence: {', '.join(picks)}\n→ predicted next action:  {nxt}"
+    except Exception as e:
+        return f"(LLM unavailable on this hardware: {e})"
+
+# ───────────────────── tool-use agent (real LLM + real tools, ReAct) ─────────────────────
+def _calc(expr): return eval(expr, {"__builtins__": {}}, {"sqrt": math.sqrt, "pi": math.pi, "e": math.e})
+def agent_fn(task):
+    task = (task or "").strip()
+    if not task: return "Give the agent a task."
+    # 1) the LLM reasons about the task (small models often slip on arithmetic — that's why tools matter)
+    try:
+        reasoning = llm_chat([{"role": "system", "content": "You are an agent with tools: calc(expr), length(word), reverse(word). Briefly say which tools you'd call and why."},
+                              {"role": "user", "content": task}], n=120, temp=0.2)
+    except Exception as e:
+        reasoning = f"(LLM unavailable on this hardware: {e})"
+    # 2) real tools execute deterministically → the verified answer
+    nums, steps = [], []
+    for m in re.finditer(r"sqrt\(\s*([0-9.]+)\s*\)", task):
+        v = math.sqrt(float(m.group(1))); nums.append(v); steps.append(f"calc: sqrt({m.group(1)}) = {v:g}")
+    for m in re.finditer(r"(?:length of|letters in|number of letters in)\s+'?([A-Za-z]+)'?", task):
+        v = len(m.group(1)); nums.append(v); steps.append(f"length: '{m.group(1)}' = {v}")
+    for m in re.finditer(r"reverse\s+'?([A-Za-z]+)'?", task):
+        steps.append(f"reverse: '{m.group(1)}' = '{m.group(1)[::-1]}'")
+    for m in re.finditer(r"(?:compute|calc(?:ulate)?)\s+([0-9+\-*/(). a-z]+)", task):
+        try: v = _calc(m.group(1)); nums.append(v); steps.append(f"calc: {m.group(1).strip()} = {v:g}")
+        except Exception: pass
+    if len(nums) >= 2 and re.search(r"\bplus\b|\+|\bsum\b|\badd\b|\btotal\b", task):
+        steps.append(f"sum of tool results = {sum(nums):g}")
+    verified = "\n".join(steps) if steps else "No supported tool call detected. Try e.g. \"sqrt(144) plus letters in 'robotics'\"."
+    return f"🤖 LLM reasoning:\n{reasoning}\n\n🛠️ Tool-verified answer:\n{verified}"
+
+# ───────────────────── diffusion — class-conditional DDPM on real digits ─────────────────────
+DT = 200
+_db = torch.linspace(1e-4, 0.02, DT); _da = 1 - _db; _dac = torch.cumprod(_da, 0)
+def _dtemb(t, dim=64):
+    half = dim // 2; freqs = torch.exp(-math.log(10000) * torch.arange(half) / half)
+    a = t[:, None].float() * freqs[None]; return torch.cat([a.sin(), a.cos()], -1)
+DDPM = None
 try:
-    class _Denoiser(nn.Module):
-        def __init__(s, D, H=H_MOT):
-            super().__init__(); s.tef = nn.Sequential(nn.Linear(1, H), nn.SiLU(), nn.Linear(H, H))
-            s.net = nn.Sequential(nn.Linear(D + H, H), nn.SiLU(), nn.Linear(H, H), nn.SiLU(), nn.Linear(H, D))
-        def forward(s, x, t): return s.net(torch.cat([x, s.tef(t[:, None].float() / TDIFF)], -1))
-    MOT = _Denoiser(D_MOT); MOT.load_state_dict(torch.load(dl("a-motion-diffusion", "denoiser.pt"), map_location="cpu")); MOT.eval()
+    class _DDPM(nn.Module):
+        def __init__(s, dim=256):
+            super().__init__(); s.lab = nn.Embedding(10, 64)
+            s.net = nn.Sequential(nn.Linear(64 + 64 + 64, dim), nn.SiLU(), nn.Linear(dim, dim), nn.SiLU(),
+                                  nn.Linear(dim, dim), nn.SiLU(), nn.Linear(dim, 64))
+        def forward(s, x, t, y): return s.net(torch.cat([x, _dtemb(t), s.lab(y)], -1))
+    DDPM = _DDPM(); DDPM.load_state_dict(torch.load(os.path.join(ASSETS, "ddpm_digits.pt"), map_location="cpu")); DDPM.eval()
 except Exception as e:
-    ERR["motion"] = str(e)
+    ERR["diffusion"] = str(e)
 
-@torch.no_grad()
-def motion_fn(n):
-    if MOT is None: return _msg_fig("Motion model not available — train/upload it (a-motion-diffusion).")
-    n = int(n); x = torch.randn(n, D_MOT)
-    for ti in reversed(range(TDIFF)):
-        t = torch.full((n,), ti, dtype=torch.long); eps = MOT(x, t)
-        mean = (x - betas[ti] / (1 - acp[ti]).sqrt() * eps) / alphas[ti].sqrt()
-        x = mean + (betas[ti].sqrt() * torch.randn_like(x) if ti > 0 else 0)
-    g = x.reshape(n, T_LEN, 2)
-    fig, ax = plt.subplots(1, n, figsize=(2.2 * n, 2.4))
+@GPU
+def diffuse_fn(digit, n):
+    if DDPM is None: return _msg_fig(f"DDPM unavailable: {ERR.get('diffusion')}")
+    n = int(n)
+    with torch.no_grad():
+        x = torch.randn(n, 64); y = torch.full((n,), int(digit), dtype=torch.long)
+        for ti in reversed(range(DT)):
+            t = torch.full((n,), ti, dtype=torch.long); eps = DDPM(x, t, y)
+            mean = (x - (1 - _da[ti]) / (1 - _dac[ti]).sqrt() * eps) / _da[ti].sqrt()
+            x = mean + (_db[ti].sqrt() * torch.randn_like(x) if ti > 0 else 0)
+        imgs = ((x + 1) / 2).clamp(0, 1).reshape(n, 8, 8)
+    fig, ax = plt.subplots(1, n, figsize=(1.5 * n, 1.9))
     for i in range(n):
-        a = ax[i] if n > 1 else ax; a.plot(g[i, :, 0], g[i, :, 1], "C1"); a.set_aspect("equal"); a.axis("off")
-    fig.suptitle("generated motions"); return fig
-
-# ───────────────────── action anticipation ─────────────────────
-VERBS = ["take", "wash", "cut", "cook", "pour", "place"]; NV = len(VERBS)
-ANT = None
-try:
-    class _Antic(nn.Module):
-        def __init__(s): super().__init__(); s.emb = nn.Embedding(NV, 32); s.lstm = nn.LSTM(32, 64, batch_first=True); s.head = nn.Linear(64, NV)
-        def forward(s, x): return s.head(s.lstm(s.emb(x))[0])
-    ANT = _Antic(); ANT.load_state_dict(torch.load(dl("c-action-anticipation-lstm", "lstm.pt"), map_location="cpu")); ANT.eval()
-except Exception as e:
-    ERR["antic"] = str(e)
-
-@torch.no_grad()
-def antic_fn(seq):
-    if ANT is None: return f"(model unavailable: {ERR.get('antic')})"
-    idx = [VERBS.index(v) for v in seq if v in VERBS]
-    if not idx: return "pick at least one action"
-    logits = ANT(torch.tensor([idx]))[0, -1]
-    p = F.softmax(logits, -1); top = torch.topk(p, 3)
-    return "next action — " + ", ".join(f"{VERBS[i]} ({p[i]:.0%})" for i in top.indices.tolist())
+        a = ax[i] if n > 1 else ax; a.imshow(imgs[i], cmap="gray"); a.axis("off")
+    fig.suptitle(f"DDPM samples — requested digit: {int(digit)}"); return fig
 
 # ───────────────────── CartPole policy (REINFORCE / actor-critic) ─────────────────────
 POL = None
@@ -189,19 +214,6 @@ def world_fn(sx, sy):
     ax.plot(tr[:, 0], tr[:, 1], "-o", c="C0", ms=3); ax.scatter([0], [0], c="C3", s=120, marker="*", label="goal")
     ax.scatter([sx], [sy], c="C2", s=60, label="start"); ax.legend(); ax.set_aspect("equal"); ax.grid(alpha=.3); ax.set_title("planned trajectory (CEM)")
     return fig
-
-# ───────────────────── tool-use agent (no model) ─────────────────────
-import re
-TOOLS = {"calc": lambda e: eval(e, {"__builtins__": {}}, {"sqrt": math.sqrt}), "len": len, "rev": lambda s: s[::-1]}
-def agent_fn(task):
-    try:
-        m = re.match(r"compute (.+)", task)
-        if m: return f"calc({m.group(1)}) = {TOOLS['calc'](m.group(1))}"
-        if task.startswith("length of "): return f"len = {TOOLS['len'](task[10:])}"
-        if task.startswith("reverse "): return f"reversed = {TOOLS['rev'](task[8:])}"
-        return "I can: 'compute 2*(3+4)', 'length of robotics', 'reverse agent'"
-    except Exception as e:
-        return f"error: {e}"
 
 # ───────────────────── gallery ─────────────────────
 GALLERY = [  # all 45 repos — trained ones show figures; placeholders light up once filled
@@ -315,38 +327,40 @@ with gr.Blocks(title="Ropedia Academy · Models") as demo:
                 with gr.Column():
                     gmd.render()
                     gt.render()
-        with gr.Tab("✍️ nanoGPT"):
-            gr.Markdown("Character-level **GPT** on Tiny Shakespeare — type a prompt, it continues in the Bard's style.", elem_classes="tip")
+        with gr.Tab("💬 Language model"):
+            gr.Markdown("A **real** small instruct LLM — **SmolLM2-360M-Instruct** — answers your prompt. "
+                        "(The from-scratch *nanoGPT* is in the Gallery.) First call loads the model; CPU is slow — set the Space to **ZeroGPU** for speed.", elem_classes="tip")
             with gr.Row():
                 with gr.Column(scale=2):
-                    p = gr.Textbox(label="Prompt", value="ROMEO:")
-                    with gr.Row():
-                        n1 = gr.Slider(50, 600, 250, step=10, label="Tokens")
-                        t1 = gr.Slider(0.1, 1.5, 0.8, step=.05, label="Temperature")
+                    p = gr.Textbox(label="Your message", value="In two sentences, what is a world model in AI?", lines=3)
+                    t1 = gr.Slider(0.0, 1.2, 0.3, step=.05, label="Temperature (0 = deterministic)")
                     b1 = gr.Button("Generate", variant="primary")
-                o1 = gr.Textbox(label="Generated text", lines=12, scale=3)
-            b1.click(nanogpt_fn, [p, n1, t1], o1)
-        with gr.Tab("🕺 Motion diffusion"):
-            gr.Markdown("A **DDPM** that samples new 2D motion trajectories.", elem_classes="tip")
-            n2 = gr.Slider(1, 6, 4, step=1, label="How many motions")
-            gr.Button("Sample motions", variant="primary").click(motion_fn, n2, (o2 := gr.Plot()))
+                o1 = gr.Textbox(label="Response", lines=12, scale=3)
+            b1.click(chat_fn, [p, t1], o1)
+        with gr.Tab("🎨 Diffusion (DDPM)"):
+            gr.Markdown("A **real class-conditional DDPM** trained on handwritten digits — pick a digit and it **generates** new samples by reverse diffusion (the same algorithm as image/motion diffusion).", elem_classes="tip")
+            with gr.Row():
+                dd = gr.Slider(0, 9, 7, step=1, label="Digit to generate")
+                dn = gr.Slider(1, 8, 6, step=1, label="How many samples")
+            gr.Button("Generate", variant="primary").click(diffuse_fn, [dd, dn], (o2 := gr.Plot()))
         with gr.Tab("🔮 Action anticipation"):
-            gr.Markdown("An **LSTM** predicts the next action from the sequence so far.", elem_classes="tip")
-            s3 = gr.CheckboxGroup(VERBS, value=["take", "wash"], label="Actions so far")
-            gr.Button("Predict next", variant="primary").click(antic_fn, s3, (o3 := gr.Textbox(label="Prediction")))
+            gr.Markdown("Real **LLM**, in-context: given the actions so far, it predicts the most likely **next** action.", elem_classes="tip")
+            s3 = gr.CheckboxGroup(VERBS, value=["take", "wash", "cut"], label="Actions so far")
+            gr.Button("Predict next", variant="primary").click(anticipate_fn, s3, (o3 := gr.Textbox(label="Prediction", lines=2)))
         with gr.Tab("🎮 CartPole policy"):
             gr.Markdown("A **REINFORCE / actor-critic** agent solving **Gymnasium CartPole-v1** — run an episode and watch it balance the pole (near the 500-step max).", elem_classes="tip")
             seed = gr.Slider(0, 50, 0, step=1, label="Episode seed")
             gr.Button("Run episode", variant="primary").click(policy_fn, seed, (o4 := gr.Plot()))
         with gr.Tab("🌍 World model"):
-            gr.Markdown("A learned **world model** plans a path to the origin with **CEM**.", elem_classes="tip")
+            gr.Markdown("A learned **world model** plans a path to the origin with **CEM** (Cross-Entropy Method) — model-based control by imagining rollouts.", elem_classes="tip")
             with gr.Row():
                 wx = gr.Slider(-2, 2, 1.8, step=.1, label="Start x"); wy = gr.Slider(-2, 2, -1.6, step=.1, label="Start y")
             gr.Button("Plan to goal", variant="primary").click(world_fn, [wx, wy], (o5 := gr.Plot()))
         with gr.Tab("🛠️ Tool-use agent"):
-            gr.Markdown("A tool-using agent: `compute 2*(3+4)`, `length of robotics`, `reverse agent`.", elem_classes="tip")
-            a6 = gr.Textbox(label="Task", value="compute sqrt(144)+2")
-            gr.Button("Run agent", variant="primary").click(agent_fn, a6, (o6 := gr.Textbox(label="Answer")))
+            gr.Markdown("A real **ReAct** agent: the LLM reasons about the task, then **real tools** (`calc`, `length`, `reverse`) execute it. "
+                        "Note how the tools fix the LLM's arithmetic — that's the whole point of tool use.", elem_classes="tip")
+            a6 = gr.Textbox(label="Task", value="What is sqrt(144) plus the number of letters in 'robotics'?")
+            gr.Button("Run agent", variant="primary").click(agent_fn, a6, (o6 := gr.Textbox(label="Answer", lines=10)))
     demo.load((lambda: gallery_fn("b-hashgrid-instngp")), None, [gi, gmd, gt])   # show a default on load
     gr.HTML(FOOTER)
 

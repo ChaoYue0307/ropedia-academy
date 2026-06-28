@@ -4,3 +4,6 @@ numpy
 matplotlib
 pillow
 huggingface_hub
+transformers>=4.44
+accelerate
+# To run the demos on free GPU: set the Space hardware to "ZeroGPU" and add `spaces` here.
