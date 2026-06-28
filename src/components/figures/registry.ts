@@ -1,5 +1,4 @@
 import { lazy, type ComponentType } from "react";
-import { PinholeProjection } from "./PinholeProjection";
 import { NerfRay } from "./NerfRay";
 import { TsdfFusion } from "./TsdfFusion";
 import { SlamLoop } from "./SlamLoop";
@@ -10,9 +9,9 @@ import { SmplBody } from "./SmplBody";
 import { SceneGraphDemo } from "./SceneGraphDemo";
 import { GazeTimeline } from "./GazeTimeline";
 import { PoseHeatmap, MotionSequence, ParametricHand, RotationContinuity, MotionDiffusion, ContactScene, SmplifyPrior } from "./extraA";
-import { Triangulation, BundleAdjust, HashGrid, Deformation4D, NerfFloaters } from "./extraB";
+import { BundleAdjust, HashGrid, Deformation4D, NerfFloaters } from "./extraB";
 import { LongTail, HandPrior, ActiveObject, ActionGrammar, BaselineMetric } from "./extraC";
-import { PnpTracking, SemanticFusion, MapParadigms, ReferenceFrames, WorldModelRollout, Pipeline } from "./extraD";
+import { PnpTracking, SemanticFusion, MapParadigms, WorldModelRollout, Pipeline } from "./extraD";
 
 // 3D viewers are lazy-loaded so three.js ships in a separate chunk, fetched
 // only when a lesson with a 3D demo is opened.
@@ -20,6 +19,9 @@ const GaussianSplat3D = lazy(() => import("./three/GaussianSplat3D"));
 const SmplBody3D = lazy(() => import("./three/SmplBody3D"));
 const NerfVolume3D = lazy(() => import("./three/NerfVolume3D"));
 const EgoView3D = lazy(() => import("./three/EgoView3D"));
+const Pinhole3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.Pinhole3D })));
+const Triangulation3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.Triangulation3D })));
+const ReferenceFrames3D = lazy(() => import("./three/Geometry3D").then((m) => ({ default: m.ReferenceFrames3D })));
 
 // Maps a lesson id to interactive demo components rendered in that lesson.
 // Every one of the 36 lessons now has at least one hands-on figure.
@@ -35,8 +37,8 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   A8: [ContactScene],
   A9: [SmplifyPrior],
   // Track B — 3D / Neural Rendering
-  B1: [PinholeProjection],
-  B2: [Triangulation],
+  B1: [Pinhole3D],
+  B2: [Triangulation3D],
   B3: [BundleAdjust],
   B4: [SdfField],
   B5: [NerfRay, NerfVolume3D],
@@ -61,7 +63,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   D4: [SemanticFusion],
   D5: [SceneGraphDemo],
   D6: [MapParadigms],
-  D7: [ReferenceFrames],
+  D7: [ReferenceFrames3D],
   D8: [WorldModelRollout],
   D9: [Pipeline],
 };
