@@ -20,6 +20,10 @@ def dl(slug, fn): return hf_hub_download(repo(slug), fn)
 
 ERR = {}  # slug -> load error (for graceful messages)
 
+def _msg_fig(text):
+    fig, ax = plt.subplots(figsize=(5, 2.4)); ax.text(0.5, 0.5, text, ha="center", va="center", wrap=True, fontsize=11, color="#8a8aa0")
+    ax.axis("off"); return fig
+
 # ───────────────────────── nanoGPT (text) ─────────────────────────
 GPT = None; gpt_cfg = None; gpt_enc = gpt_dec = None
 try:
@@ -76,7 +80,7 @@ except Exception as e:
 
 @torch.no_grad()
 def motion_fn(n):
-    if MOT is None: return None
+    if MOT is None: return _msg_fig("Motion model not available — train/upload it (a-motion-diffusion).")
     n = int(n); x = torch.randn(n, D_MOT)
     for ti in reversed(range(TDIFF)):
         t = torch.full((n,), ti, dtype=torch.long); eps = MOT(x, t)
@@ -120,7 +124,7 @@ except Exception as e:
 
 @torch.no_grad()
 def policy_fn(sx, sy):
-    if POL is None: return None
+    if POL is None: return _msg_fig("Policy not available — train/upload it (ag-reinforce-gridworld).")
     p = (int(sx), int(sy)); path = [p]
     for _ in range(2 * N + 2):
         if p == GOAL: break
@@ -150,7 +154,7 @@ except Exception as e:
 
 @torch.no_grad()
 def world_fn(sx, sy):
-    if WM is None: return None
+    if WM is None: return _msg_fig("World model not available — train/upload it (d-world-model).")
     def plan(s0, H=15, K=400, it=4, el=40):
         mu = torch.zeros(H, 2); std = torch.ones(H, 2)
         for _ in range(it):
@@ -197,18 +201,24 @@ GALLERY = [  # all 45 repos — trained ones show figures; placeholders light up
     "c-dinov2-features-probe",
 ]
 def gallery_fn(slug):
-    img, info = None, ""
+    """Never raises — always returns (image_or_None, status_markdown, metrics_str)."""
+    base = f"https://huggingface.co/{repo(slug)}"
+    title = slug.replace("-", " ").title()
+    img, metrics, status = None, "", ""
     try: img = dl(slug, "figure.png")
-    except Exception: pass
-    try: info = json.dumps(json.load(open(dl(slug, "metrics.json"))), indent=2)[:1200]
-    except Exception: pass
-    if img is None and not info:  # likely a placeholder, or just not trained yet
+    except Exception: img = None
+    try:
+        metrics = json.dumps(json.load(open(dl(slug, "metrics.json"))), indent=2)[:1500]
+        status = "✅ **Trained**"
+    except Exception:
         try:
             dl(slug, "metrics.todo.json")
-            info = "🚧 Not trained yet — open this lab's notebook in Colab, Run all, and publish.\nThen this entry lights up automatically with its results figure + metrics."
+            status = ("🚧 **Placeholder — not trained yet.** Open this lab's notebook in Colab, "
+                      "**Run all**, then publish; this entry fills in automatically.")
         except Exception:
-            info = "(no results found in this repo)"
-    return img, info, f"https://huggingface.co/{repo(slug)}"
+            status = "⚠️ **Not published yet** — run `python scripts/upload_all_to_hf.py` to create this repo."
+    md = f"### {title}\n{status}\n\n[Open the repo ↗]({base})"
+    return img, md, metrics
 
 # ───────────────────── UI ─────────────────────
 BRAND = gr.themes.Color(  # Ropedia Academy palette (matches the site's tailwind `brand`)
@@ -290,15 +300,16 @@ with gr.Blocks(theme=THEME, css=CSS, title="Ropedia Academy · Models") as demo:
             a6 = gr.Textbox(label="Task", value="compute sqrt(144)+2")
             gr.Button("Run agent", variant="primary").click(agent_fn, a6, (o6 := gr.Textbox(label="Answer")))
         with gr.Tab("🖼️ Gallery"):
-            gr.Markdown("Every model's **result figure + metrics**. 🚧 placeholders light up once you train them.", elem_classes="tip")
+            gr.Markdown("Every model's result figure + metrics — ✅ trained · 🚧 placeholder · ⚠️ not published yet.", elem_classes="tip")
             g = gr.Dropdown(GALLERY, value="b-hashgrid-instngp", label="Model")
             with gr.Row():
-                gi = gr.Image(label="Result", scale=3)
+                gi = gr.Image(label="Result", show_label=False, scale=3)
                 with gr.Column(scale=2):
-                    gl = gr.Textbox(label="Repo")
-                    gt = gr.Code(label="metrics.json")
-            g.change(gallery_fn, g, [gi, gt, gl])
-            gr.Button("Load", variant="primary").click(gallery_fn, g, [gi, gt, gl])
+                    gmd = gr.Markdown()
+                    gt = gr.Code(label="metrics.json", language="json")
+            g.change(gallery_fn, g, [gi, gmd, gt])
+            gr.Button("Load", variant="primary").click(gallery_fn, g, [gi, gmd, gt])
+    demo.load(gallery_fn, g, [gi, gmd, gt])   # populate the default model on page load
     gr.HTML(FOOTER)
 
 if __name__ == "__main__":
