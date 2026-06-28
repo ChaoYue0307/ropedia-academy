@@ -28,6 +28,6 @@ Create a new **Gradio** Space on Hugging Face, then upload these three files
 (`app.py`, `requirements.txt`, `README.md`) — or from your machine:
 
 ```bash
-huggingface-cli login
-huggingface-cli upload cy0307/nanogpt-demo spaces/nanogpt-demo . --repo-type=space
+hf auth login
+hf upload cy0307/nanogpt-demo spaces/nanogpt-demo . --repo-type=space
 ```

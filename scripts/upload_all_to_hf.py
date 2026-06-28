@@ -6,7 +6,7 @@ under your account. Get one at https://huggingface.co/settings/tokens (role: Wri
 
 Usage:
     pip install -U huggingface_hub
-    huggingface-cli login                  # paste your write token once (or HF_TOKEN=hf_...)
+    hf auth login                  # paste your write token once (or HF_TOKEN=hf_...)
     python scripts/upload_all_to_hf.py            # upload all (trained + placeholders) + collection
 
 Common options:
@@ -81,7 +81,7 @@ def main() -> None:
             print(f"  {ns}/{slug:42s} {tag:10s} {'private' if priv else 'public'}")
         if not args.no_collection:
             print(f"\nthen create/refresh collection: '{COLLECTION_TITLE}' and add all {len(folders)}.")
-        print("\n(re-run without --dry-run, after `huggingface-cli login`, to actually publish.)")
+        print("\n(re-run without --dry-run, after `hf auth login`, to actually publish.)")
         return
 
     from huggingface_hub import HfApi, create_collection, add_collection_item
