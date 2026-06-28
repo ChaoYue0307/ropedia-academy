@@ -205,10 +205,10 @@ def agent_fn(task):
 
 # ───────────────────── gallery ─────────────────────
 GALLERY = [  # all 45 repos — trained ones show figures; placeholders light up once filled
-    "nanogpt-shakespeare", "a-smplify-fit", "a-motion-diffusion", "a-pose-heatmap", "a-rotation-6d",
+    "a-smplify-fit", "a-motion-diffusion", "a-pose-heatmap", "a-rotation-6d",
     "b-deepsdf-shape", "b-gaussian-splatting-2d", "b-hashgrid-instngp", "b-icp-registration", "b-mae-pretrain",
     "c-action-anticipation-lstm", "c-simclr-pretrain", "d-world-model", "d-tsdf-fusion", "d-semantic-mapping",
-    "ag-reinforce-gridworld", "ag-behavior-cloning", "ag-agent-harness", "lm-distillation",
+    "ag-reinforce-gridworld", "ag-behavior-cloning", "ag-agent-harness", "nanogpt-shakespeare", "lm-distillation",
     # advanced / GPU labs (placeholders until you train them on Colab)
     "a-mdm-text-to-motion", "a-4dhumans-mesh", "b-gaussian-splatting-3d", "b-nerfstudio-nerfacto",
     "c-videomae-egocentric", "c-sam2-video-segmentation", "c-whisper-finetune", "d-splatam-slam",

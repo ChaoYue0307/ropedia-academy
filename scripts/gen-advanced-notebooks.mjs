@@ -751,6 +751,119 @@ print(r.choices[0].message.content)`),
 // ===========================================================================
 const labs = [mdm, fourd, gs3d, nerfstudio, videomaeEpic, sam2, splatam, dreamer, qlora, dpo, vlm, videolm, rag, lmeval, unsloth, rlhf, sdlora, controlnet, whisper, llmagent, habitat, vllm];
 
+// Production-grade evaluation: a concrete held-out metric per lab (runnable where a
+// standard automatable metric exists; the canonical metric + how-to otherwise).
+const EVAL = {
+  C_videomae_egocentric: [
+    md(`## Evaluate — top-1 / top-5 accuracy on the held-out split`),
+    code(`import numpy as np
+pred = trainer.predict(ds("val", False))
+logits, labels = pred.predictions, pred.label_ids
+top1 = float((logits.argmax(-1) == labels).mean())
+top5 = float(np.mean([l in row.argsort()[-5:] for row, l in zip(logits, labels)]))
+print(f"held-out  top-1 {top1:.3f}  |  top-5 {top5:.3f}")`),
+  ],
+  LM_qlora_finetune_llm: [
+    md(`## Evaluate — held-out perplexity (lower = better)\nPerplexity on a slice the model never trained on. For a fair before/after, also run this *before* \`trainer.train()\` and compare.`),
+    code(`import math, torch
+from datasets import load_dataset
+ev = load_dataset("mlabonne/guanaco-llama2-1k", split="train[-100:]")
+model.eval(); losses = []
+for t in ev["text"]:
+    ids = tok(t, return_tensors="pt", truncation=True, max_length=512).input_ids.to(model.device)
+    with torch.no_grad(): losses.append(model(ids, labels=ids).loss.item())
+print("held-out perplexity:", round(math.exp(sum(losses) / len(losses)), 2))`),
+  ],
+  LM_unsloth_finetune: [
+    md(`## Evaluate — held-out perplexity (lower = better)`),
+    code(`import math, torch
+from datasets import load_dataset
+ev = load_dataset("mlabonne/guanaco-llama2-1k", split="train[-100:]")
+model.eval(); losses = []
+for t in ev["text"]:
+    ids = tok(t, return_tensors="pt", truncation=True, max_length=512).input_ids.to(model.device)
+    with torch.no_grad(): losses.append(model(ids, labels=ids).loss.item())
+print("held-out perplexity:", round(math.exp(sum(losses) / len(losses)), 2))`),
+  ],
+  LM_dpo_alignment: [
+    md(`## Evaluate — preference accuracy on a held-out split\nHow often the aligned model scores the *chosen* answer above the *rejected* one (1.0 = always).`),
+    code(`from datasets import load_dataset
+ev = load_dataset("trl-lib/ultrafeedback_binarized", split="train[2000:2300]")
+m = trainer.evaluate(eval_dataset=ev)
+print({k: round(v, 4) for k, v in m.items() if "reward" in k or "accurac" in k})   # eval_rewards/accuracies`),
+  ],
+  LM_vlm_finetune: [
+    md(`## Evaluate — held-out loss (lower = better)\nRun on a ChartQA slice held out from training; for task accuracy, generate answers and exact-match against the gold labels.`),
+    code(`from datasets import load_dataset
+ev = load_dataset("HuggingFaceM4/ChartQA", split="train[500:600]")
+print(trainer.evaluate(eval_dataset=ev))`),
+  ],
+  C_whisper_finetune: [
+    md(`## Evaluate — Word Error Rate (WER) on a held-out split (lower = better)`),
+    code(`import evaluate, torch
+from datasets import load_dataset, Audio
+wer = evaluate.load("wer")
+model.to("cuda" if torch.cuda.is_available() else "cpu").eval()
+ev = load_dataset("PolyAI/minds14", "en-US", split="train[200:260]").cast_column("audio", Audio(sampling_rate=16000))
+preds, refs = [], []
+for b in ev:
+    feat = proc(b["audio"]["array"], sampling_rate=16000, return_tensors="pt").input_features.to(model.device)
+    with torch.no_grad(): ids = model.generate(feat, language="en", task="transcribe", max_new_tokens=128)
+    preds.append(proc.batch_decode(ids, skip_special_tokens=True)[0]); refs.append(b["transcription"])
+print("WER:", round(100 * wer.compute(predictions=preds, references=refs), 1), "%")`),
+  ],
+  LM_rag_pipeline: [
+    md(`## Evaluate — retrieval recall@k on labelled queries\nDoes the right passage come back in the top-k? (Retrieval quality caps the whole pipeline.)`),
+    code(`queries = [("How are 3D scenes rendered in real time?", 1), ("What parameters control the SMPL body?", 2),
+           ("What does SLAM estimate?", 3), ("How does a world model help an agent plan?", 4)]
+def recall_at_k(k=3):
+    hits = 0
+    for q, gold in queries:
+        qe = embedder.encode([q], normalize_embeddings=True); _, idx = index.search(qe, k)
+        hits += int(gold in idx[0])
+    return hits / len(queries)
+print("recall@1:", recall_at_k(1), "| recall@3:", recall_at_k(3))`),
+  ],
+  LM_vllm_serving: [
+    md(`## Evaluate — serving throughput (tokens / second)`),
+    code(`import time
+prompts = ["Summarise reinforcement learning in one sentence."] * 8
+t0 = time.time(); ntok = 0
+for p in prompts:
+    r = client.chat.completions.create(model="Qwen/Qwen2.5-0.5B-Instruct",
+        messages=[{"role": "user", "content": p}], max_tokens=128)
+    ntok += r.usage.completion_tokens
+dt = time.time() - t0
+print(f"generated {ntok} tokens in {dt:.1f}s -> {ntok / dt:.1f} tok/s (sequential; concurrent batching is much faster)")`),
+  ],
+  B_gaussian_splatting_3d: [
+    md(`## Evaluate — PSNR / SSIM / LPIPS on held-out views\n3DGS holds out every 8th image as a test view; render and score them:`),
+    code(`!python render.py -m output/<your-scene>           # render train + held-out test views
+!python metrics.py -m output/<your-scene>          # prints SSIM, PSNR, LPIPS over the test split`),
+  ],
+  B_nerfstudio_nerfacto: [
+    md(`## Evaluate — PSNR / SSIM / LPIPS on eval views`),
+    code(`!ns-eval --load-config outputs/<scene>/nerfacto/<run>/config.yml --output-path eval_results.json
+import json; print(json.load(open("eval_results.json"))["results"])`),
+  ],
+  // ── metric-definition notes for the generation / inference / heavy-RL labs ──
+  A_mdm_text_to_motion: [md(`## Evaluate — FID · R-precision · diversity\nMDM is scored against the **HumanML3D** test set with the repo's evaluator: \`python -m eval.eval_humanml --model_path save/run/model000XXXXXX.pt\` → **FID** (realism), **R-precision@1/2/3** (text↔motion match), **Diversity**, **Multimodality**. Quick sanity check without the full evaluator: generate several motions for one prompt and confirm their pairwise diversity isn't ~0 (mode collapse).`)],
+  A_4dhumans_mesh: [md(`## Evaluate — pose accuracy\nHuman-mesh recovery is scored with **PA-MPJPE / MPJPE** (mm) and **PCK** on benchmarks like **3DPW** / **Human3.6M** (use the repo's eval config). Qualitatively, overlay the predicted SMPL mesh on the input frames and check joint alignment + temporal stability.`)],
+  C_sam2_video_segmentation: [md(`## Evaluate — segmentation quality (J&F)\nVideo object segmentation is scored by the **J&F** mean — region IoU (**J**) + boundary accuracy (**F**) — on **DAVIS 2017** / **SA-V**. With ground-truth masks, compute per-frame IoU (\`evaluate.load("mean_iou")\`); without GT, inspect mask stability across the propagated frames.`)],
+  D_splatam_slam: [md(`## Evaluate — tracking + mapping\nSplaTAM reports **ATE RMSE** (camera-trajectory error, cm) and rendering **PSNR / SSIM / LPIPS**; both print at the end of \`splatam.py\` and are saved under the run's \`eval/\` folder. Compare ATE RMSE to the dataset's published numbers (e.g. Replica).`)],
+  D_dreamerv3_world_model: [md(`## Evaluate — mean episode return\nThe metric is **mean evaluation-episode return** vs environment steps (DreamerV3 logs \`eval/return\` to the logdir / TensorBoard). Average the return over several eval episodes with the trained agent and compare to the task's reported score.`)],
+  LM_videolm_qwen2vl: [md(`## Evaluate — video-understanding benchmarks\nVideo-LMs are scored on **Video-MME**, **MVBench**, **EgoSchema** (multiple-choice video-QA accuracy). For numbers, run **lmms-eval** on one suite; for a quick check, ask several questions about a known clip and verify the answers.`)],
+  LM_stable_diffusion_lora: [md(`## Evaluate — image quality & prompt alignment\nText-to-image is scored with **FID** (realism vs a reference set) and **CLIP score** (prompt alignment): \`pip install torchmetrics[image]\` → \`CLIPScore\`. For subject/DreamBooth LoRAs, also report **CLIP-I / DINO** subject similarity. Qualitatively, generate a fixed prompt grid before vs after training.`)],
+  LM_controlnet: [md(`## Evaluate — condition fidelity\nControlNet is judged by how well the output respects the control signal: re-extract the condition (Canny / depth / pose) from the *generated* image and compare to the input condition (edge IoU, depth error), plus a **CLIP score** for prompt alignment.`)],
+  AG_habitat_navigation: [md(`## Evaluate — Success rate & SPL\nNavigation is scored by **Success rate** and **SPL** (Success weighted by Path Length). Run the baseline in eval mode — \`... run.py --config-name=pointnav/ppo_pointnav_example.yaml habitat_baselines.evaluate=True\` — to print Success/SPL over the validation episodes.`)],
+  AG_llm_agent_tooluse: [md(`## Evaluate — task success rate\nScore the agent by plugging it into the self-contained **\`AG_agent_harness\`** task suite (\`harness.evaluate(agent)\`) and reporting the **fraction of tasks solved** with correct final answers — the honest, comparable way to evaluate an agent (and its prompts / tools).`)],
+  LM_rlhf_ppo: [md(`## Evaluate — mean reward (+ KL guard)\nRLHF is judged by the **mean reward** of the policy's outputs under the reward model on a held-out prompt set (should rise over training), plus a **KL-to-reference** check so it doesn't drift / reward-hack. Sample completions for fixed prompts before vs after and compare scores.`)],
+};
+for (const lab of labs) {
+  const id = lab.file.replace(/\.ipynb$/, "");
+  if (EVAL[id]) lab.cells.splice(lab.cells.length - 1, 0, ...EVAL[id]);
+}
+
 // Every advanced repo writes its own artifacts (checkpoints, logs, renders) to a
 // run/output directory; add a uniform reminder that Colab is ephemeral.
 const PERSIST = md(`## Save & persist your results\nThis pipeline writes its checkpoints, metrics/logs and outputs to the run/output directory shown above (e.g. \`output/\`, \`outputs/\`, \`logdir/\`, \`experiments/\`, or the trainer's \`output_dir\`). **Colab sessions are ephemeral** — to keep them, either mount Drive and copy the folder (\`from google.colab import drive; drive.mount('/content/drive')\`) or zip + download it (\`import shutil; shutil.make_archive('run','zip','OUTPUT_DIR')\` then \`from google.colab import files; files.download('run.zip')\`). The 🤗 Trainer labs also support \`trainer.push_to_hub()\`. To publish any output folder as a **model repo** (then group repos into a **Collection** on your profile): \`from huggingface_hub import HfApi; HfApi().upload_folder(folder_path="OUTPUT_DIR", repo_id="<you>/ropedia-<lab>")\`.`);
