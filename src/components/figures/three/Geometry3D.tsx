@@ -6,10 +6,10 @@ import { FigureFrame, Slider } from "../FigureFrame";
 import { useStore } from "../../../lib/store";
 import { useResizeKick } from "./kick";
 
-type V = [number, number, number];
-const GROUND = "#cbd5e1", GRID2 = "#e2e8f0";
+export type V = [number, number, number];
+export const GROUND = "#cbd5e1", GRID2 = "#e2e8f0";
 
-function Frame({ children, h = "h-72", cam = [3.2, 2.2, 3.6] as V, target = [0, 0, 0] as V }: { children: React.ReactNode; h?: string; cam?: V; target?: V }) {
+export function Frame({ children, h = "h-72", cam = [3.2, 2.2, 3.6] as V, target = [0, 0, 0] as V }: { children: React.ReactNode; h?: string; cam?: V; target?: V }) {
   return (
     <div className={`${h} w-full overflow-hidden rounded-xl bg-gradient-to-b from-sky-50 to-stone-100 dark:from-slate-800 dark:to-slate-900`}>
       <Canvas camera={{ position: cam, fov: 42 }} dpr={[1, 2]}>
@@ -21,10 +21,10 @@ function Frame({ children, h = "h-72", cam = [3.2, 2.2, 3.6] as V, target = [0, 
     </div>
   );
 }
-const Dot = ({ p, r = 0.09, c }: { p: V; r?: number; c: string }) => (
+export const Dot = ({ p, r = 0.09, c }: { p: V; r?: number; c: string }) => (
   <mesh position={p}><sphereGeometry args={[r, 20, 20]} /><meshStandardMaterial color={c} roughness={0.4} /></mesh>
 );
-function tag(c: string, text: string, p: V) {
+export function tag(c: string, text: string, p: V) {
   return <Html position={p} center distanceFactor={7}><div style={{ background: c, color: "#fff", padding: "1px 6px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{text}</div></Html>;
 }
 
