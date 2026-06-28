@@ -1,13 +1,11 @@
 import { lazy, type ComponentType } from "react";
 import { NerfRay } from "./NerfRay";
-import { SlamLoop } from "./SlamLoop";
 import { AnticipationTopK } from "./AnticipationTopK";
 import { SceneGraphDemo } from "./SceneGraphDemo";
 import { GazeTimeline } from "./GazeTimeline";
 import { PoseHeatmap, MotionDiffusion } from "./extraA";
-import { BundleAdjust, HashGrid, Deformation4D, NerfFloaters } from "./extraB";
-import { LongTail, HandPrior, ActiveObject, ActionGrammar, BaselineMetric } from "./extraC";
-import { PnpTracking, SemanticFusion, MapParadigms, WorldModelRollout, Pipeline } from "./extraD";
+import { LongTail, HandPrior, ActionGrammar, BaselineMetric } from "./extraC";
+import { MapParadigms, Pipeline } from "./extraD";
 
 // 3D viewers are lazy-loaded so three.js ships in a separate chunk, fetched
 // only when a lesson with a 3D demo is opened.
@@ -27,6 +25,15 @@ const MotionSeq3D = lazy(() => import("./three/Human3D").then((m) => ({ default:
 const Hand3D = lazy(() => import("./three/Human3D").then((m) => ({ default: m.Hand3D })));
 const ContactScene3D = lazy(() => import("./three/Human3D").then((m) => ({ default: m.ContactScene3D })));
 const SmplifyPrior3D = lazy(() => import("./three/Human3D").then((m) => ({ default: m.SmplifyPrior3D })));
+const BundleAdjust3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.BundleAdjust3D })));
+const Pnp3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.Pnp3D })));
+const HashGrid3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.HashGrid3D })));
+const Deform3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.Deform3D })));
+const Floaters3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.Floaters3D })));
+const SlamLoop3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.SlamLoop3D })));
+const SemanticFusion3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.SemanticFusion3D })));
+const WorldRollout3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.WorldRollout3D })));
+const ActiveObject3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.ActiveObject3D })));
 
 // Maps a lesson id to interactive demo components rendered in that lesson.
 // Every one of the 36 lessons now has at least one hands-on figure.
@@ -44,31 +51,31 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   // Track B — 3D / Neural Rendering
   B1: [Pinhole3D],
   B2: [Triangulation3D],
-  B3: [BundleAdjust],
+  B3: [BundleAdjust3D],
   B4: [SdfField3D],
   B5: [NerfRay, NerfVolume3D],
-  B6: [HashGrid],
+  B6: [HashGrid3D],
   B7: [GaussianSplat3D],
-  B8: [Deformation4D],
-  B9: [NerfFloaters],
+  B8: [Deform3D],
+  B9: [Floaters3D],
   // Track C — Egocentric Vision
   C1: [EgoView3D],
   C2: [LongTail],
   C3: [TubeMasking3D],
   C4: [AnticipationTopK],
   C5: [HandPrior],
-  C6: [ActiveObject],
+  C6: [ActiveObject3D],
   C7: [GazeTimeline],
   C8: [ActionGrammar],
   C9: [BaselineMetric],
   // Track D — Scene & World Models
-  D1: [SlamLoop],
-  D2: [PnpTracking],
+  D1: [SlamLoop3D],
+  D2: [Pnp3D],
   D3: [TsdfFusion3D],
-  D4: [SemanticFusion],
+  D4: [SemanticFusion3D],
   D5: [SceneGraphDemo],
   D6: [MapParadigms],
   D7: [ReferenceFrames3D],
-  D8: [WorldModelRollout],
+  D8: [WorldRollout3D],
   D9: [Pipeline],
 };
