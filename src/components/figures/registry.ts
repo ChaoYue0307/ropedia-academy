@@ -11,7 +11,7 @@ import { SceneGraphDemo } from "./SceneGraphDemo";
 import { GazeTimeline } from "./GazeTimeline";
 import { PoseHeatmap, MotionSequence, ParametricHand, RotationContinuity, MotionDiffusion, ContactScene, SmplifyPrior } from "./extraA";
 import { Triangulation, BundleAdjust, HashGrid, Deformation4D, NerfFloaters } from "./extraB";
-import { EgoSignals, LongTail, HandPrior, ActiveObject, ActionGrammar, BaselineMetric } from "./extraC";
+import { LongTail, HandPrior, ActiveObject, ActionGrammar, BaselineMetric } from "./extraC";
 import { PnpTracking, SemanticFusion, MapParadigms, ReferenceFrames, WorldModelRollout, Pipeline } from "./extraD";
 
 // 3D viewers are lazy-loaded so three.js ships in a separate chunk, fetched
@@ -19,6 +19,7 @@ import { PnpTracking, SemanticFusion, MapParadigms, ReferenceFrames, WorldModelR
 const GaussianSplat3D = lazy(() => import("./three/GaussianSplat3D"));
 const SmplBody3D = lazy(() => import("./three/SmplBody3D"));
 const NerfVolume3D = lazy(() => import("./three/NerfVolume3D"));
+const EgoView3D = lazy(() => import("./three/EgoView3D"));
 
 // Maps a lesson id to interactive demo components rendered in that lesson.
 // Every one of the 36 lessons now has at least one hands-on figure.
@@ -44,7 +45,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   B8: [Deformation4D],
   B9: [NerfFloaters],
   // Track C — Egocentric Vision
-  C1: [EgoSignals],
+  C1: [EgoView3D],
   C2: [LongTail],
   C3: [TubeMasking],
   C4: [AnticipationTopK],
