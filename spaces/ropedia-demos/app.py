@@ -244,7 +244,8 @@ TRAINED = {  # the 19 repos with real weights ("deployed"); everything else is a
     "c-action-anticipation-lstm", "c-simclr-pretrain", "d-world-model", "d-tsdf-fusion", "d-semantic-mapping",
     "ag-reinforce-gridworld", "ag-behavior-cloning", "ag-agent-harness", "lm-distillation",
 }
-def pretty(slug): return slug.replace("-", " ").title()
+_NAME_OVERRIDE = {"ag-reinforce-gridworld": "REINFORCE · CartPole", "nanogpt-shakespeare": "nanoGPT · Shakespeare"}
+def pretty(slug): return _NAME_OVERRIDE.get(slug, slug.replace("-", " ").title())
 N_TRAINED = len(TRAINED); N_PH = len(GALLERY) - N_TRAINED
 
 # ───────────────────── UI ─────────────────────
