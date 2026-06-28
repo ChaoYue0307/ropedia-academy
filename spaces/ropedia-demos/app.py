@@ -230,25 +230,63 @@ GALLERY = [  # all 45 repos — trained ones show figures; placeholders light up
     "ag-habitat-navigation", "b-nerf-from-scratch", "cd-clip-zeroshot-probe", "c-videomae-finetune",
     "c-dinov2-features-probe",
 ]
+def _fmt(v):
+    if isinstance(v, float): return f"{v:.4g}"
+    return str(v)
+
+def _metric_rows(d, prefix=""):
+    """Flatten metrics to (label, tidy_value) rows; summarize curves instead of dumping them."""
+    rows = []
+    for k, v in d.items():
+        key = prefix + str(k)
+        if isinstance(v, bool):
+            rows.append((key, "✓" if v else "✗"))
+        elif isinstance(v, (int, float)):
+            rows.append((key, f"**{_fmt(v)}**"))
+        elif isinstance(v, dict):
+            rows += _metric_rows(v, key + ".")
+        elif isinstance(v, list) and v:
+            last = v[-1]
+            if isinstance(last, (list, tuple)) and len(last) >= 2 and isinstance(last[-1], (int, float)):
+                rows.append((key, f"{_fmt(v[0][-1])} → **{_fmt(last[-1])}**  ·  {len(v)} pts"))   # [step,value] curve
+            elif isinstance(last, (int, float)):
+                rows.append((key, f"{_fmt(v[0])} → **{_fmt(last)}**  ·  {len(v)} pts"))
+            else:
+                rows.append((key, f"{len(v)} items"))
+        elif isinstance(v, str):
+            rows.append((key, v[:80]))
+    return rows
+
+def _metrics_md(slug):
+    """A tidy metrics table (or None). Reads metrics.json, falling back to results.json."""
+    data = None
+    for fn in ("metrics.json", "results.json"):
+        try: data = json.load(open(dl(slug, fn))); break
+        except Exception: continue
+    if not isinstance(data, dict): return None
+    rows = _metric_rows(data)
+    if not rows: return None
+    return "#### 📊 Results\n\n| metric | value |\n|---|---|\n" + "".join(f"| `{k}` | {val} |\n" for k, val in rows)
+
 def gallery_fn(slug):
-    """Never raises — always returns (image_or_None, status_markdown, metrics_str)."""
+    """Never raises — always returns (image_or_None, header_markdown, metrics_markdown)."""
     base = f"https://huggingface.co/{repo(slug)}"
-    title = slug.replace("-", " ").title()
-    img, metrics, status = None, "", ""
+    img = None
     try: img = Image.open(dl(slug, "figure.png")).convert("RGB")   # load in-memory (avoids cache-path errors)
     except Exception: img = None
-    try:
-        metrics = json.dumps(json.load(open(dl(slug, "metrics.json"))), indent=2)[:1500]
-        status = "✅ **Trained**"
-    except Exception:
+    table = _metrics_md(slug)
+    if table is not None:
+        status, metrics = "✅ **Trained**", table
+    else:
         try:
             dl(slug, "metrics.todo.json")
-            status = ("🚧 **Placeholder — not trained yet.** Open this lab's notebook in Colab, "
-                      "**Run all**, then publish; this entry fills in automatically.")
+            status = "🚧 **Placeholder — not trained yet**"
+            metrics = "_No results yet — open this lab in Colab, **Run all**, then publish; this entry fills in automatically._"
         except Exception:
-            status = "⚠️ **Not published yet** — run `python scripts/upload_all_to_hf.py` to create this repo."
-    md = f"### {title}\n{status}\n\n[Open the repo ↗]({base})"
-    return img, md, metrics
+            status = "⚠️ **Not published yet**"
+            metrics = "_Run `python scripts/upload_all_to_hf.py` to create this repo._"
+    header = f"### {pretty(slug)}\n{status} · [open the repo ↗]({base})"
+    return img, header, metrics
 
 TRAINED = {  # the 19 repos with real weights ("deployed"); everything else is a placeholder
     "nanogpt-shakespeare", "a-smplify-fit", "a-motion-diffusion", "a-pose-heatmap", "a-rotation-6d",
@@ -315,7 +353,7 @@ with gr.Blocks(title="Ropedia Academy · Models") as demo:
             # detail components defined first (so clicks can target them) but rendered lower
             gi = gr.Image(show_label=False, render=False)
             gmd = gr.Markdown(render=False)
-            gt = gr.Code(label="metrics.json", language="json", render=False)
+            gt = gr.Markdown(render=False)
             with gr.Row(elem_id="modelgrid"):                       # the clickable grid — at the top
                 for _slug in GALLERY:
                     _badge = "✅" if _slug in TRAINED else "🚧"
