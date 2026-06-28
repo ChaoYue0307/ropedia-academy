@@ -4,25 +4,44 @@ library_name: pytorch
 pipeline_tag: text-generation
 tags:
 - ropedia-academy
-- nanogpt
 - educational
+- text-generation
+- gpt
 ---
 
-# nanoGPT — Tiny Shakespeare (Ropedia Academy)
+# nanoGPT — Tiny Shakespeare
 
-A character-level GPT (decoder-only transformer) trained **from scratch** on Tiny Shakespeare — the nanoGPT lab from [Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/).
+A character-level GPT (decoder-only transformer) trained from scratch; best-checkpoint by validation loss.
 
-- **Params:** 0.82 M  |  **Config:** 4 layers, 4 heads, d=128, block=64
-- **Final loss:** train 1.782 · val 1.903 (cross-entropy, 3000 steps, 354 s on CPU)
-- **Tokenizer:** character-level, 65 chars (see `config.json`)
+Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/)** — an interactive, bilingual course on embodied & spatial AI. **Educational model:** small and quick to train; the value is the *method* and a reproducible pipeline, not a leaderboard score.
 
-> Educational model (~1 MB of training text): it produces Shakespeare-flavoured characters, not coherent prose.
+| | |
+|---|---|
+| **Task** | text-generation |
+| **Data** | Tiny Shakespeare (~1 MB) |
+| **Track** | LM · Language & models |
+| **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_nanogpt_pretrain.ipynb) |
 
-## Training loss
+## Results
+
+| metric | value |
+|---|---|
+| history_step_train_val (final) | 1.903 |
+| final_train | 1.782 |
+| final_val | 1.903 |
+| steps | 3000 |
+| params | 816705 |
+| train_seconds | 354 |
+| config.block_size | 64 |
+| config.n_embd | 128 |
+| config.n_head | 4 |
+| config.n_layer | 4 |
+| config.vocab | 65 |
+
 
 ![loss](loss.png)
 
-## Sample
+## Sample output
 
 ```
 
@@ -48,5 +67,28 @@ And encled aign and abond years was 'twonds:
 Stre you nop to hear upard:
 ```
 
+## How to use
+
+```python
+import torch
+state = torch.load("model.pt", map_location="cpu")   # some labs save pose.pt / gaussians.pt / transform.pt
+# Rebuild the model class from the Ropedia Academy notebook (linked above), then:
+# model.load_state_dict(state)
+```
+
 ## Files
-`model.pt` (weights) · `config.json` (arch + tokenizer) · `metrics.json` (loss history) · `sample.txt` · `loss.png`
+
+- `config.json`
+- `loss.png`
+- `metrics.json`
+- `model.pt`
+- `sample.txt`
+
+
+## Reproduce / train your own
+
+Open the [lab notebook in Colab](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_nanogpt_pretrain.ipynb) → **Runtime → GPU → Run all**, then its *Publish to the Hugging Face Hub* cell. Browse every lab in the [Ropedia Academy Labs tab](https://chaoyue0307.github.io/ropedia-academy/labs).
+
+
+---
+*Part of the [Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/) trained-model collection.*
