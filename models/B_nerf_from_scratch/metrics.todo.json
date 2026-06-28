@@ -1,0 +1,10 @@
+{
+  "status": "placeholder",
+  "trained": false,
+  "todo": [
+    "train on GPU",
+    "upload checkpoint",
+    "add metrics.json",
+    "add figures"
+  ]
+}

@@ -3,6 +3,7 @@ import { useStore } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 import {
   LABS, FUTURE, TRACK_LABEL, TRACK_ACCENT, LEVEL_LABEL, colabHref, githubDir,
+  hfUrl, hfProfile,
   type LabLevel, type LabTrack,
 } from "../lib/labs";
 
@@ -103,29 +104,40 @@ export function LabsPage() {
                 </div>
               </a>
 
-              {/* Track links — outside the Colab link; click to filter by that track */}
-              {lab.links && (
-                <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-stone-200/60 pt-2.5 dark:border-white/10">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-ink/40 dark:text-stone-500">{t("appliesTo", mode)}</span>
-                  {lab.links.map((tk) => (
-                    <button
-                      key={tk}
-                      onClick={() => setTrack(tk)}
-                      title={pick(TRACK_LABEL[tk], mode)}
-                      className="rounded px-2 py-0.5 text-[11px] font-bold text-white transition hover:scale-105"
-                      style={{ backgroundColor: TRACK_ACCENT[tk] }}
-                    >
-                      {tk}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Published model + track links — outside the Colab link */}
+              <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-stone-200/60 pt-2.5 dark:border-white/10">
+                <a
+                  href={hfUrl(lab)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-ink/70 transition hover:text-ink dark:bg-white/10 dark:text-stone-300"
+                >
+                  🤗 Model
+                </a>
+                {lab.links && (
+                  <>
+                    <span className="ml-1 text-[10px] font-medium uppercase tracking-wide text-ink/40 dark:text-stone-500">{t("appliesTo", mode)}</span>
+                    {lab.links.map((tk) => (
+                      <button
+                        key={tk}
+                        onClick={() => setTrack(tk)}
+                        title={pick(TRACK_LABEL[tk], mode)}
+                        className="rounded px-2 py-0.5 text-[11px] font-bold text-white transition hover:scale-105"
+                        style={{ backgroundColor: TRACK_ACCENT[tk] }}
+                      >
+                        {tk}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
 
-      <div className="flex gap-4 pt-1 text-xs">
+      <div className="flex flex-wrap gap-4 pt-1 text-xs">
+        <a href={hfProfile} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-300">🤗 Trained models on Hugging Face →</a>
         <a href={githubDir("training")} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300">notebooks/training →</a>
         <a href={githubDir("advanced")} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300">notebooks/advanced →</a>
       </div>

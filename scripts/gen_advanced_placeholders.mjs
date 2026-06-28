@@ -35,10 +35,15 @@ const ADV = [
   { id: "LM_vllm_serving", title: "Serve an LLM (vLLM)", task: "fast LLM serving / deployment", repo: "vllm-project/vllm", url: "https://github.com/vllm-project/vllm", track: "LM · Language & multimodal", links: ["A", "B", "C", "D"], pipeline: "text-generation", summary: "Deploy a (fine-tuned) LLM for fast, batched, OpenAI-compatible serving." },
   { id: "AG_llm_agent_tooluse", title: "LLM agent — tool use (ReAct)", task: "tool-using LLM agent", repo: "huggingface/transformers (function calling)", url: "https://huggingface.co/docs/transformers/main/en/chat_extras", track: "AG · Agents & RL", links: ["C", "D", "LM"], summary: "An LLM that reasons and calls tools in a loop (ReAct) to solve tasks." },
   { id: "AG_habitat_navigation", title: "Habitat — embodied navigation", task: "embodied RL navigation", repo: "facebookresearch/habitat-lab", url: "https://github.com/facebookresearch/habitat-lab", track: "AG · Agents & RL", links: ["D"], summary: "Train a PointGoal navigation agent in the Habitat 3D simulator." },
+  // GPU/foundation labs in notebooks/training/ that aren't CPU-trained here → placeholders too
+  { id: "B_nerf_from_scratch", dir: "training", title: "NeRF from scratch (tiny_nerf)", task: "neural radiance field", repo: "self-contained PyTorch (bmild tiny_nerf data)", url: "https://github.com/bmild/nerf", track: "B · 3D & rendering", links: ["D"], summary: "Train a NeRF from scratch — runs on the GPU in minutes (too slow to CPU-train here)." },
+  { id: "CD_clip_zeroshot_probe", dir: "training", title: "CLIP: zero-shot vs. probe", task: "vision-language probing", repo: "open_clip", url: "https://github.com/mlfoundations/open_clip", track: "C · Egocentric vision", links: ["D", "LM"], summary: "CLIP zero-shot classification + a trained linear probe on frozen features." },
+  { id: "C_videomae_finetune", dir: "training", title: "Fine-tune VideoMAE", task: "video action recognition", repo: "MCG-NJU/VideoMAE (🤗 transformers)", url: "https://huggingface.co/MCG-NJU/videomae-base", track: "C · Egocentric vision", links: ["A", "D"], summary: "Fine-tune the VideoMAE video transformer on a small action dataset." },
+  { id: "C_dinov2_features_probe", dir: "training", title: "DINOv2 features + probe", task: "self-supervised features", repo: "facebookresearch/dinov2", url: "https://github.com/facebookresearch/dinov2", track: "C · Egocentric vision", links: ["B", "D"], summary: "DINOv2 patch-feature PCA (objects emerge) + a linear probe on CLS features." },
 ];
 
 function card(a) {
-  const colab = `https://colab.research.google.com/github/${REPO}/blob/main/notebooks/advanced/${a.id}.ipynb`;
+  const colab = `https://colab.research.google.com/github/${REPO}/blob/main/notebooks/${a.dir || "advanced"}/${a.id}.ipynb`;
   const tags = ["ropedia-academy", "advanced", "todo", ...a.links.map((t) => "track-" + t.toLowerCase())];
   let fm = "---\nlicense: mit\n";
   if (a.pipeline) fm += `pipeline_tag: ${a.pipeline}\n`;
