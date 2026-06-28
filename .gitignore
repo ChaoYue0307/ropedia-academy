@@ -9,3 +9,8 @@ dist-ssr
 .vite
 *.log
 .claude
+
+# stray training data / py cache
+input.txt
+__pycache__/
+*.pyc
