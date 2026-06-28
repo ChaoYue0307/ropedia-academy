@@ -26,12 +26,12 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 
 | metric | value |
 |---|---|
-| history_step_train_val (final) | 1.903 |
-| final_train | 1.782 |
-| final_val | 1.903 |
-| steps | 3000 |
+| history_step_train_val (final) | 1.842 |
+| final_train | 1.779 |
+| best_val | 1.814 |
+| steps | 4000 |
 | params | 816705 |
-| train_seconds | 354 |
+| train_seconds | 505 |
 | config.block_size | 64 |
 | config.n_embd | 128 |
 | config.n_head | 4 |
@@ -39,32 +39,41 @@ Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedi
 | config.vocab | 65 |
 
 
-![loss](loss.png)
+![figure](figure.png)
 
 ## Sample output
 
 ```
 
-Where?
+Ciegvate tumpot of Bad'ers
+We narvervy sures toak hasing more,
+This hous mad the dide to to the for for hard with to
+IsSeet if love true;
+Mught and how fath quear uppose? City hat.
+My and main thou but staltany; him comblead.
 
-WARWIS:
-Skee, every, this much:
-If your merrean and the doed. God,
-When at restainot me that not are to Wast: if sto-leak
-No stroy moth prosh horn of too desdo
-Link of the ellone; this ever: the way that wan sake!
-And juked, no be earry, his brade, 'Tis recoppinten
-But commicking: is and sprages for pritter's the ease?
+LEUMIEN:
+Charth eyet not, bath brans yoer
+Where shat? I'll at har comen mort, thou gene.
 
-ISINIUS:
+FROMOK:
+I shall even Romen of joysed
+You kind indswaul'd with thou bakeng, with mell.
 
-ESCAptizen, pasy grounder
-Giver serens!' Let if my the that quan,
-And parious earty:
-not ugnhopain I would yet, that wint which shall with like
-You have timed but his breing in the kneem
-And encled aign and abond years was 'twonds:
-Stre you nop to hear upard:
+DUCIO:
+My shall stalk you fall hear:
+Mant shall In in brothere'y! prancer, best worde houm's afd it.
+
+UCIIO!
+
+GLINIUS:
+Rell w, it?
+
+Go ELIA:
+Where.
+
+HED VOLLOONT:
+More, now he now of nather'd nev
 ```
 
 ## How to use
@@ -79,7 +88,7 @@ state = torch.load("model.pt", map_location="cpu")   # some labs save pose.pt / 
 ## Files
 
 - `config.json`
-- `loss.png`
+- `figure.png`
 - `metrics.json`
 - `model.pt`
 - `sample.txt`
