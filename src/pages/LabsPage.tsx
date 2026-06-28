@@ -3,7 +3,7 @@ import { useStore } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 import {
   LABS, FUTURE, TRACK_LABEL, TRACK_ACCENT, LEVEL_LABEL, colabHref, githubDir,
-  hfUrl, hfProfile,
+  hfUrl, hfProfile, hfSpace,
   type LabLevel, type LabTrack,
 } from "../lib/labs";
 
@@ -36,6 +36,14 @@ export function LabsPage() {
       <header>
         <h1 className="font-display text-2xl font-bold tracking-tight text-ink dark:text-stone-50">{t("navLabs", mode)}</h1>
         <p className="mt-1 max-w-2xl text-sm text-ink/55 dark:text-stone-400">{t("labsIntro", mode)}</p>
+        <a
+          href={hfSpace}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-3.5 py-1.5 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5"
+        >
+          🚀 {t("liveDemos", mode)} <span aria-hidden>↗</span>
+        </a>
       </header>
 
       {/* Filters — track and level tags */}
@@ -137,6 +145,7 @@ export function LabsPage() {
       </div>
 
       <div className="flex flex-wrap gap-4 pt-1 text-xs">
+        <a href={hfSpace} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-300">🚀 Live demos (Space) →</a>
         <a href={hfProfile} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-300">🤗 Trained models on Hugging Face →</a>
         <a href={githubDir("training")} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300">notebooks/training →</a>
         <a href={githubDir("advanced")} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300">notebooks/advanced →</a>

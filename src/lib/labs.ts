@@ -33,6 +33,7 @@ export const hfSlug = (lab: Lab) =>
     : lab.file.replace(/\.ipynb$/, "").toLowerCase().replace(/_/g, "-"));
 export const hfUrl = (lab: Lab) => `https://huggingface.co/${HF_USER}/${hfSlug(lab)}`;
 export const hfProfile = `https://huggingface.co/${HF_USER}`;
+export const hfSpace = `https://huggingface.co/spaces/${HF_USER}/ropedia-demos`;
 
 const T = (en: string, zh: string): Bilingual => ({ en, zh });
 

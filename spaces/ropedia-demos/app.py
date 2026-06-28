@@ -182,16 +182,32 @@ def agent_fn(task):
         return f"error: {e}"
 
 # ───────────────────── gallery ─────────────────────
-GALLERY = ["nanogpt-shakespeare", "a-smplify-fit", "a-motion-diffusion", "a-pose-heatmap", "a-rotation-6d",
-           "b-deepsdf-shape", "b-gaussian-splatting-2d", "b-hashgrid-instngp", "b-icp-registration", "b-mae-pretrain",
-           "c-action-anticipation-lstm", "c-simclr-pretrain", "d-world-model", "d-tsdf-fusion", "d-semantic-mapping",
-           "ag-reinforce-gridworld", "ag-behavior-cloning", "ag-agent-harness", "lm-distillation"]
+GALLERY = [  # all 45 repos — trained ones show figures; placeholders light up once filled
+    "nanogpt-shakespeare", "a-smplify-fit", "a-motion-diffusion", "a-pose-heatmap", "a-rotation-6d",
+    "b-deepsdf-shape", "b-gaussian-splatting-2d", "b-hashgrid-instngp", "b-icp-registration", "b-mae-pretrain",
+    "c-action-anticipation-lstm", "c-simclr-pretrain", "d-world-model", "d-tsdf-fusion", "d-semantic-mapping",
+    "ag-reinforce-gridworld", "ag-behavior-cloning", "ag-agent-harness", "lm-distillation",
+    # advanced / GPU labs (placeholders until you train them on Colab)
+    "a-mdm-text-to-motion", "a-4dhumans-mesh", "b-gaussian-splatting-3d", "b-nerfstudio-nerfacto",
+    "c-videomae-egocentric", "c-sam2-video-segmentation", "c-whisper-finetune", "d-splatam-slam",
+    "d-dreamerv3-world-model", "lm-qlora-finetune-llm", "lm-dpo-alignment", "lm-vlm-finetune",
+    "lm-videolm-qwen2vl", "lm-rag-pipeline", "lm-eval-harness", "lm-unsloth-finetune", "lm-rlhf-ppo",
+    "lm-stable-diffusion-lora", "lm-controlnet", "lm-vllm-serving", "ag-llm-agent-tooluse",
+    "ag-habitat-navigation", "b-nerf-from-scratch", "cd-clip-zeroshot-probe", "c-videomae-finetune",
+    "c-dinov2-features-probe",
+]
 def gallery_fn(slug):
     img, info = None, ""
     try: img = dl(slug, "figure.png")
-    except Exception: info += "(no figure)\n"
-    try: info += json.dumps(json.load(open(dl(slug, "metrics.json"))), indent=2)[:1200]
-    except Exception: info += "(no metrics.json)"
+    except Exception: pass
+    try: info = json.dumps(json.load(open(dl(slug, "metrics.json"))), indent=2)[:1200]
+    except Exception: pass
+    if img is None and not info:  # likely a placeholder, or just not trained yet
+        try:
+            dl(slug, "metrics.todo.json")
+            info = "🚧 Not trained yet — open this lab's notebook in Colab, Run all, and publish.\nThen this entry lights up automatically with its results figure + metrics."
+        except Exception:
+            info = "(no results found in this repo)"
     return img, info, f"https://huggingface.co/{repo(slug)}"
 
 # ───────────────────── UI ─────────────────────
