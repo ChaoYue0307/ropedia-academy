@@ -211,30 +211,81 @@ def gallery_fn(slug):
     return img, info, f"https://huggingface.co/{repo(slug)}"
 
 # ───────────────────── UI ─────────────────────
-with gr.Blocks(title="Ropedia Academy · Models") as demo:
-    gr.Markdown("# Ropedia Academy · Models\nInteractive demos of models trained from scratch in "
-                "[Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/). All loaded from `cy0307/ropedia-*`.")
-    with gr.Tab("nanoGPT (text)"):
-        p = gr.Textbox(label="Prompt", value="ROMEO:"); n1 = gr.Slider(50, 600, 250, step=10, label="tokens"); t1 = gr.Slider(0.1, 1.5, 0.8, step=.05, label="temperature")
-        o1 = gr.Textbox(label="Generated", lines=12); gr.Button("Generate").click(nanogpt_fn, [p, n1, t1], o1)
-    with gr.Tab("Motion diffusion"):
-        n2 = gr.Slider(1, 6, 4, step=1, label="how many motions"); o2 = gr.Plot(); gr.Button("Sample motions").click(motion_fn, n2, o2)
-    with gr.Tab("Action anticipation"):
-        s3 = gr.CheckboxGroup(VERBS, value=["take", "wash"], label="action so far"); o3 = gr.Textbox(label="prediction")
-        gr.Button("Predict next").click(antic_fn, s3, o3)
-    with gr.Tab("Gridworld policy"):
-        sx = gr.Slider(0, N - 1, 0, step=1, label="start x"); sy = gr.Slider(0, N - 1, 0, step=1, label="start y"); o4 = gr.Plot()
-        gr.Button("Run policy").click(policy_fn, [sx, sy], o4)
-    with gr.Tab("World model (plan)"):
-        wx = gr.Slider(-2, 2, 1.8, step=.1, label="start x"); wy = gr.Slider(-2, 2, -1.6, step=.1, label="start y"); o5 = gr.Plot()
-        gr.Button("Plan to goal").click(world_fn, [wx, wy], o5)
-    with gr.Tab("Tool-use agent"):
-        a6 = gr.Textbox(label="task", value="compute sqrt(144)+2"); o6 = gr.Textbox(label="answer")
-        gr.Button("Run agent").click(agent_fn, a6, o6)
-    with gr.Tab("Gallery (all models)"):
-        g = gr.Dropdown(GALLERY, value="b-hashgrid-instngp", label="model")
-        gi = gr.Image(label="result"); gt = gr.Code(label="metrics.json"); gl = gr.Textbox(label="repo")
-        g.change(gallery_fn, g, [gi, gt, gl]); gr.Button("Load").click(gallery_fn, g, [gi, gt, gl])
+THEME = gr.themes.Soft(
+    primary_hue="indigo", secondary_hue="violet", neutral_hue="slate",
+    font=[gr.themes.GoogleFont("Inter"), "system-ui", "sans-serif"],
+    radius_size="lg",
+)
+CSS = """
+.gradio-container {max-width: 1040px !important; margin: 0 auto !important;}
+#hdr {background: linear-gradient(135deg,#6366f1,#a855f7); color:#fff;
+      border-radius:18px; padding:24px 28px; margin-bottom:10px;
+      box-shadow:0 18px 40px -18px rgba(99,102,241,.7);}
+#hdr h1 {font-size:1.75rem; font-weight:800; margin:0 0 6px; color:#fff;}
+#hdr p {opacity:.94; margin:0; font-size:.95rem; line-height:1.5;}
+#hdr a {color:#fff; font-weight:700; text-decoration:underline;}
+.tab-nav button {font-weight:600 !important;}
+footer {display:none !important;}
+.tip {font-size:.92rem; opacity:.8; margin:2px 0 10px;}
+"""
+HEADER = """<div id="hdr">
+  <h1>🧪 Ropedia Academy · Models</h1>
+  <p>Interactive demos of models trained <b>from scratch</b> in
+  <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a> —
+  loaded live from <a href="https://huggingface.co/cy0307" target="_blank">cy0307/ropedia-*</a>.
+  Small educational models: the value is the method, not a leaderboard.</p>
+</div>"""
+FOOTER = ('<p style="text-align:center;opacity:.6;font-size:.85rem;margin-top:14px;">'
+          'Part of <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a>'
+          ' · models &amp; collection on <a href="https://huggingface.co/cy0307" target="_blank">Hugging Face 🤗</a></p>')
+
+with gr.Blocks(theme=THEME, css=CSS, title="Ropedia Academy · Models") as demo:
+    gr.HTML(HEADER)
+    with gr.Tabs():
+        with gr.Tab("✍️ nanoGPT"):
+            gr.Markdown("Character-level **GPT** on Tiny Shakespeare — type a prompt, it continues in the Bard's style.", elem_classes="tip")
+            with gr.Row():
+                with gr.Column(scale=2):
+                    p = gr.Textbox(label="Prompt", value="ROMEO:")
+                    with gr.Row():
+                        n1 = gr.Slider(50, 600, 250, step=10, label="Tokens")
+                        t1 = gr.Slider(0.1, 1.5, 0.8, step=.05, label="Temperature")
+                    b1 = gr.Button("Generate", variant="primary")
+                o1 = gr.Textbox(label="Generated text", lines=12, scale=3)
+            b1.click(nanogpt_fn, [p, n1, t1], o1)
+        with gr.Tab("🕺 Motion diffusion"):
+            gr.Markdown("A **DDPM** that samples new 2D motion trajectories.", elem_classes="tip")
+            n2 = gr.Slider(1, 6, 4, step=1, label="How many motions")
+            gr.Button("Sample motions", variant="primary").click(motion_fn, n2, (o2 := gr.Plot()))
+        with gr.Tab("🔮 Action anticipation"):
+            gr.Markdown("An **LSTM** predicts the next action from the sequence so far.", elem_classes="tip")
+            s3 = gr.CheckboxGroup(VERBS, value=["take", "wash"], label="Actions so far")
+            gr.Button("Predict next", variant="primary").click(antic_fn, s3, (o3 := gr.Textbox(label="Prediction")))
+        with gr.Tab("🎮 Gridworld policy"):
+            gr.Markdown("A **REINFORCE / actor-critic** policy — pick a start, watch it reach the goal.", elem_classes="tip")
+            with gr.Row():
+                sx = gr.Slider(0, N - 1, 0, step=1, label="Start x"); sy = gr.Slider(0, N - 1, 0, step=1, label="Start y")
+            gr.Button("Run policy", variant="primary").click(policy_fn, [sx, sy], (o4 := gr.Plot()))
+        with gr.Tab("🌍 World model"):
+            gr.Markdown("A learned **world model** plans a path to the origin with **CEM**.", elem_classes="tip")
+            with gr.Row():
+                wx = gr.Slider(-2, 2, 1.8, step=.1, label="Start x"); wy = gr.Slider(-2, 2, -1.6, step=.1, label="Start y")
+            gr.Button("Plan to goal", variant="primary").click(world_fn, [wx, wy], (o5 := gr.Plot()))
+        with gr.Tab("🛠️ Tool-use agent"):
+            gr.Markdown("A tool-using agent: `compute 2*(3+4)`, `length of robotics`, `reverse agent`.", elem_classes="tip")
+            a6 = gr.Textbox(label="Task", value="compute sqrt(144)+2")
+            gr.Button("Run agent", variant="primary").click(agent_fn, a6, (o6 := gr.Textbox(label="Answer")))
+        with gr.Tab("🖼️ Gallery"):
+            gr.Markdown("Every model's **result figure + metrics**. 🚧 placeholders light up once you train them.", elem_classes="tip")
+            g = gr.Dropdown(GALLERY, value="b-hashgrid-instngp", label="Model")
+            with gr.Row():
+                gi = gr.Image(label="Result", scale=3)
+                with gr.Column(scale=2):
+                    gl = gr.Textbox(label="Repo")
+                    gt = gr.Code(label="metrics.json")
+            g.change(gallery_fn, g, [gi, gt, gl])
+            gr.Button("Load", variant="primary").click(gallery_fn, g, [gi, gt, gl])
+    gr.HTML(FOOTER)
 
 if __name__ == "__main__":
     demo.launch()

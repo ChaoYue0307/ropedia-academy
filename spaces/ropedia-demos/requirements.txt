@@ -1,5 +1,5 @@
 torch
-gradio
+gradio>=5
 numpy
 matplotlib
 huggingface_hub
