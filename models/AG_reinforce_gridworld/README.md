@@ -7,32 +7,33 @@ tags:
 - reinforcement-learning
 ---
 
-# REINFORCE / actor-critic
+# REINFORCE / actor-critic (CartPole)
 
-A policy-gradient agent with a value baseline + entropy bonus that learns to reach the goal.
+A policy-gradient agent with a value baseline + entropy bonus that solves the Gymnasium CartPole-v1 benchmark (greedy return near the 500 maximum).
 
 Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/)** — an interactive, bilingual course on embodied & spatial AI. **Educational model:** small and quick to train; the value is the *method* and a reproducible pipeline, not a leaderboard score.
 
 | | |
 |---|---|
 | **Task** | reinforcement learning |
-| **Data** | gridworld navigation |
+| **Data** | Gymnasium CartPole-v1 |
 | **Track** | AG · Agents & RL |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_reinforce_gridworld.ipynb) |
 
 ## Dataset
 
-- **Name:** 5×5 gridworld (RL env)
-- **Type:** synthetic env — no fixed dataset
-- **Size / stats:** agent learns from its own rollouts; reward −0.1/step, +5 at goal
-- **Split:** online RL
-- **Source:** procedural env
+- **Name:** Gymnasium CartPole-v1
+- **Type:** standard RL benchmark environment (no fixed dataset)
+- **Size / stats:** 4-D continuous state, 2 discrete actions; reward +1/step, episode cap 500; agent learns from its own rollouts
+- **Split:** online RL; greedy eval over 20 episodes
+- **Source:** Gymnasium (Farama Foundation) CartPole-v1
 
 ## Results
 
 | metric | value |
 |---|---|
-| return (final) | 4.64 |
+| return (final) | 452.7 |
+| greedy_eval | 449.45 |
 
 
 ![figure](figure.png)

@@ -113,30 +113,47 @@ def antic_fn(seq):
     p = F.softmax(logits, -1); top = torch.topk(p, 3)
     return "next action — " + ", ".join(f"{VERBS[i]} ({p[i]:.0%})" for i in top.indices.tolist())
 
-# ───────────────────── gridworld policy (REINFORCE) ─────────────────────
-N, MOVES = 5, [(-1, 0), (1, 0), (0, -1), (0, 1)]; GOAL = (N - 1, N - 1)
-def feat(p): v = torch.zeros(2 * N); v[p[0]] = 1.0; v[N + p[1]] = 1.0; return v
+# ───────────────────── CartPole policy (REINFORCE / actor-critic) ─────────────────────
 POL = None
 try:
-    POL = nn.Sequential(nn.Linear(2 * N, 64), nn.ReLU(), nn.Linear(64, 4))
+    POL = nn.Sequential(nn.Linear(4, 64), nn.Tanh(), nn.Linear(64, 2))
     POL.load_state_dict(torch.load(dl("ag-reinforce-gridworld", "policy.pt"), map_location="cpu")); POL.eval()
 except Exception as e:
     ERR["policy"] = str(e)
 
+# CartPole-v1 dynamics (Gymnasium constants) — reimplemented so the demo needs no gym install
+def _cartpole_step(s, a):
+    g, mc, mp, l, fmag, tau = 9.8, 1.0, 0.1, 0.5, 10.0, 0.02
+    x, xd, th, thd = s; tm = mc + mp; pml = mp * l
+    f = fmag if a == 1 else -fmag
+    ct, st_ = math.cos(th), math.sin(th)
+    tmp = (f + pml * thd * thd * st_) / tm
+    thacc = (g * st_ - ct * tmp) / (l * (4 / 3 - mp * ct * ct / tm))
+    xacc = tmp - pml * thacc * ct / tm
+    return np.array([x + tau * xd, xd + tau * xacc, th + tau * thd, thd + tau * thacc])
+
 @torch.no_grad()
-def policy_fn(sx, sy):
+def policy_fn(seed):
     if POL is None: return _msg_fig("Policy not available — train/upload it (ag-reinforce-gridworld).")
-    p = (int(sx), int(sy)); path = [p]
-    for _ in range(2 * N + 2):
-        if p == GOAL: break
-        a = POL(feat(p)).argmax().item()
-        p = (min(max(p[0] + MOVES[a][0], 0), N - 1), min(max(p[1] + MOVES[a][1], 0), N - 1)); path.append(p)
-    xs = [q[0] for q in path]; ys = [q[1] for q in path]
-    fig, ax = plt.subplots(figsize=(3.6, 3.6))
-    ax.plot(xs, ys, "-o", c="C0"); ax.scatter([GOAL[0]], [GOAL[1]], c="C3", s=120, marker="*", label="goal")
-    ax.scatter([sx], [sy], c="C2", s=60, label="start"); ax.set_xlim(-.5, N - .5); ax.set_ylim(-.5, N - .5)
-    ax.set_xticks(range(N)); ax.set_yticks(range(N)); ax.grid(alpha=.3); ax.legend(); ax.set_title("learned policy path")
-    return fig
+    rng = np.random.default_rng(int(seed))
+    s = rng.uniform(-0.05, 0.05, 4); xs, ths = [], []
+    for _ in range(500):
+        xs.append(float(s[0])); ths.append(float(s[2]))
+        a = int(POL(torch.tensor(s, dtype=torch.float32)).argmax())
+        s = _cartpole_step(s, a)
+        if abs(s[0]) > 2.4 or abs(s[2]) > 12 * math.pi / 180: break
+    steps = len(xs)
+    fig, ax = plt.subplots(1, 2, figsize=(8.5, 3.4))
+    cx, th = xs[-1], ths[-1]                                   # left: cart-pole at the last frame
+    ax[0].set_xlim(-2.6, 2.6); ax[0].set_ylim(-0.4, 1.4)
+    ax[0].plot([-2.4, 2.4], [0, 0], "k-", lw=1)
+    ax[0].add_patch(plt.Rectangle((cx - 0.25, -0.1), 0.5, 0.2, color="C0"))
+    ax[0].plot([cx, cx + math.sin(th)], [0, math.cos(th)], "C3-", lw=4)
+    ax[0].set_title("cart-pole (last frame)"); ax[0].set_aspect("equal"); ax[0].axis("off")
+    ax[1].plot(np.degrees(ths), c="C0"); ax[1].axhline(12, ls="--", c="C7"); ax[1].axhline(-12, ls="--", c="C7")
+    ax[1].set_xlabel("step"); ax[1].set_ylabel("pole angle (°)"); ax[1].grid(alpha=.3)
+    ax[1].set_title(f"balanced {steps} / 500 steps")
+    plt.tight_layout(); return fig
 
 # ───────────────────── world model (CEM planning) ─────────────────────
 DT, FR = 0.1, 0.1; WGOAL = torch.tensor([0., 0.])
@@ -316,11 +333,10 @@ with gr.Blocks(title="Ropedia Academy · Models") as demo:
             gr.Markdown("An **LSTM** predicts the next action from the sequence so far.", elem_classes="tip")
             s3 = gr.CheckboxGroup(VERBS, value=["take", "wash"], label="Actions so far")
             gr.Button("Predict next", variant="primary").click(antic_fn, s3, (o3 := gr.Textbox(label="Prediction")))
-        with gr.Tab("🎮 Gridworld policy"):
-            gr.Markdown("A **REINFORCE / actor-critic** policy — pick a start, watch it reach the goal.", elem_classes="tip")
-            with gr.Row():
-                sx = gr.Slider(0, N - 1, 0, step=1, label="Start x"); sy = gr.Slider(0, N - 1, 0, step=1, label="Start y")
-            gr.Button("Run policy", variant="primary").click(policy_fn, [sx, sy], (o4 := gr.Plot()))
+        with gr.Tab("🎮 CartPole policy"):
+            gr.Markdown("A **REINFORCE / actor-critic** agent solving **Gymnasium CartPole-v1** — run an episode and watch it balance the pole (near the 500-step max).", elem_classes="tip")
+            seed = gr.Slider(0, 50, 0, step=1, label="Episode seed")
+            gr.Button("Run episode", variant="primary").click(policy_fn, seed, (o4 := gr.Plot()))
         with gr.Tab("🌍 World model"):
             gr.Markdown("A learned **world model** plans a path to the origin with **CEM**.", elem_classes="tip")
             with gr.Row():

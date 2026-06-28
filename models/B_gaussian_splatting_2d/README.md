@@ -9,30 +9,30 @@ tags:
 
 # 2D Gaussian Splatting
 
-Reconstructs an image with anisotropic 2D Gaussians (with densification) — the 2D analogue of 3D Gaussian Splatting.
+Reconstructs a real photograph with anisotropic 2D Gaussians (with densification) — the 2D analogue of 3D Gaussian Splatting.
 
 Trained from scratch in **[Ropedia Academy](https://chaoyue0307.github.io/ropedia-academy/)** — an interactive, bilingual course on embodied & spatial AI. **Educational model:** small and quick to train; the value is the *method* and a reproducible pipeline, not a leaderboard score.
 
 | | |
 |---|---|
 | **Task** | differentiable image fitting |
-| **Data** | procedural target image |
+| **Data** | real photograph |
 | **Track** | B · 3D & rendering |
 | **Notebook** | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_gaussian_splatting_2d.ipynb) |
 
 ## Dataset
 
-- **Name:** Procedural target image
-- **Type:** synthetic — procedural
-- **Size / stats:** 1 RGB image, 64×64 (gradient + 3 coloured blobs)
+- **Name:** Real photograph (astronaut)
+- **Type:** real — public-domain image
+- **Size / stats:** 1 RGB photo resized to 64×64; ~500 Gaussians (densified to ~650)
 - **Split:** single image (overfit)
-- **Source:** procedural
+- **Source:** scikit-image data.astronaut() (NASA, public domain)
 
 ## Results
 
 | metric | value |
 |---|---|
-| psnr (final) | 55.94 |
+| psnr (final) | 32.45 |
 
 
 ![figure](figure.png)

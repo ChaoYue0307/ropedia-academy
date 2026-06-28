@@ -72,7 +72,7 @@ export const LABS: Lab[] = [
   { file: "LM_nanogpt_pretrain.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Train a GPT from scratch (nanoGPT)", "从零训练 GPT（nanoGPT）"), action: T("Pretrain", "预训练"), links: ["A", "B", "C", "D"] },
   { file: "LM_distillation.ipynb", dir: "training", track: "LM", level: "scratch", title: T("Knowledge distillation", "知识蒸馏"), action: T("Distill", "蒸馏"), links: ["A", "B", "C", "D"] },
   // — Agents & RL —
-  { file: "AG_reinforce_gridworld.ipynb", dir: "training", track: "AG", level: "scratch", title: T("REINFORCE policy gradient", "REINFORCE 策略梯度"), action: T("Train", "训练"), links: ["D"] },
+  { file: "AG_reinforce_gridworld.ipynb", dir: "training", track: "AG", level: "scratch", title: T("REINFORCE / actor-critic (CartPole)", "REINFORCE / actor-critic（CartPole）"), action: T("Train", "训练"), links: ["D"], note: "Gymnasium CartPole-v1" },
   { file: "AG_behavior_cloning.ipynb", dir: "training", track: "AG", level: "scratch", title: T("Behavior cloning (imitation)", "行为克隆（模仿学习）"), action: T("Train", "训练"), links: ["A", "D"] },
   { file: "AG_agent_harness.ipynb", dir: "training", track: "AG", level: "scratch", title: T("Agent + tool-use harness", "智能体 + 工具调用框架"), action: T("Harness", "框架"), links: ["C", "D", "LM"] },
   { file: "LM_qlora_finetune_llm.ipynb", dir: "advanced", track: "LM", level: "advanced", title: T("QLoRA — fine-tune an LLM", "QLoRA — 微调大语言模型"), action: T("Fine-tune", "微调"), note: "TRL + PEFT", links: ["A", "B", "C", "D"] },

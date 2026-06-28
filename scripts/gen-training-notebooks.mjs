@@ -535,15 +535,14 @@ const gsplat = {
 device = "cuda" if torch.cuda.is_available() else "cpu"
 STEPS = int(os.environ.get("STEPS", 800)); N = int(os.environ.get("NGAUSS", 500)); H = W = 64
 print("device:", device, "| steps:", STEPS, "| gaussians:", N)`),
-    md(`## 1 · Target image (procedural, self-contained)`),
-    code(`ys = torch.linspace(0, 1, H, device=device); xs = torch.linspace(0, 1, W, device=device)
+    md(`## 1 · Target image — a real photograph (downsized so it fits on CPU)`),
+    code(`from skimage import data
+from skimage.transform import resize
+img = resize(data.astronaut(), (H, W), anti_aliasing=True)          # real photo (NASA astronaut, public domain)
+target = torch.tensor(img, dtype=torch.float32, device=device).clamp(0, 1)
+ys = torch.linspace(0, 1, H, device=device); xs = torch.linspace(0, 1, W, device=device)
 YY, XX = torch.meshgrid(ys, xs, indexing="ij"); coords = torch.stack([XX, YY], -1)   # (H,W,2)
-target = 0.15 + 0.2 * YY[..., None].repeat(1, 1, 3)                                   # soft gradient
-for cx, cy, r, col in [(.3,.35,.16,(.95,.35,.35)), (.68,.4,.2,(.25,.5,.95)), (.5,.72,.17,(.35,.85,.45))]:
-    g = torch.exp(-(((XX-cx)**2 + (YY-cy)**2) / (2*r*r)))
-    target = target + g[..., None] * torch.tensor(col, device=device)
-target = target.clamp(0, 1)
-plt.imshow(target.cpu()); plt.title("target"); plt.axis("off"); plt.show()`),
+plt.imshow(target.cpu()); plt.title("target — real photo"); plt.axis("off"); plt.show()`),
     md(`## 2 · The Gaussians — learnable position, scale, rotation, colour, opacity`),
     code(`pos  = torch.rand(N, 2, device=device, requires_grad=True)
 logs = torch.full((N, 2), math.log(0.06), device=device, requires_grad=True)
@@ -973,14 +972,15 @@ STEPS = int(os.environ.get("STEPS", 1500)); H = W = 96
 L, T, Fdim = 8, 1 << 14, 2                      # levels, hash-table size, features/level
 res = [int(round(8 * 1.5 ** l)) for l in range(L)]
 primes = torch.tensor([1, 2654435761], device=device)`),
-    md(`## 1 · Target image (procedural, self-contained)`),
-    code(`ys = torch.linspace(0, 1, H, device=device); xs = torch.linspace(0, 1, W, device=device)
+    md(`## 1 · Target image — a real photograph`),
+    code(`from skimage import data
+from skimage.transform import resize
+img = resize(data.astronaut(), (H, W), anti_aliasing=True)         # real photo (public domain)
+target = torch.tensor(img, dtype=torch.float32, device=device).clamp(0, 1)
+ys = torch.linspace(0, 1, H, device=device); xs = torch.linspace(0, 1, W, device=device)
 YY, XX = torch.meshgrid(ys, xs, indexing="ij")
-target = torch.stack([0.5 + 0.5 * torch.sin(12 * XX) * torch.cos(9 * YY),
-                      0.5 + 0.5 * torch.sin(7 * (XX + YY)),
-                      0.5 + 0.5 * torch.cos(10 * YY)], -1).clamp(0, 1)
 coords = torch.stack([XX, YY], -1).reshape(-1, 2)
-plt.imshow(target.cpu()); plt.title("target"); plt.axis("off"); plt.show()`),
+plt.imshow(target.cpu()); plt.title("target — real photo"); plt.axis("off"); plt.show()`),
     md(`## 2 · The hash-grid encoding (bilinear, per level)`),
     code(`tables = nn.Parameter((torch.rand(L, T, Fdim, device=device) * 2 - 1) * 1e-4)
 def encode(c):                                  # c (N,2) in [0,1]
@@ -1207,60 +1207,58 @@ plt.tight_layout(); plt.show()`),
 // LAB 18 — REINFORCE policy gradient on a gridworld (Agents & RL)
 // ---------------------------------------------------------------------------
 const reinforce = {
-  file: "AG_reinforce_gridworld.ipynb", title: "REINFORCE policy gradient", track: "AG · Agents & RL", tag: "PyTorch",
-  what: "train an agent to reach a goal with the REINFORCE policy-gradient algorithm",
+  file: "AG_reinforce_gridworld.ipynb", title: "REINFORCE / actor-critic on CartPole", track: "AG · Agents & RL", tag: "PyTorch",
+  what: "solve the Gymnasium CartPole-v1 benchmark with REINFORCE + a value baseline (actor-critic)",
   cells: [
-    md(`# REINFORCE — learn a policy by trial and error\n\n**Agents & RL** · the simplest policy-gradient method (the root of PPO, used in RLHF).\n\nAn agent explores a gridworld; we reward reaching the goal and push up the probability of actions that led to high return. Self-contained — no gym needed.\n\n> CPU is fine.`),
-    code(`import os, torch, torch.nn as nn, matplotlib.pyplot as plt
+    md(`# REINFORCE — solve CartPole, a real RL benchmark\n\n**Agents & RL** · the simplest policy-gradient method (the root of PPO, used in RLHF).\n\nWe train on **Gymnasium \`CartPole-v1\`** — the classic control benchmark: balance a pole on a cart by pushing left/right. Reward every step the pole stays up, and push up the probability of actions that led to high return, using a **value baseline** (actor-critic) + an entropy bonus. "Solved" means an episode return near the maximum of **500**.\n\n> CPU is fine — trains in a couple of minutes.`),
+    code(`!pip -q install gymnasium`),
+    code(`import os, torch, torch.nn as nn, torch.nn.functional as F, matplotlib.pyplot as plt
+from torch.distributions import Categorical
+import gymnasium as gym
 device = "cuda" if torch.cuda.is_available() else "cpu"
-STEPS = int(os.environ.get("STEPS", 600)); N = 5; GOAL = (N - 1, N - 1); GAMMA = 0.95`),
-    md(`## 1 · The environment (a ${"N×N"} gridworld)`),
-    code(`MOVES = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-def step(pos, a):
-    x = min(max(pos[0] + MOVES[a][0], 0), N - 1); y = min(max(pos[1] + MOVES[a][1], 0), N - 1)
-    done = (x, y) == GOAL
-    return (x, y), (5.0 if done else -0.1), done
-def feat(pos):
-    v = torch.zeros(2 * N, device=device); v[pos[0]] = 1.0; v[N + pos[1]] = 1.0; return v`),
-    md(`## 2 · Policy network + REINFORCE update`),
-    code(`policy = nn.Sequential(nn.Linear(2 * N, 64), nn.ReLU(), nn.Linear(64, 4)).to(device)
-value = nn.Sequential(nn.Linear(2 * N, 64), nn.ReLU(), nn.Linear(64, 1)).to(device)   # critic baseline
-opt = torch.optim.Adam(list(policy.parameters()) + list(value.parameters()), 2e-3)
-def episode():
-    pos = (torch.randint(0, N, (1,)).item(), torch.randint(0, N, (1,)).item())
-    states, logps, ents, rews = [], [], [], []
-    for _ in range(40):
-        if pos == GOAL: break
-        f = feat(pos); d = torch.distributions.Categorical(logits=policy(f)); a = d.sample()
-        states.append(f); logps.append(d.log_prob(a)); ents.append(d.entropy())
-        pos, r, done = step(pos, a.item()); rews.append(r)
-        if done: break
-    return states, logps, ents, rews`),
-    md(`## 3 · Train — push up high-return actions`),
-    code(`hist = []
-for step_i in range(STEPS + 1):
-    batch_loss, rets = [], []
-    for _ in range(16):
-        states, logps, ents, rews = episode()
-        if not logps: continue
-        G = 0; returns = []
-        for r in reversed(rews): G = r + GAMMA * G; returns.insert(0, G)
-        returns = torch.tensor(returns, device=device)
-        V = value(torch.stack(states)).squeeze(-1)                 # state-value baseline
-        adv = (returns - V).detach(); adv = (adv - adv.mean()) / (adv.std(unbiased=False) + 1e-6)
-        pg = -(torch.stack(logps) * adv).sum()                     # policy gradient with advantage
-        vloss = ((V - returns) ** 2).mean()                        # critic regression
-        ent = -0.01 * torch.stack(ents).sum()                      # entropy bonus (exploration)
-        batch_loss.append(pg + 0.5 * vloss + ent); rets.append(sum(rews))
-    loss = torch.stack(batch_loss).mean(); opt.zero_grad(); loss.backward()
-    torch.nn.utils.clip_grad_norm_(list(policy.parameters()) + list(value.parameters()), 1.0); opt.step()
-    if step_i % max(1, STEPS // 10) == 0:
-        ar = sum(rets) / len(rets); hist.append((step_i, round(ar, 2))); print(f"step {step_i:4d}  avg return {ar:6.2f}")`),
-    md(`## 4 · Compare — return climbs as the policy learns`),
-    code(`fig, ax = plt.subplots(figsize=(6, 3.6))
-ax.plot(*zip(*hist), "-o"); ax.set_xlabel("update"); ax.set_ylabel("avg episode return"); ax.grid(alpha=.3); ax.set_title("REINFORCE learns to reach the goal")
+EPISODES = int(os.environ.get("EPISODES", 600)); GAMMA = 0.99; torch.manual_seed(0)
+env = gym.make("CartPole-v1")
+print("obs", env.observation_space.shape, "| actions", env.action_space.n)`),
+    md(`## 1 · Actor (policy) + critic (value baseline)`),
+    code(`policy = nn.Sequential(nn.Linear(4, 64), nn.Tanh(), nn.Linear(64, 2)).to(device)   # actor: state -> action logits
+critic = nn.Sequential(nn.Linear(4, 64), nn.Tanh(), nn.Linear(64, 1)).to(device)   # value baseline
+opt = torch.optim.Adam(list(policy.parameters()) + list(critic.parameters()), 3e-3)`),
+    md(`## 2 · Roll out one episode under the current policy`),
+    code(`def rollout(seed=None):
+    s, _ = env.reset(seed=seed); logps, vals, ents, rews = [], [], [], []
+    done = False
+    while not done:
+        st = torch.tensor(s, dtype=torch.float32, device=device); d = Categorical(logits=policy(st)); a = d.sample()
+        logps.append(d.log_prob(a)); ents.append(d.entropy()); vals.append(critic(st).squeeze())
+        s, r, term, trunc, _ = env.step(int(a)); done = term or trunc; rews.append(r)
+    return logps, vals, ents, rews`),
+    md(`## 3 · Train — REINFORCE with a value baseline + entropy bonus`),
+    code(`hist = []; ep_returns = []
+for ep in range(EPISODES):
+    logps, vals, ents, rews = rollout(seed=ep)
+    G = 0; returns = []
+    for r in reversed(rews): G = r + GAMMA * G; returns.insert(0, G)
+    returns = torch.tensor(returns, device=device); vals = torch.stack(vals)
+    adv = (returns - vals.detach()); adv = (adv - adv.mean()) / (adv.std(unbiased=False) + 1e-8)
+    loss = -(torch.stack(logps) * adv).mean() - 0.01 * torch.stack(ents).mean() + 0.5 * F.mse_loss(vals, returns)
+    opt.zero_grad(); loss.backward(); opt.step()
+    ep_returns.append(sum(rews))
+    if ep % max(1, EPISODES // 12) == 0:
+        ma = sum(ep_returns[-20:]) / len(ep_returns[-20:]); hist.append((ep, round(ma, 1))); print(f"ep {ep:4d}  avg return {ma:6.1f}")`),
+    md(`## 4 · Evaluate the greedy policy + plot the learning curve`),
+    code(`evals = []
+for k in range(20):
+    s, _ = env.reset(seed=1000 + k); done = False; tot = 0
+    while not done:
+        with torch.no_grad(): a = int(policy(torch.tensor(s, dtype=torch.float32, device=device)).argmax())
+        s, r, term, trunc, _ = env.step(a); done = term or trunc; tot += r
+    evals.append(tot)
+greedy_eval = sum(evals) / len(evals); print(f"greedy eval mean return {greedy_eval:.1f}  (max 500)")
+fig, ax = plt.subplots(figsize=(6, 3.6))
+ax.plot(*zip(*hist), "-o"); ax.axhline(500, ls="--", c="C7", label="max (500)")
+ax.set_xlabel("episode"); ax.set_ylabel("avg return (20-ep window)"); ax.grid(alpha=.3); ax.legend(); ax.set_title("REINFORCE solves CartPole")
 plt.show()`),
-    md(`### Where to go next\n- Add a value baseline → **Actor-Critic**, then clipped updates → **PPO** (the algorithm behind RLHF).\n- Swap the gridworld for a Gym/MuJoCo task; learn from pixels with a world model (track D).`),
+    md(`### Where to go next\n- Add clipped updates → **PPO** (the algorithm behind RLHF), or a replay buffer → off-policy methods.\n- Swap CartPole for a harder Gym/MuJoCo task; learn from pixels with a world model (track D).`),
   ],
 };
 
@@ -1556,7 +1554,7 @@ const SAVE = {
   C_action_anticipation_lstm: [`torch.save(model.state_dict(), f"{run}/lstm.pt")`, `json.dump({"top1": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
   D_tsdf_fusion: [`torch.save({"verts": torch.tensor(verts.copy()), "faces": torch.tensor(faces.copy())}, f"{run}/mesh.pt")`, `json.dump({"verts": int(verts.shape[0]), "faces": int(faces.shape[0])}, open(f"{run}/metrics.json", "w"), indent=2)`],
   D_semantic_mapping: [`json.dump({"history": hist}, open(f"{run}/metrics.json", "w"), indent=2)`, `np.save(f"{run}/occ.npy", (logodds > 0)); np.save(f"{run}/labels.npy", counts.argmax(-1))`],
-  AG_reinforce_gridworld: [`torch.save(policy.state_dict(), f"{run}/policy.pt")`, `json.dump({"return": hist}, open(f"{run}/metrics.json", "w"), indent=2)`],
+  AG_reinforce_gridworld: [`torch.save(policy.state_dict(), f"{run}/policy.pt")`, `json.dump({"return": hist, "greedy_eval": greedy_eval}, open(f"{run}/metrics.json", "w"), indent=2)`],
   AG_behavior_cloning: [`torch.save(policy.state_dict(), f"{run}/policy.pt")`, `json.dump({"imitation_acc": hist, "rollout_success": succ}, open(f"{run}/metrics.json", "w"), indent=2)`],
   AG_agent_harness: [`json.dump({"success_rate": acc, "results": [{"task": r["task"], "pred": str(r["pred"]), "ok": r["ok"]} for r in results]}, open(f"{run}/results.json", "w"), indent=2)`],
   C_simclr_pretrain: [`torch.save(enc.state_dict(), f"{run}/encoder.pt")`, `json.dump({"nt_xent": hist, "probe_simclr": simclr_acc, "probe_random": rand_acc}, open(f"{run}/metrics.json", "w"), indent=2)`],
