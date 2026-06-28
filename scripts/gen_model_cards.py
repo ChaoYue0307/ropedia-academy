@@ -113,5 +113,8 @@ def card(folder):
 
 if __name__ == "__main__":
     for folder in sorted(glob.glob("models/*")):
-        if os.path.isdir(folder):
-            print("card ->", card(folder))
+        if not os.path.isdir(folder):
+            continue
+        if os.path.exists(os.path.join(folder, "metrics.todo.json")):
+            print("skip (placeholder) ->", os.path.basename(folder)); continue
+        print("card ->", card(folder))
