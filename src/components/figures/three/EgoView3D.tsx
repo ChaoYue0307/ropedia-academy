@@ -55,6 +55,7 @@ function TableObject({ p, kind, color }: { p: V; kind: "plate" | "cup" | "knife"
 }
 
 function Scene({ yaw, reach }: { yaw: number; reach: number }) {
+  const zh = useStore((s) => s.lang) === "zh";
   const yr = (yaw * Math.PI) / 180;
   return (
     <group>
@@ -77,8 +78,8 @@ function Scene({ yaw, reach }: { yaw: number; reach: number }) {
         <Frustum reach={reach} />
         <Hand from={[-0.12, -0.18, -0.05]} to={[-0.28, -0.5 * reach, -0.8 * reach]} color="#e0598b" />
         <Hand from={[0.12, -0.18, -0.05]} to={[0.3, -0.5 * reach, -0.8 * reach]} color="#e0598b" />
-        <Html position={[0, 0.32, 0]} center distanceFactor={6} occlude={false}>
-          <div style={{ background: "#0e9aa7", color: "#fff", padding: "1px 6px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>head-mounted camera</div>
+        <Html position={[0, 0.34, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+          <div style={{ background: "#0e9aa7", color: "#fff", padding: "1px 5px", borderRadius: 5, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap", boxShadow: "0 1px 3px rgba(0,0,0,.28)" }}>{zh ? "头戴相机" : "head-mounted camera"}</div>
         </Html>
       </group>
     </group>

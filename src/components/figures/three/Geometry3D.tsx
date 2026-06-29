@@ -24,8 +24,13 @@ export function Frame({ children, h = "h-72", cam = [3.2, 2.2, 3.6] as V, target
 export const Dot = ({ p, r = 0.09, c }: { p: V; r?: number; c: string }) => (
   <mesh position={p}><sphereGeometry args={[r, 20, 20]} /><meshStandardMaterial color={c} roughness={0.4} /></mesh>
 );
+// fixed screen-size label (no distanceFactor → never blows up); non-blocking so orbit still works
 export function tag(c: string, text: string, p: V) {
-  return <Html position={p} center distanceFactor={7}><div style={{ background: c, color: "#fff", padding: "1px 6px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{text}</div></Html>;
+  return (
+    <Html position={p} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+      <div style={{ background: c, color: "#fff", padding: "1px 5px", borderRadius: 5, fontSize: 10, lineHeight: 1.35, fontWeight: 600, whiteSpace: "nowrap", boxShadow: "0 1px 3px rgba(0,0,0,.28)", opacity: 0.96 }}>{text}</div>
+    </Html>
+  );
 }
 
 // ── B1 · Pinhole projection (depth is discarded) ─────────────────────────────
@@ -151,8 +156,8 @@ export function ReferenceFrames3D() {
           {tag("#1d9e75", zh ? "前" : "front", [0, 0.3, 1.45])}
         </group>
         <Dot p={[1.5, 0.12, 0]} r={0.12} c="#e0598b" />{tag("#e0598b", "P", [1.5, 0.45, 0])}
-        <Html position={[0, 1.7, 0]} center distanceFactor={8}>
-          <div style={{ background: "#6a5ef0", color: "#fff", padding: "2px 8px", borderRadius: 7, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
+        <Html position={[0, 1.75, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+          <div style={{ background: "#6a5ef0", color: "#fff", padding: "2px 7px", borderRadius: 6, fontSize: 10, lineHeight: 1.4, fontWeight: 600, whiteSpace: "nowrap", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,.28)" }}>
             {zh ? `椅子参照系：P 在椅子${right ? "右" : "左"}侧` : `chair frame: P is on the chair's ${right ? "RIGHT" : "LEFT"}`}
             <div style={{ opacity: .85, fontWeight: 500 }}>{zh ? "世界参照系：P 始终在东侧" : "world frame: P is always east"}</div>
           </div>
