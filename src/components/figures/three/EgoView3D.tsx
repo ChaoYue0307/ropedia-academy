@@ -158,6 +158,7 @@ export function EgoView3D() {
         zh: "头戴相机随佩戴者一起移动——所以当你转头时，整个世界都会扫过画面：这种全局（自我）运动是「佩戴者在看哪里」的线索，而非单纯干扰。而佩戴者自己的手与被操作物体从视野底部进入（操作区）。拖动可旋转视角；转动头部，观察相机视锥扫过固定的桌面。",
       }}
       onReset={() => { setYaw(0); setReach(2.1); }}
+      predict={{ en: "Turn the head — do the own hands sweep away with the camera, or stay on the table?", zh: "转动头部——自己的手会随相机扫开，还是留在桌上？" }}
     >
       <div className="h-72 w-full overflow-hidden rounded-xl bg-gradient-to-b from-sky-50 to-stone-100 dark:from-slate-800 dark:to-slate-900">
         <Canvas camera={{ position: [3.8, 2.8, 4.7], fov: 42 }} dpr={[1, 2]}>

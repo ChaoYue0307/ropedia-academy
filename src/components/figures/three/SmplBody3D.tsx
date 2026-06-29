@@ -108,6 +108,7 @@ export default function SmplBody3D() {
         setArm(35);
         setLeg(18);
       }}
+      predict={{ en: "Which sliders change who this is (identity), and which change what they're doing (motion)?", zh: "哪些滑块改变「这是谁」（身份），哪些改变「在做什么」（动作）？" }}
     >
       <div role="img" aria-label="Interactive 3D human body mesh (SMPL), orbitable" className="h-64 overflow-hidden rounded-xl bg-gradient-to-b from-[#0c0b16] to-[#1c1a30]">
         <Canvas camera={{ position: [0, 0.3, 2.6], fov: 45 }} dpr={[1, 2]}>

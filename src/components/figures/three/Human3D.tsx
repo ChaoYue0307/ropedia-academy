@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import * as THREE from "three";
 import { Line } from "@react-three/drei";
-import { FigureFrame, Slider } from "../FigureFrame";
+import { FigureFrame, Slider, Readout, useTimelinePlay, PlayPause } from "../FigureFrame";
 import { useStore } from "../../../lib/store";
 import { useResizeKick } from "./kick";
 import { Frame, Dot, tag, GROUND, GRID2, type V } from "./Geometry3D";
@@ -58,12 +58,16 @@ export function SmplShape3D() {
       title={{ en: "SMPL — a parametric body (3D)", zh: "SMPL——参数化人体（三维）" }}
       caption={{ en: "SMPL represents any body as a low-dimensional vector: shape (β) sets the build, pose (θ) sets the joint angles. Here the shape parameters morph height and build continuously — a few numbers describe a whole person. Orbit to inspect.", zh: "SMPL 用低维向量表示任意人体：形状参数（β）决定体型，姿态参数（θ）决定关节角度。这里形状参数连续地改变身高与体型——几个数字就能描述整个人。旋转查看。" }}
       onReset={() => { setH(1.7); setW(1); }}
+      predict={{ en: "A full SMPL body is described by about how many numbers — ~80, ~800, or ~8000?", zh: "一具完整的 SMPL 人体大约由多少个数字描述——约 80、约 800，还是约 8000？" }}
     >
       <Frame cam={[3.8, 1.7, 4.4]} target={[0, 1.25, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
         <Body H={h} W={w} />
       </Frame>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Readout><span className="font-mono">β = [{h.toFixed(2)}m, {w.toFixed(2)}]</span> · {zh ? "几个数 → 整个人" : "a few numbers → a whole person"}</Readout>
+      </div>
+      <div className="mt-2 space-y-2">
         <Slider label={zh ? "形状 β₁（身高）" : "shape β₁ (height)"} value={h} min={1.4} max={2} step={0.02} onChange={setH} format={(v) => `${v.toFixed(2)}m`} hint={zh ? "一个形状参数，连续地缩放身体的身高。" : "A shape parameter (β) that continuously scales the body's height."} />
         <Slider label={zh ? "形状 β₂（体型）" : "shape β₂ (build)"} value={w} min={0.7} max={1.5} step={0.02} onChange={setW} format={(v) => v.toFixed(2)} hint={zh ? "一个形状参数，缩放体型（瘦 ↔ 壮）。" : "A shape parameter (β) that scales the body's build (slim ↔ broad)."} />
       </div>
@@ -76,18 +80,23 @@ export function MotionSeq3D() {
   const zh = useStore((s) => s.lang) === "zh";
   const [t, setT] = useState(0.25);
   useResizeKick();
+  const { playing, toggle } = useTimelinePlay(t, setT, 0.4);
   const phase = Math.sin(t * Math.PI * 2) * 0.6;     // a walking gait cycle
   return (
     <FigureFrame
       title={{ en: "Human motion = a sequence of poses (3D)", zh: "人体运动 = 姿态序列（三维）" }}
       caption={{ en: "Motion is a time series of poses. Scrub time to step through a walking cycle — the legs and arms swing in anti-phase. A motion model predicts the next pose given the past ones; orbit to see the 3D gait.", zh: "运动是姿态随时间的序列。拖动时间，逐步浏览一个步行周期——腿与手臂反相摆动。运动模型根据过去的姿态预测下一帧；旋转查看三维步态。" }}
       onReset={() => setT(0.25)}
+      predict={{ en: "Do the arms swing in phase with the legs, or opposite (anti-phase)?", zh: "手臂与腿是同相摆动，还是反相？" }}
     >
       <Frame cam={[3.8, 1.7, 4.4]} target={[0, 1.25, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
         <Body H={1.7} W={1} leg={phase} arm={-phase} color="#5a8bd6" />
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "时间（步态周期）" : "time (gait cycle)"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "拖动浏览一个步行周期；腿与手臂反相摆动。" : "Scrubs through one walking cycle; the legs and arms swing in anti-phase."} /></div>
+      <div className="mt-3 flex items-center gap-2">
+        <PlayPause playing={playing} onToggle={toggle} mode={zh ? "zh" : "en"} />
+        <div className="flex-1"><Slider label={zh ? "时间（步态周期）" : "time (gait cycle)"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "播放或拖动浏览一个步行周期；腿与手臂反相摆动。" : "Play or scrub through one walking cycle; the legs and arms swing in anti-phase."} /></div>
+      </div>
     </FigureFrame>
   );
 }
@@ -112,6 +121,7 @@ export function Hand3D() {
       title={{ en: "Parametric hand — articulated (3D)", zh: "参数化手——可关节运动（三维）" }}
       caption={{ en: "A hand model has ~20 joint angles. Each finger is a chain of segments that curl together; the thumb opposes. Drive the grasp to open/close — the same low-dimensional control behind hand pose estimation & dexterous manipulation. Orbit to inspect.", zh: "手部模型约有 20 个关节角。每根手指是一串可一起弯曲的关节段，拇指与之对置。拖动抓握以开合——这正是手部姿态估计与灵巧操作背后的低维控制。旋转查看。" }}
       onReset={() => setGrasp(0.3)}
+      predict={{ en: "Can a single ‘grasp’ number close all the fingers into a believable fist?", zh: "单个「抓握」数字，能把所有手指合成一个可信的拳头吗？" }}
     >
       <Frame cam={[1.6, 1.2, 1.8]} target={[0, 0.1, 0]}>
         <mesh><boxGeometry args={[0.34, 0.1, 0.36]} /><meshStandardMaterial color="#e0a07a" roughness={0.6} /></mesh>
@@ -136,6 +146,7 @@ export function ContactScene3D() {
       title={{ en: "Contact constraints (3D)", zh: "接触约束（三维）" }}
       caption={{ en: "Real human-scene interaction obeys contact: feet rest ON the floor (not floating or sunk), and a reaching hand should TOUCH the object, not pass through it. Plausible reconstruction enforces these contacts. Move the hand to make/break contact with the box.", zh: "真实的人-场景交互遵守接触约束：脚踩在地面上（既不悬空也不陷入），伸出的手应当触碰物体而非穿过它。合理的重建会强制这些接触。移动手，与方块接触或断开。" }}
       onReset={() => setReach(0.55)}
+      predict={{ en: "Raise the hand — predict the height where it actually touches the crate.", zh: "升高手——预测它真正接触到木箱的高度。" }}
     >
       <Frame cam={[3.8, 1.7, 4.4]} target={[0.1, 1.2, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
@@ -165,6 +176,7 @@ export function SmplifyPrior3D() {
       title={{ en: "SMPLify — a pose prior (3D)", zh: "SMPLify——姿态先验（三维）" }}
       caption={{ en: "Fitting a body to 2D keypoints alone is ambiguous — many 3D poses reproject to the same points, including impossible ones (hyper-extended joints). A learned pose prior penalizes implausible angles, pulling the fit toward natural poses. Increase the prior weight and watch the arm settle.", zh: "仅凭 2D 关键点拟合人体是有歧义的——许多 3D 姿态会投影到相同的点，包括不可能的姿态（关节过度伸展）。学习到的姿态先验会惩罚不合理的角度，把拟合拉向自然姿态。增大先验权重，观察手臂回到自然。" }}
       onReset={() => setPrior(0.7)}
+      predict={{ en: "The elbow starts hyper-extended (impossible). Will raising the prior weight fix it?", zh: "肘部一开始过度伸展（不可能）。增大先验权重能修复它吗？" }}
     >
       <Frame cam={[3.8, 1.7, 4.4]} target={[0, 1.25, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
@@ -183,6 +195,7 @@ export function MotionDiffusion3D() {
   const zh = useStore((s) => s.lang) === "zh";
   const [t, setT] = useState(0.5);
   useResizeKick();
+  const { playing, toggle } = useTimelinePlay(t, setT, 0.3);
   const H = 1.7, off = 0.83 * H, leg = 0.18, arm = 0.22;
   const clean = useMemo<V[]>(() => {
     const pelvis: V = [0, 0, 0], chest: V = [0, 0.46 * H, 0], neck: V = [0, 0.6 * H, 0], head: V = [0, 0.74 * H, 0];
@@ -202,6 +215,7 @@ export function MotionDiffusion3D() {
       title={{ en: "Motion diffusion — denoise into a pose (3D)", zh: "运动扩散——去噪生成姿态（三维）" }}
       caption={{ en: "Diffusion models generate motion by starting from pure noise and iteratively DENOISING it into a plausible pose (and, over a window, a whole sequence) — the same DDPM recipe as image diffusion, applied to human motion (MDM). Scrub the denoising steps: a cloud of random joints organizes into a coherent body. Orbit to inspect.", zh: "扩散模型从纯噪声出发，迭代去噪，生成合理的姿态（在一个时间窗内则是整段序列）——与图像扩散相同的 DDPM 方法，用于人体运动（MDM）。拖动去噪步数：随机关节云逐渐组织成连贯的人体。旋转查看。" }}
       onReset={() => setT(0.5)}
+      predict={{ en: "Starting from pure noise, will the joints snap into a body at once, or organize gradually?", zh: "从纯噪声开始，关节会一下子成形，还是逐渐组织成人体？" }}
     >
       <Frame cam={[3.8, 1.7, 4.4]} target={[0, 1.25, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
@@ -209,7 +223,10 @@ export function MotionDiffusion3D() {
         {cur.map((p, i) => <Dot key={i} p={p} r={0.055} c={t > 0.5 ? "#6a5ef0" : "#a3a8ff"} />)}
         {tag("#6a5ef0", t < 0.15 ? (zh ? "噪声" : "noise") : t > 0.85 ? (zh ? "姿态 ✓" : "pose ✓") : (zh ? "去噪中…" : "denoising…"), [0, 2.7, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "去噪步数" : "denoising steps"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "反向扩散的进度：从纯噪声（0%）逐步去噪到连贯姿态（100%）。" : "Progress of the reverse diffusion: from pure noise (0%) denoised to a coherent pose (100%)."} /></div>
+      <div className="mt-3 flex items-center gap-2">
+        <PlayPause playing={playing} onToggle={toggle} mode={zh ? "zh" : "en"} />
+        <div className="flex-1"><Slider label={zh ? "去噪步数" : "denoising steps"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "反向扩散的进度：从纯噪声（0%）逐步去噪到连贯姿态（100%）。" : "Progress of the reverse diffusion: from pure noise (0%) denoised to a coherent pose (100%)."} /></div>
+      </div>
     </FigureFrame>
   );
 }

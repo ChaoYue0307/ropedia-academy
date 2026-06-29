@@ -83,6 +83,7 @@ export default function NerfVolume3D() {
         zh: "拖动可环绕观察。一个片元着色器为每个像素在三维辐射场中行进射线——采样密度与颜色并从前到后累积，正是 NeRF 的可微体渲染。旋转时它是真正视角一致的。",
       }}
       onReset={() => setDensity(2.4)}
+      predict={{ en: "Raise the field density — will the object look more solid, or more transparent?", zh: "提高场密度——物体会看起来更实，还是更透明？" }}
     >
       <div role="img" aria-label="Interactive 3D NeRF volume render, orbitable" className="h-64 overflow-hidden rounded-xl">
         <Canvas camera={{ position: [0, 0.3, 3.0], fov: 45 }} dpr={[1, 2]}>

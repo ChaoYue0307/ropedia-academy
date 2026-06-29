@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Line, Html } from "@react-three/drei";
 import * as THREE from "three";
-import { FigureFrame, Slider } from "../FigureFrame";
+import { FigureFrame, Slider, Readout, useTimelinePlay, PlayPause } from "../FigureFrame";
 import { useStore } from "../../../lib/store";
 import { useResizeKick } from "./kick";
 
@@ -54,6 +54,7 @@ export function Pinhole3D() {
         zh: "拖动「深度」：世界点 P 沿射线滑入场景更深处，但它在像平面上的投影纹丝不动——投影丢弃了深度。空心点位于同一射线的另一深度处，却落在完全相同的像素上。旋转视角即可看到射线伸入三维。",
       }}
       onReset={() => { setDepth(2.2); setF(1.0); }}
+      predict={{ en: "As you drag P deeper, will its pixel (the projection) move?", zh: "把 P 拖得更深时，它的像素（投影）会移动吗？" }}
     >
       <Frame cam={[3.2, 1.7, 3.4]} target={[0, 0, 1.2]}>
         <gridHelper args={[8, 16, GROUND, GRID2]} position={[0, -1.2, 1.4]} />
@@ -68,7 +69,11 @@ export function Pinhole3D() {
         <Dot p={P} c="#1d9e75" />{tag("#1d9e75", "P", [P[0], P[1] + 0.28, P[2]])}
         <Dot p={pix} r={0.06} c="#6a5ef0" />{tag("#6a5ef0", zh ? "像素" : "pixel", [pix[0], pix[1] - 0.28, pix[2]])}
       </Frame>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Readout><span className="font-mono">{zh ? "像素" : "pixel"} (u,v) = ({ix.toFixed(2)}, {iy.toFixed(2)})</span> · {zh ? "随深度不变" : "fixed as depth varies"}</Readout>
+        <Readout tone="slate"><span className="font-mono">{zh ? "深度" : "depth"} = {depth.toFixed(1)}</span></Readout>
+      </div>
+      <div className="mt-2 space-y-2">
         <Slider label={zh ? "P 的深度" : "depth of P"} value={depth} min={1.2} max={3.2} step={0.05} onChange={setDepth} format={(v) => v.toFixed(1)} hint={zh ? "三维点沿射线的远近。改变它会移动 P，但它的像素位置不变——投影丢弃了深度。" : "How far the 3D point sits along the ray. Changing it moves P but not its pixel — projection discards depth."} />
         <Slider label={zh ? "焦距 f" : "focal length f"} value={f} min={0.6} max={1.5} step={0.05} onChange={setF} format={(v) => v.toFixed(2)} hint={zh ? "相机焦距：针孔到像平面的距离。" : "Camera focal length: the distance from the pinhole to the image plane."} />
       </div>
@@ -86,6 +91,16 @@ export function Triangulation3D() {
   const near = 0.55;
   const cams: V[] = [[-base, 0, 0], [base, 0, 0]];
   const pixel = (C: V): V => [C[0] + (P[0] - C[0]) * (near / pz), C[1] + (P[1] - C[1]) * (near / pz), near];
+  // angle between the two viewing rays at P — wider baseline ⇒ larger angle ⇒ sharper depth
+  const ang = (() => {
+    const a: V = [P[0] - cams[0][0], P[1] - cams[0][1], P[2] - cams[0][2]];
+    const b: V = [P[0] - cams[1][0], P[1] - cams[1][1], P[2] - cams[1][2]];
+    const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    return Math.acos(Math.max(-1, Math.min(1, dot / (Math.hypot(...a) * Math.hypot(...b)))));
+  })();
+  const angDeg = (ang * 180) / Math.PI;
+  const unc = Math.min(0.55, 0.045 / Math.max(0.08, Math.sin(ang))); // depth uncertainty ∝ 1/sin(angle)
+  const prec = angDeg > 26 ? (zh ? "高" : "high") : angDeg > 13 ? (zh ? "中" : "medium") : (zh ? "低" : "low");
   return (
     <FigureFrame
       title={{ en: "Triangulation (in 3D)", zh: "三角测量（三维）" }}
@@ -94,6 +109,7 @@ export function Triangulation3D() {
         zh: "两台已标定相机各沿一条射线看到该点；两射线相交于其真实三维位置 P。移动点——两个像投影（□）随之更新，而射线仍交于 P。基线越宽，相交角越锐，深度越精确。",
       }}
       onReset={() => { setPz(2.3); setBase(0.9); }}
+      predict={{ en: "For more precise depth, should the baseline be wider or narrower?", zh: "要得到更精确的深度，基线应更宽还是更窄？" }}
     >
       <Frame cam={[4.2, 2.8, 1.2]} target={[0, 0.4, 1.1]}>
         <gridHelper args={[8, 16, GROUND, GRID2]} position={[0, -0.6, 1.6]} />
@@ -111,9 +127,15 @@ export function Triangulation3D() {
         })}
         {tag("#1c1b22", zh ? "相机 1" : "cam 1", [cams[0][0], -0.28, 0])}
         {tag("#1c1b22", zh ? "相机 2" : "cam 2", [cams[1][0], -0.28, 0])}
+        {/* depth-uncertainty bubble: large when rays are near-parallel (narrow baseline), small when they cross sharply */}
+        <mesh position={P}><sphereGeometry args={[unc, 16, 16]} /><meshBasicMaterial color="#f59e0b" transparent opacity={0.16} /></mesh>
         <Dot p={P} r={0.11} c="#e0598b" />{tag("#e0598b", "P", [P[0], P[1] + 0.3, P[2]])}
       </Frame>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Readout><span className="font-mono">{zh ? "交会角" : "ray angle"} = {angDeg.toFixed(0)}°</span></Readout>
+        <Readout tone={angDeg > 26 ? "emerald" : angDeg > 13 ? "amber" : "rose"}>{zh ? "深度精度" : "depth precision"}: {prec}</Readout>
+      </div>
+      <div className="mt-2 space-y-2">
         <Slider label={zh ? "点深度" : "point depth"} value={pz} min={1.4} max={3.4} step={0.05} onChange={setPz} format={(v) => v.toFixed(1)} hint={zh ? "三维点到相机的距离（它的真实深度）。" : "How far the 3D point is from the cameras (its true depth)."} />
         <Slider label={zh ? "基线宽度" : "baseline width"} value={base} min={0.4} max={1.6} step={0.05} onChange={setBase} format={(v) => v.toFixed(1)} hint={zh ? "两台相机之间的距离。基线越宽，相交角越锐，深度越精确。" : "Distance between the two cameras. A wider baseline sharpens the intersection angle and pins depth more precisely."} />
       </div>
@@ -140,6 +162,7 @@ export function ReferenceFrames3D() {
         zh: "空间词依赖参照系。点 P 在世界中固定（位于椅子东侧），但「椅子的左/右」会随椅子转动而翻转——所以空间推理器必须确定一个参照系。旋转椅子，观察答案翻转；旋转视角可在三维中看到两个参照系。",
       }}
       onReset={() => setDeg(30)}
+      predict={{ en: "If the chair spins 180°, does ‘left of the chair’ stay the same side of the room?", zh: "椅子转 180°，「椅子左边」还是房间里的同一侧吗？" }}
     >
       <Frame cam={[3.4, 3, 3.4]}>
         <gridHelper args={[8, 16, GROUND, GRID2]} />
@@ -177,6 +200,7 @@ export function RotationContinuity3D() {
   const zh = useStore((s) => s.lang) === "zh";
   const [t, setT] = useState(0.5);
   useResizeKick();
+  const { playing, toggle } = useTimelinePlay(t, setT, 0.16);
   const yawDeg = -170 + t * 360;                       // sweeps past ±180 (the wrap)
   const yaw = (yawDeg * Math.PI) / 180;
   const euler = (((yawDeg + 180) % 360) + 360) % 360 - 180;   // wrapped → jumps at ±180
@@ -188,6 +212,7 @@ export function RotationContinuity3D() {
         zh: "拖动角度：物体平滑旋转，但欧拉角越过 ±180° 时会跳变——这种不连续网络无法拟合。6D 表示（旋转矩阵前两列，红、绿箭头）始终连续，所以更易回归。",
       }}
       onReset={() => setT(0.5)}
+      predict={{ en: "As the box rotates past ±180°, which jumps — the Euler angle or the 6D values?", zh: "当盒子转过 ±180° 时，哪个会跳变——欧拉角还是 6D 值？" }}
     >
       <Frame cam={[2.6, 1.7, 2.9]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} position={[0, -1, 0]} />
@@ -206,7 +231,10 @@ export function RotationContinuity3D() {
           <b className="text-emerald-600">6D</b><div className="font-mono text-ink/70 dark:text-stone-300">[{Math.cos(yaw).toFixed(2)}, {Math.sin(yaw).toFixed(2)}] {zh ? "连续" : "continuous"} ✓</div>
         </div>
       </div>
-      <div className="mt-2"><Slider label={zh ? "旋转" : "rotation"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${(-170 + v * 360).toFixed(0)}°`} hint={zh ? "让物体的旋转越过 ±180°。注意欧拉角在此跳变，而 6D 表示始终平滑。" : "Sweeps the object's rotation past ±180°. Watch the Euler value jump there while the 6D representation stays smooth."} /></div>
+      <div className="mt-2 flex items-center gap-2">
+        <PlayPause playing={playing} onToggle={toggle} mode={zh ? "zh" : "en"} />
+        <div className="flex-1"><Slider label={zh ? "旋转" : "rotation"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${(-170 + v * 360).toFixed(0)}°`} hint={zh ? "让物体的旋转越过 ±180°。注意欧拉角在此跳变，而 6D 表示始终平滑。" : "Sweeps the object's rotation past ±180°. Watch the Euler value jump there while the 6D representation stays smooth."} /></div>
+      </div>
     </FigureFrame>
   );
 }
@@ -222,6 +250,7 @@ export function SdfField3D() {
   useResizeKick();
   const R = 0.7, r = 0.24 + iso * 0.16;
   const samples = useMemo<V[]>(() => [[0, 0, 0], [1.1, 0.2, 0], [0.7, 0, 0.7], [-0.9, 0.4, 0.3], [0, 0.9, -0.2], [0.45, -0.1, 0]], []);
+  const nInside = samples.filter((p) => torusSDF(p, R, r) < 0).length;
   return (
     <FigureFrame
       title={{ en: "Neural SDF — the surface is a level set (3D)", zh: "神经 SDF——表面是一个等值面（三维）" }}
@@ -230,6 +259,7 @@ export function SdfField3D() {
         zh: "有符号距离场在每个三维点存储到表面的距离（内部为负，外部为正）。形状就是它的零等值面。提高水平值，表面膨胀为 SDF = c 的偏移面。圆点显示采样点的符号；旋转查看。",
       }}
       onReset={() => setIso(0)}
+      predict={{ en: "Raise the level c above 0 — will the surface shrink or inflate?", zh: "把水平值 c 提到 0 以上——表面会收缩还是膨胀？" }}
     >
       <Frame cam={[2.3, 1.7, 2.4]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} position={[0, -1, 0]} />
@@ -238,7 +268,11 @@ export function SdfField3D() {
         {tag("#ef4444", zh ? "内部 (−)" : "inside (−)", [1.6, 1.0, 0])}
         {tag("#3b82f6", zh ? "外部 (+)" : "outside (+)", [1.6, 0.6, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "等值面水平 c" : "level set c"} value={iso} min={-0.5} max={1} step={0.05} onChange={setIso} format={(v) => v.toFixed(2)} hint={zh ? "等值水平：表面是 SDF = c 处。c = 0 是真实表面；增大它得到膨胀的偏移面。" : "The iso-value: the surface is where SDF = c. c = 0 is the true surface; raising it shows an inflated offset surface."} /></div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Readout><span className="font-mono">{zh ? "表面：SDF = " : "surface: SDF = "}{iso.toFixed(2)}</span></Readout>
+        <Readout tone="slate"><span className="text-rose-500">●</span> {zh ? "内部" : "inside"} {nInside} · <span className="text-blue-500">●</span> {zh ? "外部" : "outside"} {samples.length - nInside}</Readout>
+      </div>
+      <div className="mt-2"><Slider label={zh ? "等值面水平 c" : "level set c"} value={iso} min={-0.5} max={1} step={0.05} onChange={setIso} format={(v) => v.toFixed(2)} hint={zh ? "等值水平：表面是 SDF = c 处。c = 0 是真实表面；增大它得到膨胀的偏移面。" : "The iso-value: the surface is where SDF = c. c = 0 is the true surface; raising it shows an inflated offset surface."} /></div>
     </FigureFrame>
   );
 }
@@ -274,12 +308,17 @@ export function TubeMasking3D() {
         zh: "视频是一个时空立方体（高 × 宽 × 时间）。管状掩码遮挡整条时空管——在所有帧上遮挡相同的空间块（竖直方向 = 时间轴）——所以模型无法靠复制相邻帧作弊，必须学习真实运动。调高掩码比例。",
       }}
       onReset={() => setRatio(0.6)}
+      predict={{ en: "Why hide whole tubes (a patch across ALL frames) instead of random single patches?", zh: "为什么遮挡整条管（同一块跨所有帧），而非随机的单个块？" }}
     >
       <Frame cam={[4.4, 3.2, 4.4]}>
         {cubes}
         {tag("#6a5ef0", zh ? "时间 →" : "time →", [-2.1, 0.3, -1.5])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "掩码比例" : "mask ratio"} value={ratio} min={0} max={0.9} step={0.05} onChange={setRatio} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "被遮挡的时空管比例。越高，自监督重建任务越难。" : "Fraction of spatio-temporal tubes hidden. Higher = a harder self-supervised reconstruction task."} /></div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Readout><span className="font-mono">{zh ? "可见" : "visible"}: {SX * SY - nMask}/{SX * SY} {zh ? "管" : "tubes"}</span></Readout>
+        <Readout tone={nMask >= 13 ? "rose" : "slate"}>{zh ? "模型须推断其余" : "model must infer the rest"}</Readout>
+      </div>
+      <div className="mt-2"><Slider label={zh ? "掩码比例" : "mask ratio"} value={ratio} min={0} max={0.9} step={0.05} onChange={setRatio} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "被遮挡的时空管比例。越高，自监督重建任务越难。" : "Fraction of spatio-temporal tubes hidden. Higher = a harder self-supervised reconstruction task."} /></div>
     </FigureFrame>
   );
 }
@@ -296,6 +335,7 @@ export function TsdfFusion3D() {
   }, []);
   const camDirs = useMemo<V[]>(() => Array.from({ length: 6 }, (_, k) => { const a = (k / 6) * Math.PI * 2; return [Math.cos(a), 0.25, Math.sin(a)]; }), []);
   const seen = (n: V) => camDirs.slice(0, views).some((c) => { const L = Math.hypot(...c); return (n[0] * c[0] + n[1] * c[1] + n[2] * c[2]) / L > 0.35; });
+  const pct = Math.round((pts.filter(seen).length / pts.length) * 100);
   return (
     <FigureFrame
       title={{ en: "TSDF fusion — depth → surface (3D)", zh: "TSDF 融合——深度 → 表面（三维）" }}
@@ -304,6 +344,7 @@ export function TsdfFusion3D() {
         zh: "每个深度相机只能看到朝向它的表面。TSDF 融合把多视角平均进一个体素体，表面在有符号距离过零处浮现。增加视角，观察外壳逐渐补全——更多视角把局部扫描变成闭合表面。",
       }}
       onReset={() => setViews(3)}
+      predict={{ en: "Could a single depth view ever complete the whole shell? Roughly how many does it take?", zh: "单个深度视角能补全整个外壳吗？大约需要多少个？" }}
     >
       <Frame cam={[2.8, 2.0, 2.8]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} position={[0, -1.2, 0]} />
@@ -313,7 +354,10 @@ export function TsdfFusion3D() {
         {camDirs.slice(0, views).map((c, i) => { const L = Math.hypot(...c); const p: V = [c[0] / L * 2, c[1] / L * 2, c[2] / L * 2]; return <Dot key={i} p={p} r={0.09} c="#1d9e75" />; })}
         {tag("#1d9e75", zh ? "深度相机" : "depth cams", [0, 2.3, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "融合的视角数" : "views fused"} value={views} min={1} max={6} step={1} onChange={setViews} format={(v) => `${v}`} hint={zh ? "融合的深度相机数量。每个相机只看到朝向它的表面；视角越多，外壳越完整。" : "Number of depth cameras fused. Each sees only the surface facing it; more views complete more of the shell."} /></div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Readout tone={pct > 85 ? "emerald" : pct > 55 ? "amber" : "rose"}><span className="font-mono">{zh ? "已观测表面" : "surface observed"}: {pct}%</span></Readout>
+      </div>
+      <div className="mt-2"><Slider label={zh ? "融合的视角数" : "views fused"} value={views} min={1} max={6} step={1} onChange={setViews} format={(v) => `${v}`} hint={zh ? "融合的深度相机数量。每个相机只看到朝向它的表面；视角越多，外壳越完整。" : "Number of depth cameras fused. Each sees only the surface facing it; more views complete more of the shell."} /></div>
     </FigureFrame>
   );
 }
