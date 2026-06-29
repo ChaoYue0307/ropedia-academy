@@ -139,7 +139,8 @@ export function ContactScene3D() {
       <Frame cam={[3.8, 1.7, 4.4]} target={[0.1, 1.2, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
         <mesh position={[box[0], box[1] / 2, box[2]]}><boxGeometry args={[0.4, box[1], 0.4]} /><meshStandardMaterial color="#b08968" roughness={0.7} /></mesh>
-        <Body H={1.6} W={1} reach={hand} color="#5aa86a" />
+        {/* Body draws in a group offset by 0.83*H in Y, so convert the world-frame hand target into the body's local frame */}
+        <Body H={1.6} W={1} reach={[hand[0], hand[1] - 0.83 * 1.6, hand[2]]} color="#5aa86a" />
         <Dot p={[-0.144, 0.02, 0]} r={0.05} c="#1d9e75" /><Dot p={[0.144, 0.02, 0]} r={0.05} c="#1d9e75" />
         <Dot p={hand} r={0.06} c={contact ? "#1d9e75" : "#ef4444"} />
         {tag(contact ? "#1d9e75" : "#ef4444", contact ? (zh ? "接触 ✓" : "contact ✓") : (zh ? "未接触" : "no contact"), [hand[0], hand[1] + 0.25, hand[2]])}

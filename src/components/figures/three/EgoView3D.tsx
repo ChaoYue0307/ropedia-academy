@@ -43,7 +43,8 @@ function Bone({ from, to, r, color, rough = 0.6 }: { from: V; to: V; r: number; 
   }, [from, to]);
   return (
     <mesh position={pos} quaternion={quat}>
-      <capsuleGeometry args={[r, len, 6, 12]} />
+      {/* capsule caps add r at each end, so the cylinder part is len - 2r → the capsule spans exactly from→to */}
+      <capsuleGeometry args={[r, Math.max(0.02, len - 2 * r), 6, 12]} />
       <meshStandardMaterial color={color} roughness={rough} />
     </mesh>
   );
