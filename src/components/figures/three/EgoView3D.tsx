@@ -63,8 +63,19 @@ function Arm({ shoulder, elbow, wrist }: { shoulder: V; elbow: V; wrist: V }) {
 
 // objects on the table (fixed in the WORLD — they don't move when the head turns)
 function TableObject({ p, kind, color }: { p: V; kind: "plate" | "cup" | "knife"; color: string }) {
-  if (kind === "plate") return <mesh position={p}><cylinderGeometry args={[0.22, 0.22, 0.03, 28]} /><meshStandardMaterial color={color} roughness={0.4} /></mesh>;
-  if (kind === "cup") return <mesh position={p}><cylinderGeometry args={[0.1, 0.08, 0.18, 20]} /><meshStandardMaterial color={color} roughness={0.4} /></mesh>;
+  if (kind === "plate") return (
+    <group position={p}>
+      <mesh><cylinderGeometry args={[0.22, 0.2, 0.03, 32]} /><meshStandardMaterial color={color} roughness={0.35} /></mesh>
+      <mesh position={[0, 0.016, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[0.19, 0.016, 12, 36]} /><meshStandardMaterial color={color} roughness={0.35} /></mesh>
+    </group>
+  );
+  if (kind === "cup") return (
+    <group position={p}>
+      <mesh><cylinderGeometry args={[0.1, 0.08, 0.18, 24]} /><meshStandardMaterial color={color} roughness={0.4} /></mesh>
+      <mesh position={[0, 0.085, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[0.092, 0.012, 10, 24]} /><meshStandardMaterial color={color} roughness={0.4} /></mesh>
+      <mesh position={[0.118, -0.005, 0]}><torusGeometry args={[0.05, 0.013, 10, 20]} /><meshStandardMaterial color={color} roughness={0.4} /></mesh>
+    </group>
+  );
   return <mesh position={p} rotation={[0, 0.5, 0]}><boxGeometry args={[0.3, 0.02, 0.05]} /><meshStandardMaterial color={color} metalness={0.6} roughness={0.3} /></mesh>;
 }
 
@@ -74,8 +85,10 @@ function Scene({ yaw, reach }: { yaw: number; reach: number }) {
   const skin = "#f1c8a6", shirt = "#5b7088", pants = "#3c4555";
   return (
     <group>
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[3, 5, 2]} intensity={1.1} castShadow />
+      <hemisphereLight args={["#ffffff", "#cdd6e3", 0.55]} />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[3, 5, 2]} intensity={1.0} />
+      <directionalLight position={[-3, 2, -4]} intensity={0.25} color="#c7d2fe" />
       {/* ground + table (WORLD frame, fixed) */}
       <gridHelper args={[8, 16, "#cbd5e1", "#e2e8f0"]} position={[0, 0, 0]} />
       <mesh position={[0, 0.72, 0]}><boxGeometry args={[1.8, 0.06, 1.05]} /><meshStandardMaterial color="#b08968" roughness={0.7} /></mesh>
@@ -103,11 +116,25 @@ function Scene({ yaw, reach }: { yaw: number; reach: number }) {
         <Arm shoulder={[-0.22, 1.4, 0]} elbow={[-0.34, 1.02, -0.55]} wrist={[-0.4, 0.8, -1.12]} />
         <Arm shoulder={[0.22, 1.4, 0]} elbow={[0.37, 1.05, -0.52]} wrist={[0.46, 0.84, -1.05]} />
 
-        {/* ── head + head-mounted camera + frustum — rotates as a unit (ego-motion) ── */}
+        {/* ── head + face + head-mounted camera + frustum — rotates as a unit (ego-motion). Face looks toward −z (the table). ── */}
         <group position={[0, 1.55, 0]} rotation={[0, yr, 0]}>
-          <mesh><sphereGeometry args={[0.17, 24, 24]} /><meshStandardMaterial color={skin} roughness={0.6} /></mesh>
-          <mesh position={[0, 0.14, 0.08]}><boxGeometry args={[0.12, 0.07, 0.07]} /><meshStandardMaterial color="#0e9aa7" metalness={0.4} roughness={0.3} /></mesh>
-          <mesh position={[0, 0.14, 0.13]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.025, 0.025, 0.03, 16]} /><meshStandardMaterial color="#67e8f9" /></mesh>
+          <mesh><sphereGeometry args={[0.17, 32, 32]} /><meshStandardMaterial color={skin} roughness={0.55} /></mesh>
+          {/* eyes (white + pupil), looking forward (−z) */}
+          {[-0.066, 0.066].map((x, i) => (
+            <group key={i}>
+              <mesh position={[x, 0.015, -0.145]}><sphereGeometry args={[0.036, 18, 18]} /><meshStandardMaterial color="#fafafa" roughness={0.25} /></mesh>
+              <mesh position={[x, 0.012, -0.172]}><sphereGeometry args={[0.019, 14, 14]} /><meshStandardMaterial color="#2a2433" roughness={0.15} /></mesh>
+              <mesh position={[x, 0.075, -0.13]} rotation={[0, 0, x < 0 ? 0.18 : -0.18]}><boxGeometry args={[0.06, 0.012, 0.02]} /><meshStandardMaterial color="#5b4636" roughness={0.7} /></mesh>
+            </group>
+          ))}
+          {/* nose */}
+          <mesh position={[0, -0.04, -0.162]} rotation={[-Math.PI / 2, 0, 0]}><coneGeometry args={[0.022, 0.06, 12]} /><meshStandardMaterial color={skin} roughness={0.6} /></mesh>
+          {/* ears */}
+          <mesh position={[-0.168, -0.01, 0]}><sphereGeometry args={[0.036, 14, 14]} /><meshStandardMaterial color={skin} roughness={0.6} /></mesh>
+          <mesh position={[0.168, -0.01, 0]}><sphereGeometry args={[0.036, 14, 14]} /><meshStandardMaterial color={skin} roughness={0.6} /></mesh>
+          {/* head-mounted camera on the forehead, looking forward (−z) */}
+          <mesh position={[0, 0.13, -0.1]}><boxGeometry args={[0.12, 0.07, 0.07]} /><meshStandardMaterial color="#0e9aa7" metalness={0.4} roughness={0.3} /></mesh>
+          <mesh position={[0, 0.13, -0.16]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.026, 0.026, 0.03, 18]} /><meshStandardMaterial color="#67e8f9" metalness={0.3} roughness={0.2} /></mesh>
           <Frustum reach={reach} />
           <Html position={[0, 0.34, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
             <div style={{ background: "#0e9aa7", color: "#fff", padding: "1px 5px", borderRadius: 5, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap", boxShadow: "0 1px 3px rgba(0,0,0,.28)" }}>{zh ? "头戴相机" : "head-mounted camera"}</div>

@@ -13,8 +13,10 @@ export function Frame({ children, h = "h-72", cam = [3.2, 2.2, 3.6] as V, target
   return (
     <div className={`${h} w-full overflow-hidden rounded-xl bg-gradient-to-b from-sky-50 to-stone-100 dark:from-slate-800 dark:to-slate-900`}>
       <Canvas camera={{ position: cam, fov: 42 }} dpr={[1, 2]}>
-        <ambientLight intensity={0.75} />
-        <directionalLight position={[4, 6, 3]} intensity={1} />
+        <hemisphereLight args={["#ffffff", "#c2cbd8", 0.6]} />
+        <ambientLight intensity={0.32} />
+        <directionalLight position={[4, 6, 3]} intensity={0.95} />
+        <directionalLight position={[-4, 2, -3]} intensity={0.25} color="#c7d2fe" />
         {children}
         <OrbitControls enablePan={false} target={target} minDistance={2.4} maxDistance={11} maxPolarAngle={Math.PI / 2.03} />
       </Canvas>
