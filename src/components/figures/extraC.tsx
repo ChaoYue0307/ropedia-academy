@@ -12,8 +12,8 @@ export function EgoSignals() {
     <FigureFrame
       title={{ en: "What makes egocentric different", zh: "第一人称的不同之处" }}
       caption={{
-        en: "The head-worn camera moves WITH the actor, so global motion (arrows) encodes attention, not just nuisance — and hands & manipulated objects dominate the centre-bottom (the hot region). Increase head motion to see the ego-motion grow.",
-        zh: "头戴相机随行动者一起移动，所以全局运动（箭头）编码的是注意力，而非单纯干扰——且手与被操作物体集中在中下部（高亮区）。增大头部运动，观察自我运动变大。",
+        en: "The head-worn camera moves WITH the actor, so global motion (arrows) is a cue to where the wearer is looking, not just nuisance — and hands & manipulated objects dominate the centre-bottom (the hot region). Increase head motion to see the ego-motion grow.",
+        zh: "头戴相机随行动者一起移动，所以全局运动（箭头）是「佩戴者在看哪里」的线索，而非单纯干扰——且手与被操作物体集中在中下部（高亮区）。增大头部运动，观察自我运动变大。",
       }}
       onReset={() => setMotion(14)}
     >

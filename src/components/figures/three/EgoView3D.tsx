@@ -95,8 +95,8 @@ export function EgoView3D() {
     <FigureFrame
       title={{ en: "What makes egocentric different", zh: "第一人称的不同之处" }}
       caption={{
-        en: "A head-mounted camera moves WITH the wearer — so when you turn your head, the whole world sweeps across the frame: that global (ego-)motion encodes attention, not just nuisance. And the wearer's own hands + the objects they manipulate enter from the bottom of the view (the manipulation zone). Drag to orbit; turn the head and watch the camera frustum sweep over the fixed table.",
-        zh: "头戴相机随佩戴者一起移动——所以当你转头时，整个世界都会扫过画面：这种全局（自我）运动编码的是注意力，而非单纯干扰。而佩戴者自己的手与被操作物体从视野底部进入（操作区）。拖动可旋转视角；转动头部，观察相机视锥扫过固定的桌面。",
+        en: "A head-mounted camera moves WITH the wearer — so when you turn your head, the whole world sweeps across the frame: that global (ego-)motion is a cue to where the wearer is looking, not just nuisance. And the wearer's own hands + the objects they manipulate enter from the bottom of the view (the manipulation zone). Drag to orbit; turn the head and watch the camera frustum sweep over the fixed table.",
+        zh: "头戴相机随佩戴者一起移动——所以当你转头时，整个世界都会扫过画面：这种全局（自我）运动是「佩戴者在看哪里」的线索，而非单纯干扰。而佩戴者自己的手与被操作物体从视野底部进入（操作区）。拖动可旋转视角；转动头部，观察相机视锥扫过固定的桌面。",
       }}
       onReset={() => { setYaw(0); setReach(2.1); }}
     >

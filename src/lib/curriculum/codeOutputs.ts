@@ -75,7 +75,7 @@ export const codeOutputs: Record<string, { stdout: string; image: boolean }> = {
     "image": true
   },
   "C1": {
-    "stdout": "ego-motion magnitude (attention signal): 0.332",
+    "stdout": "ego-motion magnitude (proxy for where you look): 0.332",
     "image": true
   },
   "C2": {

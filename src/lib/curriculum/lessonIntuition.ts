@@ -82,8 +82,8 @@ export const lessonIntuition: Record<string, Bilingual> = {
 
   // ── Track C — Egocentric Vision ───────────────────────────────────────────
   C1: {
-    en: "Most cameras watch you from across the room; an **egocentric** camera sits on your head and sees what you see. That flips the rules: the camera shakes with you (so motion means attention, not noise), your hands fill the bottom of the frame, and what you look at and reach for reveals your goals.",
-    zh: "大多数相机在房间对面看着你；**第一人称**相机戴在你头上，看你所看。这颠覆了规则：相机随你晃动（所以运动代表注意力，而非噪声），你的手占满画面下方，而你看向、伸手去拿的东西，泄露了你的目标。",
+    en: "Most cameras watch you from across the room; an **egocentric** camera sits on your head and sees what you see. That flips the rules: the camera shakes with you (so that motion is a cue to where *you* are looking — signal, not noise), your hands fill the bottom of the frame, and what you look at and reach for reveals your goals.",
+    zh: "大多数相机在房间对面看着你；**第一人称**相机戴在你头上，看你所看。这颠覆了规则：相机随你晃动（所以这种运动是「你在看哪里」的线索——是信号，而非噪声），你的手占满画面下方，而你看向、伸手去拿的东西，泄露了你的目标。",
   },
   C2: {
     en: "Progress here is set by benchmarks. **EPIC-Kitchens** labels cooking as (verb, noun) like 'cut onion'; **Ego4D** is a huge buffet of tasks; **Xperience-10M** packs synced video + depth + body pose + captions. The lesson every beginner must learn: test on unseen kitchens/people, or the model just memorizes the room.",

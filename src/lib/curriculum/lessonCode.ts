@@ -616,7 +616,7 @@ yy, xx = torch.meshgrid(torch.linspace(0,1,H), torch.linspace(0,1,W), indexing='
 manip = torch.exp(-(((xx-0.5)**2)/0.1 + ((yy-0.8)**2)/0.1))   # peaks center-bottom
 
 # ---------- OUTPUT: magnitude + the two signals as heatmaps ----------
-print("ego-motion magnitude (attention signal):", round(ego.mean().item(), 3))
+print("ego-motion magnitude (proxy for where you look):", round(ego.mean().item(), 3))
 fig, ax = plt.subplots(1, 2, figsize=(7.5, 3.3))
 ax[0].imshow(ego); ax[0].set_title("inter-frame motion (ego-motion)")
 ax[1].imshow(manip, cmap='hot'); ax[1].set_title("manipulation prior (center-bottom)")
