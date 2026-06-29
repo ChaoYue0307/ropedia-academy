@@ -5,6 +5,7 @@ import { FigureFrame, Slider } from "../FigureFrame";
 import { useStore } from "../../../lib/store";
 import { useResizeKick } from "./kick";
 import { Frame, Dot, tag, GROUND, GRID2, type V } from "./Geometry3D";
+import { Crate } from "./props";
 
 const add = (a: V, b: V): V => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const rx = (v: V, a: number): V => [v[0], v[1] * Math.cos(a) - v[2] * Math.sin(a), v[1] * Math.sin(a) + v[2] * Math.cos(a)];
@@ -138,7 +139,7 @@ export function ContactScene3D() {
     >
       <Frame cam={[3.8, 1.7, 4.4]} target={[0.1, 1.2, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
-        <mesh position={[box[0], box[1] / 2, box[2]]}><boxGeometry args={[0.4, box[1], 0.4]} /><meshStandardMaterial color="#b08968" roughness={0.7} /></mesh>
+        <Crate p={[box[0], box[1] / 2, box[2]]} h={box[1]} size={0.4} />
         {/* Body draws in a group offset by 0.83*H in Y, so convert the world-frame hand target into the body's local frame */}
         <Body H={1.6} W={1} reach={[hand[0], hand[1] - 0.83 * 1.6, hand[2]]} color="#5aa86a" />
         <Dot p={[-0.144, 0.02, 0]} r={0.05} c="#1d9e75" /><Dot p={[0.144, 0.02, 0]} r={0.05} c="#1d9e75" />

@@ -4,6 +4,7 @@ import { FigureFrame, Slider } from "../FigureFrame";
 import { useStore } from "../../../lib/store";
 import { useResizeKick } from "./kick";
 import { Frame, Dot, tag, GROUND, GRID2, type V } from "./Geometry3D";
+import { Cup, Plate, Knife, Bottle, Phone, Chair, Lamp, TableProp } from "./props";
 
 const h = (s: number) => (Math.sin(s * 127.1) * 43758.5) % 1;   // cheap deterministic noise in [-1,1]
 
@@ -255,13 +256,18 @@ export function ActiveObject3D() {
       <Frame cam={[2.4, 2, 2.6]} target={[0, 0.6, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
         <mesh position={[0, 0.7, 0]}><boxGeometry args={[1.8, 0.06, 1.1]} /><meshStandardMaterial color="#b08968" roughness={0.7} /></mesh>
-        {OBJS3D.map((o, i) => (
-          <group key={i}>
-            {i === active && contact && <Line points={[hand, o.p]} color="#f59e0b" lineWidth={1.6} dashed dashSize={0.06} gapSize={0.05} />}
-            <mesh position={o.p}><cylinderGeometry args={[0.16, 0.16, 0.12, 20]} /><meshStandardMaterial color={i === active && contact ? "#f59e0b" : "#94a3b8"} roughness={0.5} /></mesh>
-            {tag(i === active && contact ? "#f59e0b" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + 0.22, o.p[2]])}
-          </group>
-        ))}
+        {OBJS3D.map((o, i) => {
+          const hot = i === active && contact;
+          const c = hot ? "#f59e0b" : "#94a3b8";
+          const Prop = o.en === "plate" ? Plate : o.en === "knife" ? Knife : Cup;
+          return (
+            <group key={i}>
+              {hot && <Line points={[hand, o.p]} color="#f59e0b" lineWidth={1.6} dashed dashSize={0.06} gapSize={0.05} />}
+              <Prop p={o.p} color={c} />
+              {tag(hot ? "#f59e0b" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + 0.26, o.p[2]])}
+            </group>
+          );
+        })}
         <Dot p={hand} r={0.1} c="#e0598b" />{tag("#e0598b", zh ? "手" : "hand", [hand[0], hand[1] - 0.28, hand[2]])}
       </Frame>
       <div className="mt-3"><Slider label={zh ? "手的位置" : "hand position"} hint={zh ? "在桌面上滑动手；离手最近且接触的物体成为「活动物体」。" : "Slides the hand across the table; the closest in-contact object becomes the ‘active’ one."} value={hx} min={-0.8} max={0.8} step={0.02} onChange={setHx} format={() => contact ? (zh ? `活动：${OBJS3D[active].zh}` : `active: ${OBJS3D[active].en}`) : (zh ? "无接触" : "no contact")} /></div>
@@ -296,7 +302,11 @@ export function GazeScanpath3D() {
         <mesh position={[0, 0.7, 0]}><boxGeometry args={[1.8, 0.06, 1.1]} /><meshStandardMaterial color="#b08968" roughness={0.7} /></mesh>
         <mesh position={eye}><sphereGeometry args={[0.1, 20, 20]} /><meshStandardMaterial color="#1c1b22" /></mesh>
         {tag("#1c1b22", zh ? "眼睛" : "eye", [eye[0], eye[1] + 0.25, eye[2]])}
-        {FIX.map((o, i) => <group key={i}><mesh position={o.p}><sphereGeometry args={[0.1, 18, 18]} /><meshStandardMaterial color={o === cur ? "#f59e0b" : "#94a3b8"} roughness={0.5} /></mesh>{tag(o === cur ? "#f59e0b" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + 0.22 + (i % 2) * 0.2, o.p[2]])}</group>)}
+        {FIX.map((o, i) => {
+          const hot = o === cur, c = hot ? "#f59e0b" : "#94a3b8";
+          const Prop = o.en === "cup" ? Cup : o.en === "bottle" ? Bottle : o.en === "plate" ? Plate : Phone;
+          return <group key={i}><Prop p={o.p} color={c} />{tag(hot ? "#f59e0b" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + 0.26 + (i % 2) * 0.2, o.p[2]])}</group>;
+        })}
         {visited.length > 1 && <Line points={visited} color="#e0598b" lineWidth={2} dashed dashSize={0.08} gapSize={0.06} />}
         <Line points={[eye, cur.p]} color="#f59e0b" lineWidth={2.5} />
       </Frame>
@@ -326,7 +336,10 @@ export function SceneGraph3D() {
     >
       <Frame cam={[2.8, 2, 3]} target={[0, 0.7, 0]}>
         <gridHelper args={[6, 12, GROUND, GRID2]} />
-        {SG.map((o, i) => <group key={i}><mesh position={o.p}><sphereGeometry args={[o.r, 22, 22]} /><meshStandardMaterial color={o.c} roughness={0.5} metalness={0.1} /></mesh>{tag(i === focus ? "#6a5ef0" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + o.r + 0.12, o.p[2]])}</group>)}
+        {SG.map((o, i) => {
+          const Prop = o.en === "table" ? TableProp : o.en === "cup" ? Cup : o.en === "chair" ? Chair : Lamp;
+          return <group key={i}><Prop p={o.p} color={o.c} />{tag(i === focus ? "#6a5ef0" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + o.r + 0.18, o.p[2]])}</group>;
+        })}
         {SGREL.map(([a, b, en, zhr], i) => { const on = a === focus || b === focus; return (
           <group key={i}>
             <Line points={[SG[a].p, SG[b].p]} color={on ? "#6a5ef0" : "#cbd5e1"} lineWidth={on ? 2.5 : 1} transparent opacity={on ? 1 : 0.5} />
