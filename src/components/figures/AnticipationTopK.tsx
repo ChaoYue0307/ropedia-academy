@@ -33,6 +33,39 @@ const SCENARIOS: Scenario[] = [
     ],
     trueIdx: 2,
   },
+  {
+    context: { en: "After: pick up knife", zh: "在「拿起刀」之后" },
+    actions: [
+      { name: { en: "chop onion", zh: "切洋葱" }, p: 0.38 },
+      { name: { en: "cut bread", zh: "切面包" }, p: 0.25 },
+      { name: { en: "spread butter", zh: "抹黄油" }, p: 0.18 },
+      { name: { en: "peel apple", zh: "削苹果" }, p: 0.12 },
+      { name: { en: "wash knife", zh: "洗刀" }, p: 0.07 },
+    ],
+    trueIdx: 1,
+  },
+  {
+    context: { en: "After: turn on tap", zh: "在「打开水龙头」之后" },
+    actions: [
+      { name: { en: "fill kettle", zh: "接满水壶" }, p: 0.34 },
+      { name: { en: "wash hands", zh: "洗手" }, p: 0.28 },
+      { name: { en: "rinse cup", zh: "冲洗杯子" }, p: 0.2 },
+      { name: { en: "fill a pot", zh: "接满锅" }, p: 0.11 },
+      { name: { en: "wash veg", zh: "洗菜" }, p: 0.07 },
+    ],
+    trueIdx: 3,
+  },
+  {
+    context: { en: "After: open laptop", zh: "在「打开笔记本」之后" },
+    actions: [
+      { name: { en: "check email", zh: "查看邮件" }, p: 0.4 },
+      { name: { en: "open browser", zh: "打开浏览器" }, p: 0.26 },
+      { name: { en: "join a call", zh: "加入通话" }, p: 0.18 },
+      { name: { en: "play music", zh: "播放音乐" }, p: 0.1 },
+      { name: { en: "shut it down", zh: "关机" }, p: 0.06 },
+    ],
+    trueIdx: 2,
+  },
 ];
 
 export function AnticipationTopK() {
