@@ -14,6 +14,7 @@ export function CheckCard({
   index: number;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const [hinted, setHinted] = useState(false);
   const reviewing = useStore((s) => s.reviewing.includes(check.id));
   const addToReview = useStore((s) => s.addToReview);
 
@@ -43,6 +44,15 @@ export function CheckCard({
         >
           {revealed ? t("hideAnswer", mode) : t("showAnswer", mode)}
         </button>
+        {check.hint && !revealed && (
+          <button
+            onClick={() => setHinted((h) => !h)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/70 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:border-amber-400 hover:bg-amber-50/60 dark:border-amber-400/30 dark:text-amber-300 dark:hover:bg-amber-400/[0.08]"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 3z" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            {hinted ? t("hideHint", mode) : t("showHint", mode)}
+          </button>
+        )}
         <button
           onClick={() => addToReview(check.id)}
           disabled={reviewing}
@@ -51,6 +61,13 @@ export function CheckCard({
           {reviewing ? `✓ ${t("inReview", mode)}` : `+ ${t("addToReview", mode)}`}
         </button>
       </div>
+
+      {check.hint && hinted && !revealed && (
+        <div className="mt-4 animate-fade-in rounded-xl border-l-2 border-amber-400 bg-amber-50/50 p-4 text-[15px] leading-relaxed text-ink/80 dark:border-amber-400/60 dark:bg-amber-400/[0.07] dark:text-stone-200">
+          <span className="mr-1.5 font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">{t("hint", mode)}:</span>
+          <BiText value={check.hint} mode={mode} />
+        </div>
+      )}
 
       {revealed && (
         <div className="mt-4 animate-fade-in rounded-xl border-l-2 border-brand-400 bg-brand-50/50 p-4 dark:border-brand-400/60 dark:bg-brand-500/[0.07]">

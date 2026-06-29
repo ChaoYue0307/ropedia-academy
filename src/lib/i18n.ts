@@ -82,6 +82,8 @@ export const S: Dict = {
   showAnswer: { en: "Reveal answer", zh: "揭晓答案" },
   hideAnswer: { en: "Hide answer", zh: "收起答案" },
   hint: { en: "Hint", zh: "提示" },
+  showHint: { en: "Show hint", zh: "看提示" },
+  hideHint: { en: "Hide hint", zh: "收起提示" },
   addToReview: { en: "Add to review", zh: "加入复习" },
   inReview: { en: "In review deck", zh: "已在复习卡组" },
   markComplete: { en: "Mark lesson complete", zh: "标记本课完成" },

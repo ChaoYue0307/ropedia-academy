@@ -52,6 +52,24 @@ export const trackA: Track = {
             zh: "单纯的线性混合蒙皮在弯曲关节处产生伪影（肘/膝的「糖纸」塌陷）。以姿态为条件的校正混合形变加入学到的形变，在蒙皮失效处恢复真实的体积与表面形状。",
           },
         },
+        {
+          id: "A1-q3",
+          prompt: { en: "SMPL separates shape β from pose θ. What does this disentanglement let you do?", zh: "SMPL 把形状 β 与姿态 θ 分离。这种解耦让你能做什么？" },
+          answer: {
+            en: "Because identity and articulation are independent factors, you can hold one fixed and vary the other: re-pose the same person with a new θ, retarget one motion (a θ sequence) onto bodies of different β, or change body shape without re-animating. Entangled parameters would couple 'who' with 'how they move'.",
+            zh: "因为身份与关节运动是独立因素，你可以固定其一、变化其二：用新的 θ 给同一个人换姿态，把一段运动（θ 序列）重定向到不同 β 的身体上，或改变体型而无需重新做动画。若参数纠缠，「是谁」就会和「怎么动」耦合在一起。",
+          },
+          hint: { en: "Think about reusing one motion sequence on people of different builds.", zh: "想想把同一段运动用在体型不同的人身上。" },
+        },
+        {
+          id: "A1-q4",
+          prompt: { en: "Why does it matter that M(β, θ) is differentiable?", zh: "M(β, θ) 可微，为什么这很重要？" },
+          answer: {
+            en: "Differentiability lets gradients flow through the body model, so you can fit β, θ by gradient descent and train networks end-to-end with losses on the output mesh/joints — including the reprojection loss of Lesson 4. A non-differentiable generator would block backprop from a 2D/3D error back to the parameters.",
+            zh: "可微让梯度能穿过人体模型，于是你能用梯度下降拟合 β、θ，并以定义在输出网格/关节上的损失端到端训练网络——包括第 4 课的重投影损失。不可微的生成器会阻断从 2D/3D 误差到参数的反向传播。",
+          },
+          hint: { en: "How does the reprojection loss in Lesson 4 reach the parameters?", zh: "第 4 课的重投影损失是怎么作用到参数上的？" },
+        },
       ],
       links: ["A4", "A5", "C6"],
       papers: [{ title: "SMPL: A Skinned Multi-Person Linear Model", year: 2015 }],
@@ -89,6 +107,24 @@ export const trackA: Track = {
             en: "Motion over time constrains depth: parallax, the physical consistency of limb lengths across frames, and dynamics rule out 3D interpretations that flicker or violate bone-length constancy. Temporal models exploit this to produce smoother, less ambiguous 3D trajectories than per-frame estimates.",
             zh: "随时间的运动约束了深度：视差、跨帧肢体长度的物理一致性、以及动力学，排除了那些闪烁或违反骨长恒定的 3D 解释。时序模型利用这点，产出比逐帧估计更平滑、更少歧义的 3D 轨迹。",
           },
+        },
+        {
+          id: "A2-q3",
+          prompt: { en: "Top-down vs bottom-up pose estimation — what is the core scaling trade-off?", zh: "自顶向下 vs 自底向上姿态估计——核心的扩展性权衡是什么？" },
+          answer: {
+            en: "Top-down runs a single-person pose net per detected person, so cost grows with the number of people and it struggles under heavy overlap. Bottom-up detects all joints once (constant detection cost) but must then solve a grouping problem to assign joints to people. Top-down is accurate for few people; bottom-up scales better to crowds.",
+            zh: "自顶向下对每个检测到的人各跑一次单人姿态网络，开销随人数增长，且在严重重叠时易失败；自底向上一次性检测所有关节（检测开销恒定），但随后要解一个分组问题，把关节分配给各人。人少时自顶向下更准，人群中自底向上扩展性更好。",
+          },
+          hint: { en: "What happens to each as the number of people in the frame grows?", zh: "当画面里人数增多时，两者各会怎样？" },
+        },
+        {
+          id: "A2-q4",
+          prompt: { en: "The argmax of a heatmap is non-differentiable, and a wide blob carries meaning. Address both.", zh: "热图的 argmax 不可微，而宽的「斑点」也有含义。请同时说明这两点。" },
+          answer: {
+            en: "Hard argmax blocks gradients, so training uses a soft-argmax (a softmax-weighted coordinate expectation) to stay differentiable. The blob's width encodes confidence: a tight peak = a certain keypoint, a broad or multi-modal blob = an uncertain/ambiguous joint — exactly the information a single regressed coordinate throws away.",
+            zh: "硬 argmax 阻断梯度，所以训练用 soft-argmax（按 softmax 加权的坐标期望）以保持可微。斑点宽度编码置信度：尖锐峰=关键点确定，宽/多模态斑点=关节不确定或有歧义——这正是单个回归坐标丢掉的信息。",
+          },
+          hint: { en: "How do you get a differentiable coordinate, and what does peak sharpness tell you?", zh: "如何得到可微的坐标？峰的尖锐程度又说明什么？" },
         },
       ],
       links: ["A1", "A4", "A6"],
@@ -128,6 +164,24 @@ export const trackA: Track = {
             zh: "速度对平移不变，并直接暴露动力学——在不同位置执行的同一动作产生相同的速度模式，因此模型跨位置泛化，关注运动本身而非绝对位置。",
           },
         },
+        {
+          id: "A3-q3",
+          prompt: { en: "Why is self-supervised pretraining especially attractive for motion backbones?", zh: "为什么自监督预训练对运动骨干尤其有吸引力？" },
+          answer: {
+            en: "Labeled motion (action/intent labels, paired text) is scarce and expensive, but raw mocap and pose-tracked video are abundant. Self-supervision (masked-motion or contrastive objectives) learns a general movement representation from that unlabeled corpus, which then transfers to recognition, prediction, and generation — the same shared-substrate logic as image/LM pretraining.",
+            zh: "带标注的运动（动作/意图标签、配对文本）稀缺且昂贵，但原始动捕与姿态跟踪视频却很丰富。自监督（如掩码运动或对比目标）从这些无标注语料中学到通用的运动表示，再迁移到识别、预测与生成——与图像/语言预训练同样的「共享基底」逻辑。",
+          },
+          hint: { en: "Compare how much labeled vs unlabeled motion data exists.", zh: "比较一下有标注与无标注运动数据各有多少。" },
+        },
+        {
+          id: "A3-q4",
+          prompt: { en: "Why is one motion representation that serves recognition, prediction, AND generation valuable?", zh: "拥有一个同时服务识别、预测与生成的运动表示，为何有价值？" },
+          answer: {
+            en: "It is the motion analogue of an image backbone: a single learned encoding of 'how bodies move' that many heads reuse. You don't relearn movement structure per task; improvements to the representation lift all downstream tasks, and the tasks regularize each other (a representation good for prediction tends to be good for generation).",
+            zh: "它是图像骨干在运动上的对应物：一个学到的「身体如何运动」的统一编码，被许多头部复用。你无需为每个任务重新学习运动结构；对表示的改进会同时抬升所有下游任务，且任务之间互相正则化（适合预测的表示往往也适合生成）。",
+          },
+          hint: { en: "What does an ImageNet-pretrained backbone do for many vision tasks at once?", zh: "在 ImageNet 上预训练的骨干，为众多视觉任务一次性带来了什么？" },
+        },
       ],
       links: ["A7", "C3", "A2"],
       papers: [{ title: "Spatial Temporal Graph Convolutional Networks (ST-GCN)", year: 2018 }],
@@ -165,6 +219,24 @@ export const trackA: Track = {
             en: "Many different 3D poses project to the same 2D keypoints (depth/rotation ambiguity), including anatomically impossible ones. A prior (adversarial or statistical) restricts solutions to the manifold of realistic human poses, picking the plausible 3D explanation among the infinitely many that fit the 2D.",
             zh: "许多不同的 3D 姿态投影到相同的 2D 关键点（深度/旋转歧义），包括解剖学上不可能的。先验（对抗或统计）把解限制在真实人体姿态的流形上，在无穷多个符合 2D 的解中挑出合理的 3D 解释。",
           },
+        },
+        {
+          id: "A4-q3",
+          prompt: { en: "HMR's pattern — regress a model's parameters, supervise via differentiable reprojection — recurs where, and why must the renderer be differentiable?", zh: "HMR 的范式——回归模型参数、经可微重投影监督——还在哪里出现？为什么渲染器必须可微？" },
+          answer: {
+            en: "The same pattern fits cameras and geometry in Track B and closes the loop in SLAM. The projection/renderer must be differentiable so the 2D error can backpropagate into the 3D parameters; without it you couldn't push the predicted 3D toward explaining the 2D evidence by gradient descent.",
+            zh: "同一范式在 Track B 拟合相机与几何、在 SLAM 中闭环。投影/渲染器必须可微，2D 误差才能反向传播进 3D 参数；否则你无法用梯度下降推动预测的 3D 去解释 2D 证据。",
+          },
+          hint: { en: "How does a 2D-keypoint error change the predicted 3D parameters?", zh: "一个 2D 关键点误差，是怎么改变预测的 3D 参数的？" },
+        },
+        {
+          id: "A4-q4",
+          prompt: { en: "Why must HMR estimate a camera jointly, and what ambiguity does that expose?", zh: "为什么 HMR 必须联合估计相机？这暴露了什么歧义？" },
+          answer: {
+            en: "Reprojection needs a camera to map 3D→2D, so the camera must be solved together with the body. This surfaces the scale–depth ambiguity: a large body far away and a small body up close project identically, so body scale and camera distance trade off and need priors (or a known focal length) to disambiguate.",
+            zh: "重投影需要相机把 3D 映射到 2D，所以相机必须与身体一起求解。这暴露了尺度–深度歧义：远处的大身体与近处的小身体投影相同，于是身体尺度与相机距离互相权衡，需要先验（或已知焦距）来消歧。",
+          },
+          hint: { en: "A big body far away vs a small body up close — how do they look in the image?", zh: "远处的大身体 vs 近处的小身体——它们在图像里看起来如何？" },
         },
       ],
       links: ["A1", "B3", "A8"],
@@ -204,6 +276,24 @@ export const trackA: Track = {
             zh: "接触与抓取是 3D 几何关系——哪些手指表面触碰物体的哪个部位，以及该构型是否物理合理。2D 框无法表达表面接触或穿插；3D 网格让你能计算邻近度、接触点和抓取类型。",
           },
         },
+        {
+          id: "A5-q3",
+          prompt: { en: "What is identical and what is specialized across SMPL, MANO, and FLAME?", zh: "SMPL、MANO、FLAME 之间，哪些完全相同、哪些是特化的？" },
+          answer: {
+            en: "Identical recipe: a template mesh + shape blendshapes + linear blend skinning + pose-dependent correctives, all differentiable. Specialized: where parameters are spent — MANO allocates many pose DOF to finger joints; FLAME adds expression and jaw/neck bases for the face. Same machinery, capacity allocated to where the part actually varies.",
+            zh: "相同的配方：模板网格 + 形状混合形变 + 线性混合蒙皮 + 姿态相关校正，全部可微。特化的是参数花在哪：MANO 把大量姿态自由度分配给手指关节，FLAME 为面部加入表情与下颌/颈部基。同一套机制，把容量分配到该部位真正变化之处。",
+          },
+          hint: { en: "Recall the SMPL recipe — which steps carry over unchanged?", zh: "回想 SMPL 的配方——哪些步骤原样沿用？" },
+        },
+        {
+          id: "A5-q4",
+          prompt: { en: "Why combine the parts into one SMPL-X model instead of fitting hands, face, and body separately?", zh: "为什么把各部位合成一个 SMPL-X 模型，而不是分别拟合手、脸、身体？" },
+          answer: {
+            en: "The parts must agree where they join — wrists, neck — and share one global pose and coordinate frame. A unified model jointly optimizes them so the hand mesh actually attaches to the forearm and the head to the body, avoiding the seams, double-counting, and inconsistent scale that independent fits produce.",
+            zh: "各部位在连接处——手腕、颈部——必须吻合，并共享单一的全局姿态与坐标系。统一模型联合优化它们，使手部网格真正接到前臂、头接到身体，避免独立拟合带来的接缝、重复计数与尺度不一致。",
+          },
+          hint: { en: "What goes wrong at the wrists and neck if hand/face/body are fit independently?", zh: "若手/脸/身体各自独立拟合，手腕与颈部处会出什么问题？" },
+        },
       ],
       links: ["A1", "C5", "C6"],
       papers: [{ title: "Embodied Hands: Modeling and Capturing Hands and Bodies Together (MANO)", year: 2017 }],
@@ -241,6 +331,24 @@ export const trackA: Track = {
             en: "Local frames express each joint's rotation relative to its parent, matching the kinematic chain and making the same gesture invariant to overall body orientation/position. This decouples articulation from global placement, which generalizes better and composes naturally along the skeleton.",
             zh: "局部坐标系把每个关节的旋转表示为相对其父节点的，符合运动学链，使同一手势对整体身体朝向/位置不变。这把关节运动与全局位置解耦，泛化更好，并沿骨架自然组合。",
           },
+        },
+        {
+          id: "A6-q3",
+          prompt: { en: "The 6D rotation gives only two columns. How do you recover a valid rotation, and why over-parameterize 3 DOF with 6 numbers?", zh: "6D 旋转只给两列。你如何恢复有效旋转？为什么用 6 个数过参数化 3 个自由度？" },
+          answer: {
+            en: "You Gram-Schmidt the two predicted vectors into an orthonormal pair and take their cross product for the third column, yielding a proper rotation matrix. The extra dimensions buy continuity: a smooth map from network outputs to SO(3) exists in 6D but not in ≤4D, so the redundancy is exactly what makes it learnable.",
+            zh: "你把预测的两个向量做 Gram–Schmidt 正交归一化得到正交对，再取叉积作为第三列，得到一个真正的旋转矩阵。多出的维度换来连续性：从网络输出到 SO(3) 的平滑映射在 6D 存在、在 ≤4D 不存在，正是这份冗余使其可学。",
+          },
+          hint: { en: "How do you turn two 3-vectors into an orthonormal frame?", zh: "如何把两个三维向量变成一组正交基？" },
+        },
+        {
+          id: "A6-q4",
+          prompt: { en: "'Match the representation to the manifold' recurs in Tracks B and D. State the principle and give an example.", zh: "「让表示匹配流形」在 Track B 和 D 中反复出现。陈述这一原则并举一例。" },
+          answer: {
+            en: "Rotations live on the curved manifold SO(3); forcing them through a discontinuous or unconstrained Euclidean parameterization fights that geometry. The same care applies to camera poses (Track B) and reference frames for spatial reasoning (Track D): pick encodings (continuous, constraint-respecting) that match the underlying manifold so networks learn and optimizers behave.",
+            zh: "旋转生活在弯曲流形 SO(3) 上；硬把它塞进不连续或无约束的欧氏参数化会与该几何作对。相同的讲究适用于相机位姿（Track B）与空间推理的参照系（Track D）：选择匹配底层流形的编码（连续、尊重约束），网络才学得好、优化器才行为良好。",
+          },
+          hint: { en: "What space do 3D rotations actually live in — is it flat?", zh: "三维旋转究竟生活在什么空间——它是平的吗？" },
         },
       ],
       links: ["A3", "B3", "D7"],
@@ -280,6 +388,24 @@ export const trackA: Track = {
             zh: "生成器在姿态空间匹配数据分布，但不强制接触动力学；逐帧的小误差累积成可见伪影，如脚在地面滑动。修复需要显式的接触/物理约束或损失，因为合理性是逐帧似然不捕捉的全局物理性质。",
           },
         },
+        {
+          id: "A7-q3",
+          prompt: { en: "Why did diffusion models overtake VAEs for motion generation?", zh: "为什么扩散模型在运动生成上超越了 VAE？" },
+          answer: {
+            en: "Future/possible motion is highly multimodal, and diffusion captures multimodal distributions and fine detail better than a VAE's single smooth latent, with fewer blurry 'averaged' samples. It also conditions cleanly on text/music/goals via classifier-free guidance, giving controllable, diverse, high-fidelity sequences.",
+            zh: "未来/可能的运动高度多模态，扩散比 VAE 单一平滑潜空间更能刻画多模态分布与细节，产生更少模糊「平均」的样本。它还能通过无分类器引导干净地以文本/音乐/目标为条件，给出可控、多样、高保真的序列。",
+          },
+          hint: { en: "Several different motions can be equally valid continuations — which model represents that better?", zh: "几种不同的运动都可能是同样合理的延续——哪种模型更能表示这点？" },
+        },
+        {
+          id: "A7-q4",
+          prompt: { en: "Why is long-horizon coherence hard for motion generators?", zh: "为什么长时程连贯对运动生成器很难？" },
+          answer: {
+            en: "Errors accumulate: small per-step inaccuracies drift the body off the data manifold over many frames, and the conditioning signal (prompt/goal) fades in influence the further you generate, so motion can wander, repeat, or stop matching the instruction. Maintaining global structure over long spans needs hierarchy or explicit long-range conditioning.",
+            zh: "误差会累积：逐步的小不准确在多帧后把身体漂移出数据流形，而条件信号（提示/目标）随着越生成越远而影响减弱，于是运动可能游走、重复或不再符合指令。在长跨度上维持全局结构需要层级结构或显式的长程条件。",
+          },
+          hint: { en: "What happens to small errors and to the prompt's influence as the sequence gets longer?", zh: "随着序列变长，小误差和提示的影响力各会怎样？" },
+        },
       ],
       links: ["A3", "A8", "D8"],
       papers: [{ title: "Human Motion Diffusion Model (MDM)", year: 2022 }],
@@ -318,6 +444,24 @@ export const trackA: Track = {
             zh: "它来自物理而非标注：身体必须被支撑，且不能与物体互相穿插。这些规律对每一帧都成立而无需标注，因此可作为损失/约束施加在无标注数据上，从物理合理性中免费获得 3D 监督。",
           },
         },
+        {
+          id: "A8-q3",
+          prompt: { en: "What is an affordance, and how does scene + contact geometry let you reason about it?", zh: "什么是可供性（affordance）？场景 + 接触几何如何让你推理它？" },
+          answer: {
+            en: "An affordance is what the environment lets a body do — sit-able, reach-able, grasp-able. Given scene geometry and a body/contact model you can test placements: where a body mesh can be supported without penetration, what surfaces a hand can reach — turning 'what is here' into 'what actions are possible here'.",
+            zh: "可供性是环境允许身体做的事——可坐、可够、可抓。给定场景几何与身体/接触模型，你可以测试摆放：身体网格能在哪里被支撑而不穿插、手能够到哪些表面——把「这里有什么」变成「这里能做什么动作」。",
+          },
+          hint: { en: "It's about possible actions, not just object identity.", zh: "它关乎可能的动作，而非仅仅物体的身份。" },
+        },
+        {
+          id: "A8-q4",
+          prompt: { en: "Why is putting the human and the scene in one coordinate frame the crux of this problem?", zh: "为什么把人与场景放进同一坐标系是这个问题的关键？" },
+          answer: {
+            en: "Contact and non-penetration are only meaningful if body and scene live in the same metric frame; Track A recovers the body (often up-to-scale, camera-relative) while Track B/D reconstruct the scene separately. Aligning their scale and pose into a shared world frame is the hard prerequisite before any contact reasoning works.",
+            zh: "接触与非穿插只有当身体与场景处于同一度量坐标系时才有意义；Track A 恢复身体（常是相机相对、尺度不定的），而 Track B/D 单独重建场景。把它们的尺度与位姿对齐到共享的世界坐标系，是任何接触推理生效前的硬前提。",
+          },
+          hint: { en: "Two separate reconstructions — what must be true before 'foot touches floor' even makes sense?", zh: "两个独立的重建——在「脚接触地面」成立之前，必须先满足什么？" },
+        },
       ],
       links: ["A4", "B8", "D6"],
       papers: [{ title: "Resolving 3D Human Pose Ambiguities with 3D Scene Constraints (PROX)", year: 2019 }],
@@ -355,6 +499,24 @@ export const trackA: Track = {
             en: "Optimization needs no training data or GPU training loop — it directly minimizes reprojection + prior on that clip, is easy to inspect term-by-term, and is ideal for a small reproduction. A regressor pays off only when you need fast inference at scale across many inputs.",
             zh: "优化无需训练数据或 GPU 训练循环——它直接在该片段上最小化重投影 + 先验，逐项易于检查，非常适合小规模复现。回归器只有在需要跨大量输入做快速、规模化推理时才划算。",
           },
+        },
+        {
+          id: "A9-q3",
+          prompt: { en: "When you down-weight the contact/temporal terms, foot-skating appears. Why, and what fixes it?", zh: "当你调低接触/时间项时出现脚滑。为什么？怎么修？" },
+          answer: {
+            en: "Without a temporal/contact term, nothing pins a planted foot to the same world point across frames, so small per-frame errors slide it — visible as skating. Fixes: a foot-contact loss that zeroes foot velocity during stance, or temporal smoothness tying consecutive frames; both enforce the global physical constraint the per-frame fit ignores.",
+            zh: "没有时间/接触项时，没有东西把站立的脚跨帧钉在同一世界点，于是逐帧的小误差让它滑动——表现为脚滑。修法：在支撑相把脚速度归零的接触损失，或把相邻帧绑定的时间平滑；两者都强制了逐帧拟合忽略的全局物理约束。",
+          },
+          hint: { en: "What ties a planted foot to one spot over consecutive frames?", zh: "是什么把一只站定的脚在连续帧间固定在同一处？" },
+        },
+        {
+          id: "A9-q4",
+          prompt: { en: "Why is term-by-term ablation the right way to understand a paper's loss?", zh: "为什么逐项消融是理解一篇论文损失的正确方式？" },
+          answer: {
+            en: "Each loss term targets a specific failure (reprojection→2D fit, prior→plausibility, contact→support, temporal→smoothness). Removing one at a time isolates its effect: the artifact that appears tells you exactly what that term was preventing, building a causal map of the system instead of treating the loss as a black box.",
+            zh: "每个损失项针对特定失败（重投影→2D 拟合、先验→合理性、接触→支撑、时间→平滑）。一次去掉一项能隔离其作用：出现的伪影正好告诉你该项在防止什么，从而建立系统的因果图谱，而不是把损失当黑箱。",
+          },
+          hint: { en: "Remove one ingredient at a time — what does the artifact that shows up tell you?", zh: "一次移除一种成分——冒出来的伪影告诉了你什么？" },
         },
       ],
       links: ["A4", "C9", "B9"],

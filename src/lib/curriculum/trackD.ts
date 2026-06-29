@@ -52,6 +52,24 @@ export const trackD: Track = {
             zh: "一个约束，断言两个位姿（现在与很早一次对同一地点的访问）观测了同一场景，故必须几何一致。把这条边加入位姿图，迫使后端把累积误差沿整个回环重新分配，把地图拉回全局一致。",
           },
         },
+        {
+          id: "D1-q3",
+          prompt: { en: "Why split SLAM into a fast local front-end and a slow global back-end?", zh: "为什么把 SLAM 分成快速局部的前端与缓慢全局的后端？" },
+          answer: {
+            en: "They have conflicting requirements. Tracking must run at frame rate to not lose the camera, so it stays local and cheap. Global consistency needs expensive optimization over many poses/points, too slow to do every frame. Separating them lets the front-end keep up in real time while the back-end refines in the background and periodically corrects the front-end's drift.",
+            zh: "它们要求相互冲突。跟踪必须以帧率运行以免丢失相机，故保持局部而便宜。全局一致需要对许多位姿/点做昂贵优化，逐帧太慢。把它们分开，让前端实时跟上，后端在后台精修并周期性校正前端的漂移。",
+          },
+          hint: { en: "One must keep up with the camera every frame; the other can take its time. Why not both at once?", zh: "一个必须每帧跟上相机；另一个可以慢慢来。为什么不合二为一？" },
+        },
+        {
+          id: "D1-q4",
+          prompt: { en: "Loop closure depends on recognizing a revisited place. Why is that hard, and what happens if you get it wrong?", zh: "回环依赖识别重访的地点。为什么这很难？弄错了会怎样？" },
+          answer: {
+            en: "Perceptual aliasing: different places can look nearly identical (two similar corridors), and the same place looks different under new viewpoint/lighting. A false loop closure asserts a wrong constraint and the back-end warps the whole map to satisfy it — often catastrophically. So place recognition must be conservative; a wrong closure is worse than a missed one.",
+            zh: "感知混叠：不同地点可能看起来几乎相同（两条相似走廊），而同一地点在新视角/光照下又显得不同。错误的回环断言一个错误约束，后端会扭曲整张地图去满足它——常是灾难性的。因此地点识别必须保守；错误的闭环比漏掉一个更糟。",
+          },
+          hint: { en: "Two identical-looking corridors — what if the system thinks they're the same place?", zh: "两条看起来一模一样的走廊——若系统以为它们是同一地点会怎样？" },
+        },
       ],
       links: ["D2", "B3", "B2"],
       papers: [{ title: "ORB-SLAM: A Versatile and Accurate Monocular SLAM System", year: 2015 }],
@@ -89,6 +107,24 @@ export const trackD: Track = {
             en: "A dense, photometric, gap-filling map you can render from novel views — enabling dense tracking against the model, hole-free reconstruction, and direct downstream use (e.g. semantics, simulation). It unifies localization and high-fidelity reconstruction in one live-optimized representation instead of a sparse landmark cloud.",
             zh: "一张稠密、光度、可补洞的地图，可从新视角渲染——支持对模型的稠密跟踪、无洞重建，以及直接的下游用途（如语义、模拟）。它把定位与高保真重建统一进一个实时优化的表示，而非稀疏地标点云。",
           },
+        },
+        {
+          id: "D2-q3",
+          prompt: { en: "Classical sparse-feature SLAM vs neural/dense SLAM — what's the core trade-off?", zh: "经典稀疏特征 SLAM vs 神经/稠密 SLAM——核心权衡是什么？" },
+          answer: {
+            en: "Sparse SLAM tracks a few robust feature landmarks: fast, robust, low-memory, but the map is a holey point cloud with no surfaces. Neural/dense SLAM optimizes a full photometric field (NeRF/Gaussian): a complete, renderable, gap-filled map useful downstream, but heavier, GPU-hungry, and historically less robust to fast motion. Coverage and fidelity vs speed and robustness.",
+            zh: "稀疏 SLAM 跟踪少数鲁棒的特征地标：快、鲁棒、低内存，但地图是带洞的点云、无表面。神经/稠密 SLAM 优化完整的光度场（NeRF/高斯）：完整、可渲染、补洞的地图，下游有用，但更重、吃 GPU、且历来对快速运动更不鲁棒。覆盖与保真 vs 速度与鲁棒。",
+          },
+          hint: { en: "A handful of robust landmarks vs a full dense surface — what does each cost and give?", zh: "一把鲁棒的地标 vs 一整张稠密表面——各自的代价与收益是什么？" },
+        },
+        {
+          id: "D2-q4",
+          prompt: { en: "If SLAM is 'the same toolkit as offline SfM under a different time budget,' what concretely must change to run online?", zh: "若 SLAM 是「与离线 SfM 同一工具箱、只是时间预算不同」，在线运行具体须改什么？" },
+          answer: {
+            en: "You can't re-optimize all frames every step. So: select sparse keyframes instead of using every frame, run windowed/local BA (or a pose graph) rather than global BA each step, do place recognition + loop closure to inject occasional global corrections, and bound memory via marginalization or submaps. Same math, restructured to meet a real-time, bounded-compute budget.",
+            zh: "你无法每一步都重优化所有帧。于是：选稀疏关键帧而非用每一帧、跑窗口化/局部 BA（或位姿图）而非每步全局 BA、用地点识别+回环注入偶发的全局校正、并经边缘化或子地图界定内存。同一套数学，被重构以满足实时、有界算力的预算。",
+          },
+          hint: { en: "You can't run global bundle adjustment over every frame in real time — what do you do instead?", zh: "你无法实时对每一帧跑全局光束法平差——那你改怎么做？" },
         },
       ],
       links: ["B3", "B5", "D3"],
@@ -128,6 +164,24 @@ export const trackD: Track = {
             zh: "只有表面附近的薄带对提取几何和融合深度重要；远处距离无关，存储它们会浪费内存与计算。截断到一个带只存有用区域，使融合局部而便宜，且仍精确确定零等值面。",
           },
         },
+        {
+          id: "D3-q3",
+          prompt: { en: "Why tile a large scene into submaps instead of one global TSDF grid?", zh: "为什么把大场景切成子地图，而非一张全局 TSDF 网格？" },
+          answer: {
+            en: "A single grid covering a whole building wastes memory on empty space and, worse, can't be corrected after loop closure — if the trajectory shifts, every baked voxel is wrong. Submaps are each locally consistent and rigidly attached to a keyframe pose; when the back-end updates poses (loop closure), you just move the submaps, bounding both memory and the cost of staying drift-consistent.",
+            zh: "覆盖整栋楼的单一网格在空白空间浪费内存，更糟的是回环后无法校正——若轨迹移动，每个已烘焙的体素都错了。子地图各自局部一致并刚性附着到某关键帧位姿；当后端更新位姿（回环）时，你只需移动子地图，从而界定内存与保持漂移一致的代价。",
+          },
+          hint: { en: "After a loop closure shifts the trajectory, can you re-bend one giant baked grid?", zh: "当回环使轨迹移动后，你能把一张已烘焙的巨大网格重新弯折吗？" },
+        },
+        {
+          id: "D3-q4",
+          prompt: { en: "In TSDF fusion each voxel keeps a weight, not just a distance. What is that weight for?", zh: "TSDF 融合中每个体素保留一个权重，而非只有距离。这个权重做什么用？" },
+          answer: {
+            en: "It accumulates confidence: each new measurement updates the running average in proportion to its reliability (depth is noisier far away or at grazing angles), so trustworthy observations count more. Weights also let you down-weight or forget old/uncertain data and handle dynamic content — the average isn't naive, it's confidence-weighted.",
+            zh: "它累积置信度：每个新测量按其可靠性（深度在远处或掠射角更含噪）成比例更新滑动平均，于是可信观测占更大权重。权重还让你能降权或遗忘旧/不确定的数据并处理动态内容——这个平均不是朴素的，而是置信度加权的。",
+          },
+          hint: { en: "Is a depth reading from 5 m away as trustworthy as one from 0.5 m?", zh: "5 米外的深度读数和 0.5 米处的一样可信吗？" },
+        },
       ],
       links: ["B4", "D2", "D4"],
       papers: [{ title: "KinectFusion: Real-Time Dense Surface Mapping and Tracking", year: 2011 }],
@@ -165,6 +219,24 @@ export const trackD: Track = {
             en: "Queries for arbitrary concepts not in any training label set — 'a mug', 'something to sit on', 'the red thing' — by matching language to the map's CLIP features. It turns the map into a language-addressable index of the scene, bridging 3D geometry and natural language / LLMs.",
             zh: "可查询任何训练标签集里没有的概念——「一个杯子」「能坐的东西」「红色的那个」——靠把语言与地图的 CLIP 特征匹配。它把地图变成场景的语言可寻址索引，连接 3D 几何与自然语言/LLM。",
           },
+        },
+        {
+          id: "D4-q3",
+          prompt: { en: "How does fusing semantics into 3D fix 2D segmentation errors that flicker frame-to-frame?", zh: "把语义融合进 3D，如何修正逐帧闪烁的 2D 分割错误？" },
+          answer: {
+            en: "Each 3D element pools predictions from many views; an occasional wrong or flickering 2D label is outvoted by the majority of correct observations through Bayesian fusion. It's the exact multi-frame denoising of TSDF fusion (D3) applied to labels instead of geometry — redundancy across views corrects single-frame error.",
+            zh: "每个 3D 元素汇聚来自多个视角的预测；偶发的错误或闪烁的 2D 标签会被多数正确观测经贝叶斯融合压过。这正是 TSDF 融合（D3）的多帧去噪，只是用在标签而非几何上——视角间的冗余纠正单帧误差。",
+          },
+          hint: { en: "One bad frame vs twenty good views all voting on the same voxel — who wins?", zh: "一个坏帧 vs 二十个好视角，都为同一体素投票——谁赢？" },
+        },
+        {
+          id: "D4-q4",
+          prompt: { en: "A flat semantic map has 'mug' and 'table' labels. Why can't it answer 'is the mug on the table?'", zh: "扁平语义地图有「杯子」和「桌子」标签。为什么它回答不了「杯子在桌上吗？」" },
+          answer: {
+            en: "Labels mark what is where, but the relation 'on' is an edge between two entities, which a flat per-element map doesn't store. You'd have to recompute geometry every query and you have no notion of object instances/relations. Encoding relations explicitly is exactly what the next lesson's scene graph adds.",
+            zh: "标签标记了什么在哪，但「在…上」这个关系是两个实体间的一条边，扁平的逐元素地图并不存储它。你得在每次查询时重算几何，且没有物体实例/关系的概念。显式编码关系，正是下一课场景图所添加的。",
+          },
+          hint: { en: "'On' is a relationship between two things — does a per-voxel label store relationships?", zh: "「在…上」是两个事物之间的关系——逐体素标签会存储关系吗？" },
         },
       ],
       links: ["D3", "B7", "D5"],
@@ -204,6 +276,24 @@ export const trackD: Track = {
             zh: "它紧凑、符号化、关系化——接近语言。LLM 能直接读「厨房桌上的杯子」并据此推理，而原始点云庞大、无结构、并非天然可解释。图是几何感知与符号/语言推理之间恰当的接口。",
           },
         },
+        {
+          id: "D5-q3",
+          prompt: { en: "Why is the hierarchy (object → room → floor → building) important, not just the object–relation edges?", zh: "为什么层级（物体 → 房间 → 楼层 → 建筑）很重要，而不只是物体–关系的边？" },
+          answer: {
+            en: "Hierarchy lets you reason and query at the right level of abstraction: 'is the mug in the kitchen?' is answered by traversing object→room links, without scanning millions of voxels. It also scales — you plan over rooms/floors for long-range navigation and drop to objects only where needed — matching the multi-scale structure of real environments.",
+            zh: "层级让你在恰当的抽象层级推理与查询：「杯子在厨房吗？」靠遍历物体→房间的链接即可回答，无需扫描数百万体素。它也可扩展——长程导航在房间/楼层层面规划，只在需要处下降到物体——契合真实环境的多尺度结构。",
+          },
+          hint: { en: "To check if the mug is in the kitchen, would you rather scan voxels or follow one link?", zh: "要检查杯子在不在厨房，你愿意扫描体素，还是只跟一条链接？" },
+        },
+        {
+          id: "D5-q4",
+          prompt: { en: "Going from a voxel map to a symbolic scene graph is a big abstraction. What's the price?", zh: "从体素地图走到符号场景图是一次大抽象。代价是什么？" },
+          answer: {
+            en: "You gain compactness, relations, and planner/LLM-readability; you lose precise sub-object geometry and free-space detail, and you become dependent on correct object detection and relation extraction. A wrong node/edge silently corrupts all downstream reasoning. The graph is only as good as the perception that builds it — which is why systems keep a geometric layer alongside it.",
+            zh: "你获得紧凑性、关系与对规划器/LLM 的可读性；你失去精确的子物体几何与自由空间细节，并变得依赖正确的物体检测与关系抽取。一个错误的节点/边会悄悄污染所有下游推理。图的好坏只取决于构建它的感知——这正是系统在其旁保留几何层的原因。",
+          },
+          hint: { en: "If a detector mislabels a node, what happens to every query that uses it?", zh: "若检测器给一个节点贴错标签，用到它的每个查询会怎样？" },
+        },
       ],
       links: ["D4", "D6", "D7"],
       papers: [{ title: "3D Scene Graph: A Structure for Unified Semantics, 3D Space, and Camera", year: 2019 }],
@@ -241,6 +331,24 @@ export const trackD: Track = {
             en: "The two strengths are complementary and non-overlapping: you need metric free-space for navigation/collision and a compact relational/object layer for manipulation, reasoning, and language. No single representation does both well, so a hybrid keeps a space layer and an object/graph layer linked, querying whichever suits the task.",
             zh: "两者的长处互补且不重叠：导航/碰撞需要度量自由空间，操作、推理与语言需要紧凑的关系/物体层。没有单一表示能两者兼优，故混合系统保留相互链接的空间层与物体/图层，按任务查询合适的一个。",
           },
+        },
+        {
+          id: "D6-q3",
+          prompt: { en: "'Pick up the red mug next to the kettle.' Which representation suits this, and why?", zh: "「拿起水壶旁边的红杯子。」哪种表示适合，为什么？" },
+          answer: {
+            en: "Object-centric (scene graph / object database): the task is about specific objects and their relations ('next to'), and the language refers to object attributes ('red mug'). A graph gives addressable object nodes with attributes and relational edges to resolve the reference, whereas a raw voxel grid has no notion of 'the mug' to grasp.",
+            zh: "物体中心（场景图/物体数据库）：任务关乎特定物体及其关系（「旁边」），语言指向物体属性（「红杯子」）。图给出带属性的可寻址物体节点与关系边来消解指代，而原始体素网格没有「那个杯子」的概念可供抓取。",
+          },
+          hint: { en: "The task names a specific object and a relation — what represents those directly?", zh: "任务点名了一个特定物体和一个关系——什么能直接表示它们？" },
+        },
+        {
+          id: "D6-q4",
+          prompt: { en: "Name one question each representation answers *poorly*, and connect it to 'representation determines reasoning.'", zh: "各举一个每种表示*答得差*的问题，并联系「表示决定推理」。" },
+          answer: {
+            en: "A space-centric grid answers 'is the mug on the table?' poorly — it has no objects or relations. An object graph answers 'is there a clear 30 cm gap here?' poorly — it abstracts away precise free space. Each representation bounds the inferences available, which is exactly why the next lesson frames reasoning as downstream of representation.",
+            zh: "空间中心网格答不好「杯子在桌上吗？」——它没有物体或关系。物体图答不好「这里有 30 厘米的空隙吗？」——它抽象掉了精确自由空间。每种表示都界定了可用推断，这正是下一课把推理框定为表示之下游的原因。",
+          },
+          hint: { en: "What can't a voxel grid say about objects, and what can't an object graph say about gaps?", zh: "体素网格说不出物体的什么？物体图又说不出空隙的什么？" },
         },
       ],
       links: ["D3", "D5", "D7"],
@@ -280,6 +388,24 @@ export const trackD: Track = {
             zh: "「椅子左边」或「前面」在没有视角时未定义（说话者 vs 物体，自我 vs 他者中心）；同样的词在不同参照系下指不同位置。确定参照系，与 Track A 的局部 vs 全局关节系、Track B 的相机外参是同一套坐标/旋转纪律——凡几何遇见意义之处，皆有参照系。",
           },
         },
+        {
+          id: "D7-q3",
+          prompt: { en: "The frontier is LLM + scene graph. Why feed a symbolic graph to a language model rather than raw perception?", zh: "前沿是 LLM + 场景图。为什么把符号图喂给语言模型，而非原始感知？" },
+          answer: {
+            en: "LLMs reason over symbols and text, not point clouds. A scene graph is already compact, relational, and language-like, so the model can read 'mug on table in kitchen', answer spatial questions, and decompose a goal ('make coffee') into steps grounded in the actual objects present. The graph is the interface that makes perception consumable by language-level reasoning.",
+            zh: "LLM 在符号与文本上推理，而非点云。场景图本就紧凑、关系化、类语言，故模型能读「厨房桌上的杯子」、回答空间问题，并把目标（「冲咖啡」）分解为落地于实际在场物体的步骤。图是让感知可被语言级推理消费的接口。",
+          },
+          hint: { en: "Can an LLM read a point cloud? What form does it actually consume?", zh: "LLM 能读点云吗？它实际消费的是什么形式？" },
+        },
+        {
+          id: "D7-q4",
+          prompt: { en: "Give a concrete case where egocentric and allocentric frames give different answers, and why the agent must convert between them.", zh: "举一个自我中心与他者中心参照系给出不同答案的具体例子，并说明智能体为何必须在二者间转换。" },
+          answer: {
+            en: "'The cup is to my left' (egocentric, the speaker's view) can be to the right of a robot facing the speaker, or on a different side from the cup's own intrinsic 'left'. To act on a human instruction the agent must convert the speaker's egocentric frame into its own and into world/allocentric coordinates — otherwise it reaches the wrong way. Frame conversion is the bridge from language to action.",
+            zh: "「杯子在我左边」（自我中心，说话者视角）对面对说话者的机器人可能是在右边，或与杯子自身内在的「左边」不同侧。要执行人类指令，智能体必须把说话者的自我中心系转换到自己的、再到世界/他者中心坐标——否则会朝错误方向伸手。参照系转换是从语言到行动的桥梁。",
+          },
+          hint: { en: "'On my left' from the speaker's view — is that the same side for a robot facing them?", zh: "从说话者视角的「我左边」——对面对他的机器人是同一侧吗？" },
+        },
       ],
       links: ["D5", "A6", "D8"],
       papers: [{ title: "SayPlan / LLM-grounded planning over 3D scene graphs", year: 2023 }],
@@ -318,6 +444,24 @@ export const trackD: Track = {
             zh: "感知：第一人称视觉（C）与人体建模（A）读取智能体与行动者；3D/4D 重建（B）与 SLAM/语义建图（D1–5）构建几何+语义状态。预测：世界模型（D8），辅以 A 的运动先验。规划：在场景图上的空间推理（D5–7）。行动闭环回感知。每条赛道都是同一个智能体的一个阶段。",
           },
         },
+        {
+          id: "D8-q3",
+          prompt: { en: "Why is planning by simulating imagined rollouts better than just acting in the real world to see what happens?", zh: "为什么以模拟想象的滚动来规划，胜过直接在真实世界里行动看结果？" },
+          answer: {
+            en: "Real actions are slow, irreversible, and sometimes dangerous; a world model lets the agent try many candidate plans internally — cheaply and safely — and keep only the best before committing. It's the difference between thinking before acting and trial-and-error in reality, essential when mistakes are costly (a robot, a vehicle).",
+            zh: "真实动作慢、不可逆、有时危险；世界模型让智能体在内部廉价而安全地尝试许多候选计划，只保留最佳者再去执行。这是「行动前思考」与「在现实中试错」之别——当错误代价高昂时（机器人、车辆）至关重要。",
+          },
+          hint: { en: "Would you rather test a risky plan in your head or with the real robot?", zh: "你愿意在脑中测试一个有风险的计划，还是用真实机器人？" },
+        },
+        {
+          id: "D8-q4",
+          prompt: { en: "Why do world-model predictions degrade over long rollouts, and which earlier lesson's problem is this?", zh: "为什么世界模型的预测在长滚动上退化？这是此前哪一课的问题？" },
+          answer: {
+            en: "The model feeds its own predictions back as input, so each step's error becomes the next step's input error and compounds, drifting off the real distribution — the same unbounded error accumulation as SLAM drift (D1) and long-horizon motion generation (A7). Long rollouts need correction signals (re-observation), uncertainty modeling, or hierarchy to stay grounded.",
+            zh: "模型把自己的预测作为输入回灌，于是每一步的误差成为下一步的输入误差并复合，漂移出真实分布——与 SLAM 漂移（D1）、长时程运动生成（A7）是同一种无界误差累积。长滚动需要校正信号（重新观测）、不确定性建模或层级结构来保持落地。",
+          },
+          hint: { en: "When you predict from your own predictions, what happens to errors? Where did you see this before?", zh: "当你从自己的预测再去预测，误差会怎样？你之前在哪见过？" },
+        },
       ],
       links: ["D7", "C8", "A7"],
       papers: [{ title: "World Models (Ha & Schmidhuber)", year: 2018 }],
@@ -355,6 +499,24 @@ export const trackD: Track = {
             en: "Poses via SLAM/SfM (B3, D2) → fuse depth into a TSDF/Gaussian map (D3) → run per-frame 2D segmentation and Bayes-fuse labels (with CLIP features) into the 3D map (D4) → cluster into objects and infer relations to build a scene graph (D5) → query it in language. Start with one short sequence and a trusted metric before scaling.",
             zh: "经 SLAM/SfM 求位姿（B3、D2）→ 把深度融合进 TSDF/高斯地图（D3）→ 逐帧 2D 分割并把标签（带 CLIP 特征）贝叶斯融合进 3D 地图（D4）→ 聚类成物体并推断关系以建场景图（D5）→ 用语言查询它。先用一段短序列与可信指标，再扩展。",
           },
+        },
+        {
+          id: "D9-q3",
+          prompt: { en: "Why start the capstone with a trusted metric on one short sequence before scaling up?", zh: "为什么终极项目要先在一段短序列上得到可信指标，再扩展规模？" },
+          answer: {
+            en: "A multi-stage pipeline (poses → fusion → semantics → graph) has many places to fail silently; without a trusted measurement on a small, inspectable case you can't tell which stage is broken. Establishing a correct, measurable baseline first — the same discipline as the B9/C9 reproductions — means scaling adds data, not undiagnosable bugs.",
+            zh: "多阶段流水线（位姿 → 融合 → 语义 → 图）有许多会无声失败的地方；没有在一个小而可检查的案例上的可信测量，你无法判断哪一阶段坏了。先建立一个正确、可测量的基线——与 B9/C9 复现同样的纪律——意味着扩展只是增加数据，而非无法诊断的 bug。",
+          },
+          hint: { en: "A four-stage pipeline can fail silently — how do you know which stage broke if you scale first?", zh: "四阶段流水线会无声失败——若你先扩展，怎么知道是哪一阶段坏了？" },
+        },
+        {
+          id: "D9-q4",
+          prompt: { en: "The capstone says the web of cross-track connections, not any single method, distinguishes a researcher. Why?", zh: "终极项目说，区分研究者的是跨赛道连接之网，而非任何单一方法。为什么？" },
+          answer: {
+            en: "Specific methods date quickly, but the shared principles — reprojection / analysis-by-synthesis, the SDF, multi-frame fusion, representation→reasoning — transfer across problems and let you recognize a new method as a variant of something you already understand. Seeing the connections is what lets you adapt to and invent within a fast-moving field, rather than re-learning each method as an isolated fact.",
+            zh: "具体方法很快过时，但共享原则——重投影/分析合成、SDF、多帧融合、表示决定推理——可跨问题迁移，让你把新方法识别为你已理解之物的变体。看见连接，才让你能在快速演进的领域中适应并创造，而非把每个方法当孤立的事实重新学一遍。",
+          },
+          hint: { en: "Methods go out of date — what doesn't?", zh: "方法会过时——什么不会？" },
         },
       ],
       links: ["D8", "B9", "C9"],

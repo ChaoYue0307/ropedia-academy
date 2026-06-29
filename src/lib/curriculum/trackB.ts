@@ -52,6 +52,24 @@ export const trackB: Track = {
             zh: "它们把非线性的透视除法变成线性矩阵乘法（在一个尺度因子意义下），于是旋转、平移、投影组合为一个矩阵，标准线性代数（最小二乘、SVD）即可应用。「~」（在尺度意义下相等）干净地刻画了深度/尺度的自由度。",
           },
         },
+        {
+          id: "B1-q3",
+          prompt: { en: "What is the difference between intrinsics K and extrinsics [R|t], and why separate them?", zh: "内参 K 与外参 [R|t] 有何区别？为什么把它们分开？" },
+          answer: {
+            en: "Intrinsics K describe the camera itself — focal length and principal point — and stay fixed if you only move the camera. Extrinsics [R|t] describe where the camera is and how it's oriented in the world, changing every time it moves. Separating them lets you calibrate K once and re-estimate pose per frame, keeping the optimization variables physically meaningful.",
+            zh: "内参 K 描述相机本身——焦距与主点——只移动相机时它保持不变。外参 [R|t] 描述相机在世界中的位置与朝向，每次移动都改变。把它们分开，使你能一次标定 K、逐帧重估位姿，并让优化变量具有物理意义。",
+          },
+          hint: { en: "Which one changes when you walk the camera across the room, and which when you swap the lens?", zh: "把相机搬到房间另一头时哪个变？换镜头时哪个变？" },
+        },
+        {
+          id: "B1-q4",
+          prompt: { en: "'Projection discards depth' is called the source of the track's hard problems. Name two consequences.", zh: "「投影丢弃深度」被称为本赛道难题的根源。举出两个后果。" },
+          answer: {
+            en: "(1) Single-view 3D is impossible, so you need triangulation from multiple views (Lesson 2). (2) Reconstruction has an inherent scale ambiguity — without metric cues you can't tell a big scene far away from a small one nearby — which propagates into SfM/SLAM and must be fixed with a known length, stereo baseline, or sensor. Depth/occlusion reasoning in rendering also stems from this.",
+            zh: "(1) 单视图 3D 不可能，故需多视图三角测量（第 2 课）。(2) 重建存在固有的尺度歧义——没有度量线索就分不清远处的大场景与近处的小场景——它传播进 SfM/SLAM，须用已知长度、立体基线或传感器修正。渲染中的深度/遮挡推理也源于此。",
+          },
+          hint: { en: "Think why you need two views, and why a reconstruction's absolute size is unknown.", zh: "想想为什么需要两个视图，以及为什么重建的绝对尺寸是未知的。" },
+        },
       ],
       links: ["B2", "B3", "D2"],
       papers: [{ title: "Multiple View Geometry in Computer Vision (Hartley & Zisserman)", year: 2003 }],
@@ -89,6 +107,24 @@ export const trackB: Track = {
             en: "Measured pixels and estimated poses are noisy, so the two back-projected rays are skew and never meet exactly in 3D. Least squares finds the point minimizing total reprojection (or ray) error — the most consistent 3D location given imperfect inputs.",
             zh: "测得的像素与估计的位姿都有噪声，因此两条反投影射线是异面的，在 3D 中从不精确相交。最小二乘求使总重投影（或射线）误差最小的点——在不完美输入下最一致的 3D 位置。",
           },
+        },
+        {
+          id: "B2-q3",
+          prompt: { en: "Why does a wider baseline between two views give more accurate depth, and what's the cost?", zh: "为什么两视图间更宽的基线能给出更准的深度？代价是什么？" },
+          answer: {
+            en: "A wider baseline makes the two viewing rays intersect at a sharper angle, so a given pixel-localization error translates into a smaller depth error — depth precision improves with the triangulation angle. The cost is correspondence: wider baselines mean larger appearance changes, more occlusion, and harder, less reliable matching.",
+            zh: "更宽的基线使两条视线以更锐的角度相交，于是给定的像素定位误差转化为更小的深度误差——深度精度随三角测量角度提升。代价在对应：更宽的基线意味着更大的外观变化、更多遮挡、更难且更不可靠的匹配。",
+          },
+          hint: { en: "Picture two nearly parallel rays vs two rays meeting at a wide angle — which pins depth better?", zh: "想象两条近乎平行的射线 vs 以大角度相交的两条射线——哪个更能确定深度？" },
+        },
+        {
+          id: "B2-q4",
+          prompt: { en: "Given poses, triangulation is easy algebra. So what is actually the hard part of multi-view reconstruction?", zh: "给定位姿，三角测量只是简单代数。那么多视图重建真正难的部分是什么？" },
+          answer: {
+            en: "Correspondence — reliably matching which pixel in one image is the same scene point in another. Textureless regions (a blank wall), repetitive patterns (windows), occlusion, and lighting changes all break matching, and a single wrong match produces a grossly wrong 3D point. The geometry is solved; robust data association is the bottleneck.",
+            zh: "对应——可靠地匹配一图中的某像素与另一图中的同一场景点。无纹理区域（白墙）、重复图案（窗户）、遮挡与光照变化都会破坏匹配，而单个错误匹配会产生严重错误的 3D 点。几何已解决；稳健的数据关联才是瓶颈。",
+          },
+          hint: { en: "What happens when you try to triangulate points on a blank white wall?", zh: "当你试图对一面空白白墙上的点做三角测量时会发生什么？" },
         },
       ],
       links: ["B1", "B3", "D2"],
@@ -128,6 +164,24 @@ export const trackB: Track = {
             zh: "每个 3D 点只被少数相机看到，因此大多数点–相机对没有观测；雅可比/海森矩阵大部分为零。利用这种稀疏性（如 Schur 补）使求解上千相机、数百万点变得可行——稠密求解将昂贵到无望。",
           },
         },
+        {
+          id: "B3-q3",
+          prompt: { en: "PnP and bundle adjustment both deal with camera pose. What's the division of labor?", zh: "PnP 与光束法平差都涉及相机位姿。它们如何分工？" },
+          answer: {
+            en: "PnP localizes a single new camera given already-known 3D points and their 2D projections — a fast, local bootstrap step. BA then refines everything jointly: all poses and all 3D points together, for global consistency. SfM pipelines use PnP to register each new image, then BA to clean up accumulated drift.",
+            zh: "PnP 在已知 3D 点及其 2D 投影的情况下定位单个新相机——一个快速、局部的引导步骤。BA 随后联合精修一切：所有位姿与所有 3D 点一起，以求全局一致。SfM 流水线用 PnP 注册每张新图，再用 BA 清理累积漂移。",
+          },
+          hint: { en: "Which one registers one new camera quickly, and which one polishes the whole map?", zh: "哪个快速注册一个新相机，哪个打磨整张地图？" },
+        },
+        {
+          id: "B3-q4",
+          prompt: { en: "BA is a nonlinear least-squares problem solved with Levenberg–Marquardt. Why does it need a good initialization?", zh: "BA 是用 Levenberg–Marquardt 求解的非线性最小二乘问题。为什么它需要良好的初始化？" },
+          answer: {
+            en: "The reprojection objective is non-convex with many local minima; LM is a local optimizer that only descends from where it starts. A poor initial guess (bad poses/points) can settle into a wrong minimum. Incremental SfM and PnP provide a close-enough starting estimate so BA refines toward the correct global structure.",
+            zh: "重投影目标非凸、有许多局部极小；LM 是局部优化器，只从起点下降。糟糕的初值（坏位姿/点）会落入错误的极小。增量式 SfM 与 PnP 提供足够接近的初始估计，使 BA 朝正确的全局结构精修。",
+          },
+          hint: { en: "LM only goes downhill from where it starts — what if it starts in the wrong valley?", zh: "LM 只从起点往下走——若它从错误的山谷出发会怎样？" },
+        },
       ],
       links: ["B2", "A4", "D2"],
       papers: [{ title: "Building Rome in a Day (large-scale SfM)", year: 2009 }],
@@ -165,6 +219,24 @@ export const trackB: Track = {
             en: "TSDF is the engineering version: a Signed Distance Function truncated to a thin band near the surface (clamped to ±1 far away). The same 'distance to nearest surface' concept is used for NeRF-style geometry in Track B and for fusing many noisy depth maps into one dense map in Track D.",
             zh: "TSDF 是工程化版本：把符号距离函数在表面附近截断为一个薄带（远处钳为 ±1）。同一个「到最近曲面的距离」概念，在 Track B 用于 NeRF 式几何，在 Track D 用于把许多含噪深度图融合成一张稠密地图。",
           },
+        },
+        {
+          id: "B4-q3",
+          prompt: { en: "Why is 'a neural network is a geometry representation' a paradigm shift? What does storing a function buy and cost?", zh: "为什么「神经网络就是一种几何表示」是范式转变？存储一个函数有何收益与代价？" },
+          answer: {
+            en: "Instead of an array of explicit primitives (vertices/voxels) at fixed resolution, the geometry lives in the weights of a continuous function you can query anywhere at any precision and differentiate end-to-end. The buy: compactness, continuity, resolution-freedom. The cost: querying needs a network evaluation (slow), and the shape is implicit — harder to edit or directly rasterize than explicit primitives.",
+            zh: "几何不再是固定分辨率的显式基元数组（顶点/体素），而是驻留在一个连续函数的权重里，可在任意精度处处查询并端到端可微。收益：紧凑、连续、无分辨率限制。代价：查询需要一次网络求值（慢），且形状是隐式的——比显式基元更难编辑或直接光栅化。",
+          },
+          hint: { en: "Compare a list of vertices to a function f(x) you must evaluate to learn anything about the shape.", zh: "把一份顶点列表，与一个你必须求值才能了解形状的函数 f(x) 作比较。" },
+        },
+        {
+          id: "B4-q4",
+          prompt: { en: "The surface is the zero level-set of f. How do you turn that into an explicit surface or render it, and why is ∇f useful?", zh: "曲面是 f 的零等值面。你如何把它变成显式曲面或渲染它？∇f 为何有用？" },
+          answer: {
+            en: "Extract a mesh with marching cubes (sample f on a grid, polygonize the f=0 crossing), or render directly with sphere tracing. ∇f gives the surface normal (for shading) and, because f is a distance, its magnitude tells you how far the nearest surface is — so sphere tracing can safely step by |f| toward the surface without overshooting.",
+            zh: "用 marching cubes 提取网格（在网格上采样 f，对 f=0 的穿越多边形化），或用球体追踪直接渲染。∇f 给出表面法向（用于着色），且因为 f 是距离，其大小告诉你最近曲面有多远——故球体追踪可安全地以 |f| 朝曲面步进而不越过。",
+          },
+          hint: { en: "If f tells you the distance to the nearest surface, how big a step can you safely take toward it?", zh: "若 f 告诉你到最近曲面的距离，你能安全地朝它迈多大一步？" },
         },
       ],
       links: ["B5", "D3", "A1"],
@@ -204,6 +276,24 @@ export const trackB: Track = {
             zh: "普通 MLP 偏向低频函数，产出模糊结果。把坐标经高频正弦映射，使网络能表示锐利的高频细节（边缘、纹理），大幅提升重建保真度。",
           },
         },
+        {
+          id: "B5-q3",
+          prompt: { en: "In the volume rendering integral, what does transmittance T(t) represent, and why does it make occlusion come out right?", zh: "在体渲染积分中，透射率 T(t) 代表什么？它为何让遮挡得到正确处理？" },
+          answer: {
+            en: "T(t) is the probability the ray travels from the camera to depth t without being absorbed — it starts at 1 and decays through dense matter. Weighting each sample's color by T·σ means once the ray hits an opaque surface, T collapses toward 0 and everything behind contributes almost nothing — so nearer opaque surfaces correctly occlude farther ones.",
+            zh: "T(t) 是射线从相机到达深度 t 而未被吸收的概率——从 1 开始，穿过稠密物质时衰减。用 T·σ 给每个采样的颜色加权意味着：一旦射线撞上不透明表面，T 坍缩趋近 0，其后的一切几乎不贡献——于是较近的不透明表面正确遮挡较远的。",
+          },
+          hint: { en: "What's the chance the ray reaches a given point without being blocked first?", zh: "射线在未被先挡住的情况下到达某点的概率是多少？" },
+        },
+        {
+          id: "B5-q4",
+          prompt: { en: "NeRF 'reframed reconstruction as optimizing a renderer.' How is this the same pattern as bundle adjustment and HMR?", zh: "NeRF「把重建重新表述为优化一个渲染器」。这与光束法平差和 HMR 是同一范式吗？" },
+          answer: {
+            en: "All three are analysis-by-synthesis: parameterize the unknowns (3D points+poses for BA; SMPL β,θ for HMR; a radiance field for NeRF), pass them through a differentiable forward model (projection / camera / volume renderer), and minimize the gap to the observed pixels/keypoints. Reprojection/photometric error is the shared currency; differentiability is what makes all three trainable by gradient descent.",
+            zh: "三者都是分析–合成：参数化未知量（BA 是 3D 点+位姿；HMR 是 SMPL β、θ；NeRF 是辐射场），让它们通过一个可微前向模型（投影/相机/体渲染器），并最小化与观测像素/关键点的差距。重投影/光度误差是共享货币；可微性使三者都能由梯度下降训练。",
+          },
+          hint: { en: "Predict parameters → render through a forward model → match observations. Where have you seen this?", zh: "预测参数 → 经前向模型渲染 → 匹配观测。你在哪里见过这个？" },
+        },
       ],
       links: ["B4", "B6", "B7"],
       papers: [{ title: "NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis", year: 2020 }],
@@ -241,6 +331,24 @@ export const trackB: Track = {
             en: "Collisions are resolved by the small MLP and by the multi-resolution structure (other levels disambiguate), and gradients naturally concentrate on occupied regions, so colliding empty space barely matters. The net effect is a controlled, graceful approximation rather than a hard error.",
             zh: "冲突由小 MLP 和多分辨率结构（其他层级消歧）解决，且梯度自然集中在被占据区域，因此与空白空间冲突几乎无关紧要。净效果是受控、优雅的近似，而非硬性错误。",
           },
+        },
+        {
+          id: "B6-q3",
+          prompt: { en: "Instant-NGP uses a multi-resolution hash grid. Why multiple resolutions instead of one fine grid?", zh: "Instant-NGP 用多分辨率哈希网格。为什么用多分辨率而非一个精细网格？" },
+          answer: {
+            en: "Coarse levels capture smooth, large-scale structure with few parameters and help disambiguate hash collisions; fine levels add sharp local detail. A single fine grid would need enormous memory to cover the volume densely and would lack large-scale context. Combining scales gives detail where needed and global structure cheaply.",
+            zh: "粗层级用很少参数捕捉平滑的大尺度结构，并帮助消解哈希冲突；细层级加入锐利的局部细节。单个精细网格需要巨大内存才能稠密覆盖整个体积，且缺乏大尺度上下文。组合多个尺度，既在需要处给出细节，又廉价地提供全局结构。",
+          },
+          hint: { en: "What does the coarse level give you that a single ultra-fine grid can't (cheaply)?", zh: "粗层级提供了单个超精细网格（廉价地）给不了的什么？" },
+        },
+        {
+          id: "B6-q4",
+          prompt: { en: "How does the lesson of hash grids — explicit local features beat a monolithic MLP — foreshadow Gaussian Splatting?", zh: "哈希网格的教训——显式局部特征胜过单体 MLP——如何预示了高斯泼溅？" },
+          answer: {
+            en: "Both push capacity out of a global MLP into explicit, locally-indexed primitives that are cheap to query and update. Instant-NGP uses grid features + a tiny MLP; 3DGS goes all the way to fully explicit Gaussians with essentially no MLP, rasterized directly. Same insight — local explicit representation = speed — taken to its conclusion.",
+            zh: "两者都把容量从全局 MLP 推向显式、局部索引、查询与更新便宜的基元。Instant-NGP 用网格特征 + 极小 MLP；3DGS 一路走到完全显式的高斯、几乎无 MLP、直接光栅化。同一洞见——局部显式表示=速度——被推向极致。",
+          },
+          hint: { en: "Where does 3DGS store its scene capacity — in network weights or in primitives?", zh: "3DGS 把场景容量存在哪——网络权重还是基元里？" },
         },
       ],
       links: ["B5", "B7", "D3"],
@@ -280,6 +388,24 @@ export const trackB: Track = {
             zh: "每个高斯是显式、可寻址的元素，因此可为每个高斯附加额外属性（语义特征或标签）并像颜色一样优化。这直接得到可查询的语义 3D 地图，而无需把语义烘进不透明的 MLP——正是语义高斯建图所利用的。",
           },
         },
+        {
+          id: "B7-q3",
+          prompt: { en: "3DGS is called a synthesis of the track's themes. Which three lineages does it combine?", zh: "3DGS 被称为本赛道主题的综合。它融合了哪三条脉络？" },
+          answer: {
+            en: "(1) Explicit primitives, like point clouds — the scene is concrete elements you can address and edit. (2) Differentiable rendering, like NeRF — the rasterizer passes gradients so the representation is learned from images. (3) Optimizing a representation against observations, like bundle adjustment — Gaussians are refined to minimize the image error.",
+            zh: "(1) 显式基元，像点云——场景是可寻址、可编辑的具体元素。(2) 可微渲染，像 NeRF——光栅化器传递梯度，使表示从图像中学到。(3) 把表示对着观测优化，像光束法平差——高斯被精修以最小化图像误差。",
+          },
+          hint: { en: "Think point clouds, NeRF, and BA — one idea from each.", zh: "想想点云、NeRF 与 BA——各取一个想法。" },
+        },
+        {
+          id: "B7-q4",
+          prompt: { en: "3DGS starts with few Gaussians and adaptively densifies. Why not fix the Gaussian count up front?", zh: "3DGS 从少量高斯开始并自适应稠密化。为什么不预先固定高斯数量？" },
+          answer: {
+            en: "You don't know in advance where the scene needs detail. Adaptive densification adds Gaussians where reconstruction error / gradient is high (fine textures, edges) and prunes where they're wasted (empty or over-covered regions), allocating capacity to match the scene's actual complexity — better quality at lower total count than a uniform fixed budget.",
+            zh: "你事先不知道场景哪里需要细节。自适应稠密化在重建误差/梯度高处（精细纹理、边缘）增加高斯，在浪费处（空白或过度覆盖区域）剪除，使容量分配匹配场景实际复杂度——在更低的总数下获得比均匀固定预算更好的质量。",
+          },
+          hint: { en: "Do you know before training which parts of the scene have the finest detail?", zh: "训练前你知道场景哪些部位细节最精细吗？" },
+        },
       ],
       links: ["B5", "B6", "D4"],
       papers: [{ title: "3D Gaussian Splatting for Real-Time Radiance Field Rendering", year: 2023 }],
@@ -318,6 +444,24 @@ export const trackB: Track = {
             zh: "尽可能刚性/局部刚性：真实表面在小邻域内大多刚性运动，因此惩罚非刚性的局部形变，可排除许多虽拟合像素却意味着不可能物理运动的「抖动」解，选出物理合理的几何+运动分解。",
           },
         },
+        {
+          id: "B8-q3",
+          prompt: { en: "When does the canonical + deformation factorization break down?", zh: "标准 + 形变的分解何时会失效？" },
+          answer: {
+            en: "When content can't be explained as a warp of one rest state: topology changes (a mouth opening, things merging/splitting), objects appearing or disappearing, or motion so large the deformation field becomes ambiguous. A fixed canonical space has no slot for content that wasn't there at rest, so such scenes need multiple canonicals, time-varying topology, or per-segment models.",
+            zh: "当内容无法被解释为对单一静止态的扭曲时：拓扑变化（嘴张开、物体合并/分裂）、物体出现或消失，或运动大到形变场变得歧义。固定的标准空间没有位置容纳静止时不存在的内容，故此类场景需要多个标准空间、随时间变化的拓扑，或分段模型。",
+          },
+          hint: { en: "What if an object enters the scene that simply wasn't present in the rest state?", zh: "若有个物体进入场景，而它在静止态里根本不存在，会怎样？" },
+        },
+        {
+          id: "B8-q4",
+          prompt: { en: "How does 4D reconstruction tie Track A and Track D together?", zh: "4D 重建如何把 Track A 与 Track D 联系起来？" },
+          answer: {
+            en: "For the people in a dynamic scene, 4D reconstruction leans on Track A's articulated human priors (SMPL/motion) to constrain how bodies deform. Its output — time-varying 3D geometry — is exactly the kind of moving world state Track D's world models learn to simulate and predict. So it consumes human priors and produces world dynamics.",
+            zh: "对动态场景中的人，4D 重建依靠 Track A 的关节化人体先验（SMPL/运动）来约束身体如何形变。其输出——随时间变化的 3D 几何——正是 Track D 世界模型学习去模拟与预测的那种运动世界状态。因此它消费人体先验、产出世界动态。",
+          },
+          hint: { en: "Who provides the body priors, and who simulates the resulting moving geometry?", zh: "谁提供身体先验，谁又模拟由此产生的运动几何？" },
+        },
       ],
       links: ["B7", "A7", "D8"],
       papers: [{ title: "D-NeRF: Neural Radiance Fields for Dynamic Scenes", year: 2021 }],
@@ -355,6 +499,24 @@ export const trackB: Track = {
             en: "NeRF/3DGS assume accurate poses; even small pose errors make multi-view rays inconsistent, so the model averages conflicting observations into blur/ghosting. Bad poses mimic model failure. Checking/refining poses (or running BA) first isolates whether the problem is the geometry pipeline or the renderer.",
             zh: "NeRF/3DGS 假设位姿准确；即便小的位姿误差也会使多视图射线不一致，模型把冲突观测平均成模糊/重影。坏位姿伪装成模型失败。先检查/精修位姿（或跑 BA），可分离问题出在几何流水线还是渲染器。",
           },
+        },
+        {
+          id: "B9-q3",
+          prompt: { en: "Floaters and blur are both artifacts. How do their root causes differ, and why does telling them apart matter?", zh: "漂浮物与模糊都是伪影。它们的根因有何不同？区分它们为何重要？" },
+          answer: {
+            en: "Floaters are a coverage/regularization problem — under-observed regions let the optimizer park spurious density; fix with more views or density sparsity. Blur/ghosting is usually a calibration problem — inaccurate camera poses make multi-view rays disagree and average out; fix by re-running COLMAP/BA. Same symptom class, opposite fixes, so misdiagnosing wastes effort on the wrong knob.",
+            zh: "漂浮物是覆盖/正则问题——观测不足的区域让优化器停放虚假密度；用更多视角或密度稀疏化修复。模糊/重影通常是标定问题——相机位姿不准使多视图射线不一致而被平均；用重跑 COLMAP/BA 修复。同类症状、相反修法，故误诊会把精力浪费在错误的旋钮上。",
+          },
+          hint: { en: "One is 'not enough views saw this spot,' the other is 'the cameras are mis-located.'", zh: "一个是「看到此处的视角不够」，另一个是「相机位置不准」。" },
+        },
+        {
+          id: "B9-q4",
+          prompt: { en: "Why is reproducing a result (COLMAP poses → nerfacto) a better learning exercise than reading the paper alone?", zh: "为什么复现一个结果（COLMAP 位姿 → nerfacto）比只读论文更好地学习？" },
+          answer: {
+            en: "The paper presents the clean method; reproduction forces you through the real pipeline — capturing enough well-distributed views, getting poses right, and confronting the actual failure modes (floaters, blur, pose drift). Diagnosing those artifacts teaches the cause–effect links between each component and the output that equations alone never surface.",
+            zh: "论文呈现干净的方法；复现迫使你走完真实流水线——拍到足够且分布良好的视角、把位姿弄对，并直面真实的失败模式（漂浮物、模糊、位姿漂移）。诊断这些伪影，教会你各组件与输出之间的因果联系，而这是仅靠公式永远无法揭示的。",
+          },
+          hint: { en: "What do you learn from artifacts that you can't learn from the equations?", zh: "从伪影中你能学到什么是公式给不了的？" },
         },
       ],
       links: ["B5", "B7", "D9"],

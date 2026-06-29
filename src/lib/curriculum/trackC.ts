@@ -52,6 +52,24 @@ export const trackC: Track = {
             zh: "它们的先验假设可见的全身与大致静态的背景；第一人称视频两者皆无。判别信号转移到了手、被操作物体以及画面中心附近的短时程运动，因此为身体姿态和场景上下文调好的特征会表现不佳。",
           },
         },
+        {
+          id: "C1-q3",
+          prompt: { en: "The most informative pixels cluster center-bottom (hands/manipulation). What does this imply for model and data design?", zh: "信息量最大的像素聚集在中下部（手/操作）。这对模型与数据设计意味着什么？" },
+          answer: {
+            en: "Spend capacity where the signal is: spatial attention or cropping toward the hand region, and augmentations that don't crop hands out of frame. Background-heavy global pooling wastes capacity on irrelevant scene; a head focused on the manipulation zone (e.g. via the active object) is more sample-efficient.",
+            zh: "把容量花在信号所在之处：朝手部区域的空间注意力或裁剪，以及不会把手裁出画面的数据增强。偏重背景的全局池化把容量浪费在无关场景上；聚焦操作区（如借助活动物体）的头部更省样本。",
+          },
+          hint: { en: "If you know where the action is in the frame, where should the model look?", zh: "若你知道动作在画面里的位置，模型该往哪看？" },
+        },
+        {
+          id: "C1-q4",
+          prompt: { en: "Why is the egocentric viewpoint uniquely suited to recovering an actor's *goals*, not just their actions?", zh: "为什么第一人称视角尤其适合恢复行动者的*目标*，而不仅是动作？" },
+          answer: {
+            en: "You see roughly what the actor sees, so attention-revealing cues are directly observable: gaze fixations, reach direction, and the ordered sequence of grasped objects all expose the plan before it completes. A third-person camera sees the body but not the actor's foveated attention, so intent must be inferred far more indirectly.",
+            zh: "你看到的大致就是行动者看到的，因此揭示注意力的线索可直接观测：注视、伸手方向、依次抓取的物体序列，都在计划完成前暴露它。第三人称相机看到身体，却看不到行动者的中央凹注意力，故意图须更间接地推断。",
+          },
+          hint: { en: "You're seeing through (almost) the actor's own eyes — what does that reveal?", zh: "你（几乎）是透过行动者自己的眼睛在看——这揭示了什么？" },
+        },
       ],
       links: ["C5", "C7", "A1"],
       papers: [{ title: "Ego4D: Around the World in 3,000 Hours of Egocentric Video", year: 2022 }],
@@ -99,6 +117,15 @@ export const trackC: Track = {
             zh: "单一任务把研究收窄到一个指标和一种失败模式。在共享原始视频上的一套基准，让同一份数据驱动记忆、操作、社交与预测的研究，鼓励能跨任务迁移的表示，也反映了真实可穿戴智能体必须同时做很多事。",
           },
         },
+        {
+          id: "C2-q4",
+          prompt: { en: "EPIC labels actions with a closed (verb, noun) vocabulary. What does that miss, and how do free-form language captions (as in Xperience-10M) help?", zh: "EPIC 用封闭的（动词，名词）词表标注动作。这会遗漏什么？自由形式的语言描述（如 Xperience-10M）如何弥补？" },
+          answer: {
+            en: "A fixed vocabulary can't name actions/objects outside its list (novel tools, fine distinctions, multi-step descriptions) and forces every event into a rigid slot. Free-form captions support open-vocabulary recognition, compositional and rare descriptions, and grounding to language models — at the cost of noisier, harder-to-score supervision.",
+            zh: "固定词表无法命名其列表之外的动作/物体（新工具、细微区分、多步描述），并迫使每个事件塞进一个僵硬的槽。自由形式描述支持开放词汇识别、组合式与罕见描述、以及与语言模型的接地——代价是更含噪、更难评分的监督。",
+          },
+          hint: { en: "What can't you label if the word isn't in your fixed verb/noun list?", zh: "若某个词不在你固定的动词/名词列表里，你就无法标注什么？" },
+        },
       ],
       links: ["C4", "C7", "D8"],
       papers: [
@@ -141,6 +168,24 @@ export const trackC: Track = {
             zh: "当标注数据稀缺、又没有无标注预训练数据或算力时，SlowFast 内建的强运动/外观先验能用更少的数据、且无需昂贵的预训练阶段就取得不错的结果。归纳偏置替代了规模。",
           },
         },
+        {
+          id: "C3-q3",
+          prompt: { en: "Why does SlowFast use two pathways at different frame rates instead of one fast high-resolution pathway?", zh: "为什么 SlowFast 用两条不同帧率的通路，而非一条快速高分辨率通路？" },
+          answer: {
+            en: "Appearance/semantics change slowly across frames (redundant), so a few high-detail frames suffice; motion changes fast and needs many frames but little channel capacity. Matching each pathway's sampling to the rate of the signal it captures is far more efficient than running everything at high spatial AND temporal resolution, which would be hugely expensive for little gain.",
+            zh: "外观/语义跨帧变化缓慢（冗余），故少量高细节帧即足够；运动变化快、需要许多帧但只需少量通道容量。让每条通路的采样匹配它所捕捉信号的速率，远比把一切都以高空间且高时间分辨率运行高效——后者代价巨大却收益甚微。",
+          },
+          hint: { en: "Does what an object looks like change as fast as how it moves?", zh: "一个物体的外观，变化得和它的运动一样快吗？" },
+        },
+        {
+          id: "C3-q4",
+          prompt: { en: "The shift from SlowFast to VideoMAE mirrors a broader trend in deep learning. Name it and give the image/language parallel.", zh: "从 SlowFast 到 VideoMAE 的转变映射了深度学习的一个更大趋势。说出它，并给出图像/语言的对应。" },
+          answer: {
+            en: "Hand-designed inductive bias → self-supervised pretraining at scale. SlowFast bakes in a motion/appearance prior; VideoMAE learns the prior from masses of unlabeled video by masked reconstruction — the same arc as MAE for images and masked-language-model pretraining (BERT/GPT) for text. As data and compute grow, learned priors overtake hand-built ones.",
+            zh: "手工设计的归纳偏置 → 大规模自监督预训练。SlowFast 把运动/外观先验写死；VideoMAE 通过掩码重建从海量无标注视频中学到先验——与图像的 MAE、文本的掩码语言模型预训练（BERT/GPT）是同一条弧线。随着数据与算力增长，学到的先验超越手工搭建的。",
+          },
+          hint: { en: "Think MAE for images and BERT for text — what replaced hand-built features there?", zh: "想想图像的 MAE 与文本的 BERT——那里是什么取代了手工特征？" },
+        },
       ],
       links: ["C4", "B7", "A3"],
       papers: [
@@ -182,6 +227,24 @@ export const trackC: Track = {
             zh: "手伸向某物体的轨迹（通常先有注视落在它上面）。操作是目标导向的，因此身体在动作标签可见之前就已对下一个物体「下注」——伸手与预抓取是意图最早的可见证据。",
           },
         },
+        {
+          id: "C4-q3",
+          prompt: { en: "Anticipation uses only the video *before* the action starts. Why is that strictly harder than recognition, beyond just having less footage?", zh: "预判只用动作开始*之前*的视频。除了片段更短之外，为什么这严格地比识别更难？" },
+          answer: {
+            en: "Recognition sees the defining evidence (the cut happening); anticipation must extrapolate from pre-action cues to an event that hasn't occurred and is genuinely multi-modal — several futures are valid. So it's not just less data: it's predicting a distribution over an uncertain future rather than classifying observed evidence.",
+            zh: "识别看到了决定性证据（正在切）；预判必须从动作前的线索外推到一个尚未发生且本质多模态的事件——多个未来都成立。所以这不仅是数据更少，而是预测一个不确定未来的分布，而非对已观测证据分类。",
+          },
+          hint: { en: "The moment that defines the action label hasn't happened yet — what must the model do instead?", zh: "定义动作标签的那一刻还没发生——模型只能改为做什么？" },
+        },
+        {
+          id: "C4-q4",
+          prompt: { en: "Exploiting an action grammar (scripts) helps anticipation. What's the accompanying risk?", zh: "利用动作语法（脚本）有助于预判。随之而来的风险是什么？" },
+          answer: {
+            en: "A learned script is a prior over typical orderings; it boosts accuracy on routine sequences but biases the model toward the common path, so it mispredicts when the actor deviates (skips a step, improvises, does it out of order). The prior must be strong enough to help yet not so rigid it ignores the actual evidence.",
+            zh: "学到的脚本是对典型顺序的先验；它在常规序列上提升准确率，却使模型偏向常见路径，因此当行动者偏离（跳步、即兴、乱序）时会预测错误。先验须强到有用、又不能僵硬到无视实际证据。",
+          },
+          hint: { en: "Scripts help until someone does the steps in an unusual order.", zh: "脚本一直有用，直到有人以不寻常的顺序做这些步骤。" },
+        },
       ],
       links: ["C7", "C8", "C6"],
       papers: [{ title: "What Would You Expect? Anticipating Egocentric Actions (RU-LSTM)", year: 2019 }],
@@ -219,6 +282,24 @@ export const trackC: Track = {
             en: "Reasoning about contact and grasp requires knowing exactly which pixels are hand vs object vs background at the boundary. A box overlaps both hand and object and can't express occlusion order; a mask can, which is what hand–object interaction modeling consumes.",
             zh: "推理接触与抓取需要在边界处准确知道哪些像素是手、是物体、是背景。框会同时覆盖手和物体，无法表达遮挡顺序；掩码可以，而这正是手–物交互建模所需的输入。",
           },
+        },
+        {
+          id: "C5-q3",
+          prompt: { en: "Self-occlusion is called the dominant failure mode. Why does it specifically wreck hand pose/contact estimation, and what mitigates it?", zh: "自遮挡被称为最主要的失败模式。为什么它尤其破坏手部姿态/接触估计？什么能缓解它？" },
+          answer: {
+            en: "A gripping hand hides its own fingers and the contact region from the camera, so the very pixels that determine pose and grasp are missing in that frame. Mitigations: temporal context (fingers visible in nearby frames), a learned hand prior / MANO mesh that fills in plausible articulation, and depth or multi-view when available.",
+            zh: "握持的手把自己的手指和接触区域对相机遮住，于是决定姿态与抓取的那些像素在该帧恰好缺失。缓解：时间上下文（手指在邻近帧可见）、学到的手部先验/MANO 网格来补全合理的关节构型，以及在可得时用深度或多视图。",
+          },
+          hint: { en: "When a hand makes a fist, where did the fingers go for the camera?", zh: "当手握成拳，对相机来说手指去哪了？" },
+        },
+        {
+          id: "C5-q4",
+          prompt: { en: "Why does distinguishing the wearer's own hands from another person's matter for learning from demonstration?", zh: "为什么区分佩戴者自己的手与他人的手，对从示范中学习很重要？" },
+          answer: {
+            en: "In social/instructional video both the teacher's and the learner's hands appear. To imitate, the agent must know which hands are executing the demonstrated skill versus its own; mixing them corrupts the action label and the grasp it tries to copy. Ownership disentangles 'what I'm being shown' from 'what I'm doing'.",
+            zh: "在社交/教学视频里，老师与学习者的手都会出现。要模仿，智能体必须知道哪只手在执行被示范的技能、哪只是自己的；混淆会污染动作标签与它试图复制的抓取。归属把「别人在示范什么」与「我在做什么」解耦。",
+          },
+          hint: { en: "If two people's hands are in frame, whose action are you trying to copy?", zh: "若画面里有两个人的手，你在试图复制谁的动作？" },
         },
       ],
       links: ["C6", "C1", "A6"],
@@ -258,6 +339,24 @@ export const trackC: Track = {
             zh: "它把杂乱的多物体场景收缩为正被操作的那一个物体，给识别头部一个干净、相关的区域，而非整帧。这削减了背景干扰，并把（动词，名词）预测绑定到真正涉及的名词上。",
           },
         },
+        {
+          id: "C6-q3",
+          prompt: { en: "Contact state segments a continuous video into interaction episodes. Why is that a useful temporal primitive?", zh: "接触状态把连续视频切分为交互片段。为什么这是一个有用的时间基元？" },
+          answer: {
+            en: "Contact onset/offset gives natural, semantically meaningful boundaries for when a manipulation begins and ends, turning an undifferentiated video stream into discrete action units. Those units anchor recognition (classify within an episode) and anticipation (predict the next episode), and align with how activities are actually structured.",
+            zh: "接触的开始/结束给出了操作何时起止的自然、语义上有意义的边界，把无区分的视频流变成离散的动作单元。这些单元为识别（在一个片段内分类）和预判（预测下一个片段）提供锚点，并与活动的真实结构对齐。",
+          },
+          hint: { en: "What naturally marks the start and end of 'an action'?", zh: "什么天然地标记了「一个动作」的开始与结束？" },
+        },
+        {
+          id: "C6-q4",
+          prompt: { en: "Why is hand–object interaction where 2D perception 'starts demanding 3D'?", zh: "为什么手–物交互是 2D 感知「开始索要 3D」的地方？" },
+          answer: {
+            en: "Contact and grasp are physical-geometric: whether surfaces actually touch, and whether a configuration is feasible, can't be decided from a 2D overlap (a hand in front of an object looks like a hand on it). You need 3D shape and pose — motivating Track A's hand-mesh recovery and Track B's reconstruction to bring geometry to the same scene.",
+            zh: "接触与抓取是物理几何的：表面是否真的接触、某构型是否可行，无法从 2D 重叠判定（手在物体前面看起来就像手在物体上）。你需要 3D 形状与姿态——这推动了 Track A 的手部网格恢复与 Track B 的重建，为同一场景带来几何。",
+          },
+          hint: { en: "In 2D, does a hand touching a cup look different from a hand just in front of it?", zh: "在 2D 里，手碰到杯子和手只是在杯子前面，看起来有区别吗？" },
+        },
       ],
       links: ["C4", "A6", "B4"],
       papers: [{ title: "Understanding Human Hands in Contact at Internet Scale (100DOH)", year: 2020 }],
@@ -295,6 +394,24 @@ export const trackC: Track = {
             en: "Predict egocentric saliency from the frame plus head-motion: the scene center, the just-grasped object, and the direction of head turn approximate the fixation. Training a gaze-prediction head on datasets that do have eye tracking (e.g. EGTEA) transfers a reasonable prior to trackerless video.",
             zh: "用画面加头部运动预测第一人称显著性：画面中心、刚抓取的物体、头部转动方向可近似注视点。在确有眼动数据的数据集（如 EGTEA）上训练注视预测头部，可把合理先验迁移到无眼动仪的视频。",
           },
+        },
+        {
+          id: "C7-q3",
+          prompt: { en: "Beyond anticipation, how does gaze concretely improve an action *recognition* model?", zh: "除预判外，注视如何具体改进动作*识别*模型？" },
+          answer: {
+            en: "Gaze is a supervised attention signal: it tells the model which region is foveated/relevant, so features concentrate on the manipulated object and background distractors are suppressed. This is especially valuable in cluttered egocentric frames where most pixels are irrelevant — the model attends like the human did.",
+            zh: "注视是一个有监督的注意力信号：它告诉模型哪个区域被中央凹注视/相关，于是特征集中到被操作物体上，背景干扰被抑制。在大多数像素都无关的杂乱第一人称画面里这尤其有价值——模型像人一样去注意。",
+          },
+          hint: { en: "Gaze is a label for 'where to look' — what does that do to features?", zh: "注视是「该往哪看」的标签——这对特征有何作用？" },
+        },
+        {
+          id: "C7-q4",
+          prompt: { en: "Why does fusing gaze + hand + object recover intention better than any one signal alone?", zh: "为什么融合注视 + 手 + 物体，比任一单独信号更能恢复意图？" },
+          answer: {
+            en: "They form the eye–hand coordination chain: gaze anchors the target first, the hand is guided there, contact follows. Each disambiguates the others — gaze picks the active object among many, the hand confirms commitment, the object constrains the action — so together they reconstruct the micro-structure of the plan that any single cue would leave ambiguous.",
+            zh: "它们构成眼–手协调链：注视先锚定目标，手被引导过去，接触随之发生。每个信号都为其他消歧——注视在众多物体中选出活动物体，手确认「下注」，物体约束动作——故合在一起能重建任一单一线索都会留下歧义的计划微观结构。",
+          },
+          hint: { en: "Gaze, reach, and grasp happen in a coordinated sequence — what does each add?", zh: "注视、伸手与抓取按协调的顺序发生——各自添加了什么？" },
         },
       ],
       links: ["C4", "C8", "D7"],
@@ -334,6 +451,24 @@ export const trackC: Track = {
             zh: "许多步骤顺序可互换（先加糖或先加奶皆可），而少数有硬依赖。偏序恰好捕捉真实约束，而不过度承诺某一条有效路径，因此模型接受所有正确执行，只标记真正的违规。",
           },
         },
+        {
+          id: "C8-q3",
+          prompt: { en: "Why does a hierarchical task representation (activity → sub-activity → atomic action) improve data efficiency?", zh: "为什么层级化的任务表示（活动 → 子活动 → 原子动作）提升数据效率？" },
+          answer: {
+            en: "Sub-routines recur across tasks — the same 'grind' or 'pour' step appears in many recipes. A hierarchy lets the model learn each reusable building block once and recompose it, so it generalizes to new tasks built from familiar sub-activities instead of needing examples of every full activity end-to-end.",
+            zh: "子例程在任务间复现——同一个「磨」或「倒」的步骤出现在许多配方里。层级让模型把每个可复用的构件学一次再重组，于是它能泛化到由熟悉子活动组成的新任务，而无需每个完整活动的端到端样本。",
+          },
+          hint: { en: "How many recipes share the exact 'pour water' step?", zh: "有多少配方共享完全相同的「倒水」步骤？" },
+        },
+        {
+          id: "C8-q4",
+          prompt: { en: "Intention modeling is said to reach toward Track D's world models. What abstraction do they share?", zh: "意图建模据说伸向 Track D 的世界模型。它们共享什么抽象？" },
+          answer: {
+            en: "Both model an agent pursuing goals in a structured world with state, dynamics, and constraints. Intention modeling infers the latent goal and valid action orderings from behavior; world models formalize how the world evolves under actions. Procedure understanding is the cognitive layer above perception that connects 'what is happening' to 'what the agent is trying to achieve' — the bridge to planning.",
+            zh: "两者都建模一个在带有状态、动态与约束的结构化世界中追求目标的智能体。意图建模从行为推断潜在目标与有效动作顺序；世界模型形式化世界在动作下如何演化。流程理解是感知之上的认知层，把「正在发生什么」与「智能体想达成什么」连接起来——通向规划的桥梁。",
+          },
+          hint: { en: "Both describe an agent with goals acting in a world with rules.", zh: "两者都描述一个有目标的智能体在有规则的世界中行动。" },
+        },
       ],
       links: ["C4", "D8", "D9"],
       papers: [{ title: "Ego4D Long-Term Action Anticipation & Procedure Understanding", year: 2022 }],
@@ -371,6 +506,24 @@ export const trackC: Track = {
             en: "(1) Confirm the evaluation matches exactly — same split, same metric definition, same pre/post-processing; mismatches here explain most gaps. (2) Confirm the inputs match — same backbone weights, frame sampling, and normalization. Only after data+metric+inputs align should you suspect the model code itself.",
             zh: "(1) 确认评估完全一致——相同划分、相同指标定义、相同前/后处理；这里的不一致解释了大多数差距。(2) 确认输入一致——相同骨干权重、抽帧、归一化。只有在数据+指标+输入对齐之后，才该怀疑模型代码本身。",
           },
+        },
+        {
+          id: "C9-q3",
+          prompt: { en: "Why is the one decisive ablation often more informative than the paper's headline accuracy number?", zh: "为什么那个决定性的消融，往往比论文的标题准确率数字更有信息量？" },
+          answer: {
+            en: "The headline number says the system works; the ablation says *why* — it isolates the contribution of the key idea by removing it and showing the drop. That causal attribution is what transfers: you learn which component to keep, reuse, or improve, whereas a single aggregate score tells you nothing about what's load-bearing.",
+            zh: "标题数字说明系统有效；消融说明*为什么*——它通过移除关键想法并展示下降，分离出该想法的贡献。这种因果归因才可迁移：你学到该保留、复用或改进哪个组件，而单一的总分对什么在承重只字未提。",
+          },
+          hint: { en: "One tells you it works; the other tells you which part makes it work.", zh: "一个告诉你它有效；另一个告诉你哪一部分使它有效。" },
+        },
+        {
+          id: "C9-q4",
+          prompt: { en: "Why is a trustworthy held-out number — not matching SOTA — the real deliverable of a reproduction?", zh: "为什么可信的留出数字——而非追平 SOTA——才是复现的真正交付物？" },
+          answer: {
+            en: "A number you can trust on a proper held-out split is the measurement instrument for everything you do next: only against a controlled, understood baseline can you tell whether your new idea actually helped. Chasing SOTA without that foundation gives a fragile number you can't build on or attribute improvements to.",
+            zh: "在恰当留出划分上你信得过的数字，是你之后一切工作的测量仪器：只有对着一个受控、被理解的基线，你才能判断新想法是否真的有用。没有这个基础去追 SOTA，得到的是一个脆弱、无法在其上扩展、也无法归因改进的数字。",
+          },
+          hint: { en: "What lets you prove your next idea actually improved things?", zh: "是什么让你能证明你的下一个想法确实带来了改进？" },
         },
       ],
       links: ["C3", "C4", "B9"],
