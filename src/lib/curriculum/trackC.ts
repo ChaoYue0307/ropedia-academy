@@ -78,7 +78,7 @@ export const trackC: Track = {
       id: "C2",
       trackId: "C",
       index: 2,
-      title: { en: "Key datasets: Ego4D, EPIC-Kitchens, EGTEA", zh: "关键数据集：Ego4D、EPIC-Kitchens、EGTEA" },
+      title: { en: "Key datasets: Ego4D, EPIC-Kitchens, EGTEA, Xperience-10M", zh: "关键数据集：Ego4D、EPIC-Kitchens、EGTEA、Xperience-10M" },
       summary: {
         en: "The benchmarks define the field — know what each measures and what it leaves out.",
         zh: "基准定义了领域——要清楚每个数据集衡量什么、又遗漏了什么。",
