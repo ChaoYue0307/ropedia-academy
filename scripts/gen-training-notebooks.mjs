@@ -41,7 +41,7 @@ from huggingface_hub import HfApi, notebook_login
 import os
 notebook_login()   # paste a WRITE token from https://huggingface.co/settings/tokens
 api = HfApi(); user = api.whoami()["name"]
-lab = os.path.basename(run); repo_id = f"{user}/ropedia-" + lab.lower().replace("_", "-")
+lab = os.path.basename(run); repo_id = f"{user}/" + lab.lower().replace("_", "-")
 fig = "\\n![results](figure.png)\\n" if os.path.exists(f"{run}/figure.png") else ""
 open(f"{run}/README.md", "w").write("---\\ntags: [ropedia-academy, education]\\n---\\n# " + lab + "\\n\\nTrained in **Ropedia Academy** (educational lab). Checkpoint, full loss/eval history (metrics.json) and the results figure are included." + fig)
 api.create_repo(repo_id, repo_type="model", exist_ok=True)

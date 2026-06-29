@@ -28,8 +28,8 @@ describe("labs catalog", () => {
       file: "LM_nanogpt_pretrain.ipynb", dir: "training", track: "LM", level: "scratch",
       title: { en: "", zh: "" }, action: { en: "", zh: "" },
     } as Lab;
-    expect(hfSlug(lab)).toBe("ropedia-nanogpt-shakespeare"); // special-cased slug
-    expect(hfUrl(lab)).toBe("https://huggingface.co/cy0307/ropedia-nanogpt-shakespeare");
+    expect(hfSlug(lab)).toBe("nanogpt-shakespeare"); // special-cased slug
+    expect(hfUrl(lab)).toBe("https://huggingface.co/cy0307/nanogpt-shakespeare");
     expect(colabHref(lab)).toContain("/notebooks/training/LM_nanogpt_pretrain.ipynb");
     expect(githubDir("advanced")).toContain("/notebooks/advanced");
   });
