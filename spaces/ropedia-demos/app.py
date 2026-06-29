@@ -469,7 +469,7 @@ HEADER = f"""<div id="hdr"><div style="display:flex;align-items:center;gap:15px;
   {LOGO}
   <div>
     <h1>Ropedia Academy · Models</h1>
-    <p>Interactive demos of models trained <b>from scratch</b> in
+    <p>Interactive demos from
     <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a> —
     loaded live from <a href="https://huggingface.co/cy0307" target="_blank">cy0307</a>.
     Small educational models — the value is the method, not a leaderboard.</p>
