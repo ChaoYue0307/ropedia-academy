@@ -268,3 +268,72 @@ export function ActiveObject3D() {
     </FigureFrame>
   );
 }
+
+// ── C7 · Gaze scanpath (a 3D sequence of fixations over time) ─────────────────
+const FIX: { p: V; en: string; zh: string }[] = [
+  { p: [-0.82, 0.86, 0.1], en: "cup", zh: "杯子" },
+  { p: [0.85, 1.05, 0.3], en: "bottle", zh: "瓶子" },
+  { p: [0.2, 0.82, -0.5], en: "plate", zh: "盘子" },
+  { p: [-0.35, 0.8, 0.6], en: "phone", zh: "手机" },
+];
+export function GazeScanpath3D() {
+  const zh = useStore((s) => s.lang) === "zh";
+  const [t, setT] = useState(0.35);
+  useResizeKick();
+  const eye: V = [0, 1.65, 2.2];
+  const order = [0, 1, 2, 3], n = order.length;
+  const idx = Math.min(n - 1, Math.floor(t * n));
+  const cur = FIX[order[idx]];
+  const visited = order.slice(0, idx + 1).map((i) => FIX[i].p);
+  return (
+    <FigureFrame
+      title={{ en: "Gaze scanpath over time (3D)", zh: "随时间的注视扫描路径（三维）" }}
+      caption={{ en: "Egocentric gaze isn't random: it hops between task-relevant objects in a sequence of fixations (a scanpath), with quick saccades between them. The fixated object is a strong cue for the action. Scrub time to follow where the eye looks next; orbit to inspect the 3D scene.", zh: "第一人称的注视并非随机：它在与任务相关的物体间以一连串注视（扫描路径）跳转，其间是快速扫视。被注视的物体是动作的强线索。拖动时间，跟随视线下一步看向何处；旋转查看三维场景。" }}
+      onReset={() => setT(0.35)}
+    >
+      <Frame cam={[2.8, 2, 3.2]} target={[0, 0.7, 0]}>
+        <gridHelper args={[6, 12, GROUND, GRID2]} />
+        <mesh position={[0, 0.7, 0]}><boxGeometry args={[1.8, 0.06, 1.1]} /><meshStandardMaterial color="#b08968" roughness={0.7} /></mesh>
+        <mesh position={eye}><sphereGeometry args={[0.1, 20, 20]} /><meshStandardMaterial color="#1c1b22" /></mesh>
+        {tag("#1c1b22", zh ? "眼睛" : "eye", [eye[0], eye[1] + 0.25, eye[2]])}
+        {FIX.map((o, i) => <group key={i}><mesh position={o.p}><sphereGeometry args={[0.1, 18, 18]} /><meshStandardMaterial color={o === cur ? "#f59e0b" : "#94a3b8"} roughness={0.5} /></mesh>{tag(o === cur ? "#f59e0b" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + 0.22 + (i % 2) * 0.2, o.p[2]])}</group>)}
+        {visited.length > 1 && <Line points={visited} color="#e0598b" lineWidth={2} dashed dashSize={0.08} gapSize={0.06} />}
+        <Line points={[eye, cur.p]} color="#f59e0b" lineWidth={2.5} />
+      </Frame>
+      <div className="mt-3"><Slider label={zh ? "时间（注视序列）" : "time (fixation sequence)"} value={t} min={0} max={1} step={0.01} onChange={setT} format={() => zh ? `注视：${cur.zh}` : `looking at: ${cur.en}`} /></div>
+    </FigureFrame>
+  );
+}
+
+// ── D5 · Scene graph grounded in a 3D scene (objects + spatial relations) ─────
+const SG: { p: V; en: string; zh: string; c: string; r: number }[] = [
+  { p: [0, 0.36, 0], en: "table", zh: "桌子", c: "#b08968", r: 0.22 },
+  { p: [0.08, 1.05, 0.05], en: "cup", zh: "杯子", c: "#f59e0b", r: 0.12 },
+  { p: [0.95, 0.3, 0.2], en: "chair", zh: "椅子", c: "#8b5a2b", r: 0.16 },
+  { p: [-0.85, 1.35, -0.1], en: "lamp", zh: "灯", c: "#67e8f9", r: 0.14 },
+];
+const SGREL: [number, number, string, string][] = [[1, 0, "on", "在…上"], [2, 0, "next to", "紧挨"], [3, 0, "above-left", "左上"]];
+export function SceneGraph3D() {
+  const zh = useStore((s) => s.lang) === "zh";
+  const [focus, setFocus] = useState(1);
+  useResizeKick();
+  const mid = (a: V, b: V): V => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+  return (
+    <FigureFrame
+      title={{ en: "Scene graph — objects + relations (3D)", zh: "场景图——物体 + 关系（三维）" }}
+      caption={{ en: "A scene graph turns a 3D scene into nodes (objects) and edges (spatial relations: on, next-to, above). It's the structured, symbolic layer a language model can reason over — ‘the cup on the table’. Pick a node to highlight its relations; orbit to see them grounded in 3D.", zh: "场景图把三维场景转化为节点（物体）与边（空间关系：在…上、紧挨、上方）。这是语言模型可以推理的结构化符号层——「桌上的杯子」。选择一个节点高亮其关系；旋转可看到它们在三维中的落位。" }}
+      onReset={() => setFocus(1)}
+    >
+      <Frame cam={[2.8, 2, 3]} target={[0, 0.7, 0]}>
+        <gridHelper args={[6, 12, GROUND, GRID2]} />
+        {SG.map((o, i) => <group key={i}><mesh position={o.p}><sphereGeometry args={[o.r, 22, 22]} /><meshStandardMaterial color={o.c} roughness={0.5} metalness={0.1} /></mesh>{tag(i === focus ? "#6a5ef0" : "#64748b", zh ? o.zh : o.en, [o.p[0], o.p[1] + o.r + 0.12, o.p[2]])}</group>)}
+        {SGREL.map(([a, b, en, zhr], i) => { const on = a === focus || b === focus; return (
+          <group key={i}>
+            <Line points={[SG[a].p, SG[b].p]} color={on ? "#6a5ef0" : "#cbd5e1"} lineWidth={on ? 2.5 : 1} transparent opacity={on ? 1 : 0.5} />
+            {on && tag("#6a5ef0", zh ? zhr : en, (([mx, my, mz]) => [mx + 0.28, my, mz] as V)(mid(SG[a].p, SG[b].p)))}
+          </group>); })}
+      </Frame>
+      <div className="mt-3"><Slider label={zh ? "聚焦节点" : "focus node"} value={focus} min={0} max={3} step={1} onChange={(v) => setFocus(Math.round(v))} format={(v) => zh ? SG[Math.round(v)].zh : SG[Math.round(v)].en} /></div>
+    </FigureFrame>
+  );
+}

@@ -1,8 +1,6 @@
 import { lazy, type ComponentType } from "react";
 import { NerfRay } from "./NerfRay";
 import { AnticipationTopK } from "./AnticipationTopK";
-import { SceneGraphDemo } from "./SceneGraphDemo";
-import { GazeTimeline } from "./GazeTimeline";
 import { PoseHeatmap } from "./extraA";
 import { LongTail, HandPrior, ActionGrammar, BaselineMetric } from "./extraC";
 import { MapParadigms, Pipeline } from "./extraD";
@@ -35,6 +33,8 @@ const SemanticFusion3D = lazy(() => import("./three/Scene3D").then((m) => ({ def
 const WorldRollout3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.WorldRollout3D })));
 const ActiveObject3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.ActiveObject3D })));
 const MotionDiffusion3D = lazy(() => import("./three/Human3D").then((m) => ({ default: m.MotionDiffusion3D })));
+const GazeScanpath3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.GazeScanpath3D })));
+const SceneGraph3D = lazy(() => import("./three/Scene3D").then((m) => ({ default: m.SceneGraph3D })));
 
 // Maps a lesson id to interactive demo components rendered in that lesson.
 // Every one of the 36 lessons now has at least one hands-on figure.
@@ -66,7 +66,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   C4: [AnticipationTopK],
   C5: [HandPrior],
   C6: [ActiveObject3D],
-  C7: [GazeTimeline],
+  C7: [GazeScanpath3D],
   C8: [ActionGrammar],
   C9: [BaselineMetric],
   // Track D — Scene & World Models
@@ -74,7 +74,7 @@ export const lessonFigures: Record<string, ComponentType[]> = {
   D2: [Pnp3D],
   D3: [TsdfFusion3D],
   D4: [SemanticFusion3D],
-  D5: [SceneGraphDemo],
+  D5: [SceneGraph3D],
   D6: [MapParadigms],
   D7: [ReferenceFrames3D],
   D8: [WorldRollout3D],
