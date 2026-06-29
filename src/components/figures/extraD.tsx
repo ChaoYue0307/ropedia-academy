@@ -94,7 +94,7 @@ export function SemanticFusion() {
 export function MapParadigms() {
   const zh = useStore((s) => s.lang) === "zh";
   const [space, setSpace] = useState(true);
-  const GX = 30, GY = 14, C = 9, R = 5, cell = 30;
+  const GX = 45, GY = 14, C = 9, R = 5, cell = 30;
   const wall = new Set(["3,1", "3,2", "3,3", "4,3", "5,3"]);
   return (
     <FigureFrame

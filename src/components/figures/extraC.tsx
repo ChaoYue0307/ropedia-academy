@@ -80,8 +80,8 @@ export function LongTail() {
 // ── C5 · Hand detection: side + own-hand bottom-edge prior ───────────────────
 export function HandPrior() {
   const zh = useStore((s) => s.lang) === "zh";
-  const [hx, setHx] = useState(120);
-  const [hy, setHy] = useState(120);
+  const [hx, setHx] = useState(206);
+  const [hy, setHy] = useState(34);
   const fx = 20, fy = 12, fw = 320, fh = 150, bw = 56, bh = 40;
   const side = hx + bw / 2 < fx + fw / 2 ? (zh ? "左" : "left") : (zh ? "右" : "right");
   const own = hy + bh > fy + fh * 0.8;
@@ -92,12 +92,12 @@ export function HandPrior() {
         en: "Finding hands is the egocentric anchor. Side (left/right) follows from horizontal position; ownership uses a strong first-person prior — the wearer's own hands enter from the bottom edge. Move the box across the frame.",
         zh: "找到手是第一人称的锚点。左右由水平位置决定；归属则用一个强第一人称先验——佩戴者自己的手从底边进入。把框在画面中移动。",
       }}
-      onReset={() => { setHx(120); setHy(120); }}
+      onReset={() => { setHx(206); setHy(34); }}
     >
       <svg viewBox="0 0 360 178" className="w-full">
         <rect x={fx} y={fy} width={fw} height={fh} rx={8} fill="currentColor" className="text-stone-100 dark:text-white/5" stroke="#cbd5e1" />
         <rect x={fx} y={fy + fh * 0.8} width={fw} height={fh * 0.2} fill="#1d9e75" fillOpacity={0.12} />
-        <text x={fx + 6} y={fy + fh - 6} fontSize="8.5" fill="#1d9e75">{zh ? "自有手进入区（底边）" : "own-hand entry zone (bottom edge)"}</text>
+        <text x={fx + 6} y={fy + fh - 7} fontSize="8.5" fill="#1d9e75">{zh ? "自有手进入区（底边）" : "own-hand entry zone"}</text>
         <line x1={fx + fw / 2} y1={fy} x2={fx + fw / 2} y2={fy + fh} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="3 3" />
         <rect x={hx} y={hy} width={bw} height={bh} rx={6} fill="none" stroke={own ? "#1d9e75" : "#ef4444"} strokeWidth={2.5} />
         <text x={hx + bw / 2} y={hy + bh / 2 + 3} textAnchor="middle" fontSize="9" fill={own ? "#1d9e75" : "#ef4444"}>{side} · {own ? (zh ? "自己" : "own") : (zh ? "他人" : "other")}</text>
@@ -219,7 +219,7 @@ export function BaselineMetric() {
     { l: { en: "top-5", zh: "top-5" }, v: top5, c: "#1d9e75" },
     { l: { en: "shuffled", zh: "打乱对照" }, v: ctrl, c: "#ef4444" },
   ];
-  const BASE = 120, X0 = 60, BW = 70;
+  const BASE = 120, X0 = 96, BW = 66;
   return (
     <FigureFrame
       title={{ en: "Honest baseline + control", zh: "诚实基线 + 对照" }}
