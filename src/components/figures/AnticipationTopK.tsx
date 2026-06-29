@@ -83,7 +83,7 @@ export function AnticipationTopK() {
         })}
       </div>
       <div className="mt-3 space-y-2.5">
-        <Slider label={zh ? "k 值" : "k"} value={k} min={1} max={5} onChange={(v) => setK(Math.round(v))} />
+        <Slider label={zh ? "k 值" : "k"} value={k} min={1} max={5} onChange={(v) => setK(Math.round(v))} hint={zh ? "若真实动作落在概率最高的前 k 个预测内即算「正确」。k 越大，越能覆盖合理的下一动作。" : "Counts the model correct if the true action is in its top-k predictions. Larger k covers more of the plausible next actions."} />
         <div className="flex items-center gap-2">
           <button
             onClick={() => setRevealed(true)}

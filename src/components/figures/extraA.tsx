@@ -35,9 +35,9 @@ export function PoseHeatmap() {
         </g>
       </svg>
       <div className="mt-3 space-y-2">
-        <Slider label={zh ? "峰值 x" : "peak x"} value={px} min={1} max={16} step={0.5} onChange={setPx} format={(v) => v.toFixed(1)} />
-        <Slider label={zh ? "峰值 y" : "peak y"} value={py} min={1} max={8} step={0.5} onChange={setPy} format={(v) => v.toFixed(1)} />
-        <Slider label={zh ? "锐度 (1/σ)" : "sharpness"} value={sig} min={0.8} max={4} step={0.1} onChange={setSig} format={(v) => v.toFixed(1)} />
+        <Slider label={zh ? "峰值 x" : "peak x"} value={px} min={1} max={16} step={0.5} onChange={setPx} format={(v) => v.toFixed(1)} hint={zh ? "热图峰值的水平位置——即预测关键点的 x 坐标。" : "Horizontal position of the heatmap peak — the predicted keypoint's x."} />
+        <Slider label={zh ? "峰值 y" : "peak y"} value={py} min={1} max={8} step={0.5} onChange={setPy} format={(v) => v.toFixed(1)} hint={zh ? "热图峰值的竖直位置——即预测关键点的 y 坐标。" : "Vertical position of the heatmap peak — the predicted keypoint's y."} />
+        <Slider label={zh ? "锐度 (1/σ)" : "sharpness"} value={sig} min={0.8} max={4} step={0.1} onChange={setSig} format={(v) => v.toFixed(1)} hint={zh ? "峰的锐度（1/σ）。越尖表示越自信；越宽的斑表示越不确定。" : "How peaked the blob is (1/σ). A sharp peak = confident; a wide blob = uncertain."} />
       </div>
     </FigureFrame>
   );

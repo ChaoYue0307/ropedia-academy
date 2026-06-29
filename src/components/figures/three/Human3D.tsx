@@ -63,8 +63,8 @@ export function SmplShape3D() {
         <Body H={h} W={w} />
       </Frame>
       <div className="mt-3 space-y-2">
-        <Slider label={zh ? "形状 β₁（身高）" : "shape β₁ (height)"} value={h} min={1.4} max={2} step={0.02} onChange={setH} format={(v) => `${v.toFixed(2)}m`} />
-        <Slider label={zh ? "形状 β₂（体型）" : "shape β₂ (build)"} value={w} min={0.7} max={1.5} step={0.02} onChange={setW} format={(v) => v.toFixed(2)} />
+        <Slider label={zh ? "形状 β₁（身高）" : "shape β₁ (height)"} value={h} min={1.4} max={2} step={0.02} onChange={setH} format={(v) => `${v.toFixed(2)}m`} hint={zh ? "一个形状参数，连续地缩放身体的身高。" : "A shape parameter (β) that continuously scales the body's height."} />
+        <Slider label={zh ? "形状 β₂（体型）" : "shape β₂ (build)"} value={w} min={0.7} max={1.5} step={0.02} onChange={setW} format={(v) => v.toFixed(2)} hint={zh ? "一个形状参数，缩放体型（瘦 ↔ 壮）。" : "A shape parameter (β) that scales the body's build (slim ↔ broad)."} />
       </div>
     </FigureFrame>
   );
@@ -86,7 +86,7 @@ export function MotionSeq3D() {
         <gridHelper args={[6, 12, GROUND, GRID2]} />
         <Body H={1.7} W={1} leg={phase} arm={-phase} color="#5a8bd6" />
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "时间（步态周期）" : "time (gait cycle)"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} /></div>
+      <div className="mt-3"><Slider label={zh ? "时间（步态周期）" : "time (gait cycle)"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "拖动浏览一个步行周期；腿与手臂反相摆动。" : "Scrubs through one walking cycle; the legs and arms swing in anti-phase."} /></div>
     </FigureFrame>
   );
 }
@@ -117,7 +117,7 @@ export function Hand3D() {
         {[-0.12, -0.04, 0.04, 0.12].map((x, i) => <group key={i} position={[x, 0, 0.18]}><Finger base={[0, 0, 0]} dir={[0, 0, 1]} grasp={grasp} len={0.13 + (i === 0 || i === 3 ? -0.02 : 0.02)} /></group>)}
         <group position={[-0.17, 0, -0.02]}><Finger base={[0, 0, 0]} dir={[-0.5, 0, 0.5]} grasp={grasp * 0.8} n={2} len={0.12} /></group>
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "抓握" : "grasp"} value={grasp} min={0} max={1.2} step={0.02} onChange={setGrasp} format={(v) => v < 0.2 ? (zh ? "张开" : "open") : v > 0.9 ? (zh ? "握拳" : "fist") : (zh ? "半握" : "half")} /></div>
+      <div className="mt-3"><Slider label={zh ? "抓握" : "grasp"} value={grasp} min={0} max={1.2} step={0.02} onChange={setGrasp} format={(v) => v < 0.2 ? (zh ? "张开" : "open") : v > 0.9 ? (zh ? "握拳" : "fist") : (zh ? "半握" : "half")} hint={zh ? "让所有手指一起从张开弯到握拳——一个低维抓握控制。" : "Curls all fingers together from open to a fist — one low-dimensional grasp control."} /></div>
     </FigureFrame>
   );
 }
@@ -144,7 +144,7 @@ export function ContactScene3D() {
         <Dot p={hand} r={0.06} c={contact ? "#1d9e75" : "#ef4444"} />
         {tag(contact ? "#1d9e75" : "#ef4444", contact ? (zh ? "接触 ✓" : "contact ✓") : (zh ? "未接触" : "no contact"), [hand[0], hand[1] + 0.25, hand[2]])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "伸手高度" : "hand height"} value={reach} min={0.2} max={0.9} step={0.02} onChange={setReach} format={(v) => v.toFixed(2)} /></div>
+      <div className="mt-3"><Slider label={zh ? "伸手高度" : "hand height"} value={reach} min={0.2} max={0.9} step={0.02} onChange={setReach} format={(v) => v.toFixed(2)} hint={zh ? "升降伸出的手，与方块接触或断开（接触约束）。" : "Raises/lowers the reaching hand to make or break contact with the box (the contact constraint)."} /></div>
     </FigureFrame>
   );
 }
@@ -170,7 +170,7 @@ export function SmplifyPrior3D() {
       </Frame>
       <div className="mt-3 space-y-2">
         <div className={"text-xs font-semibold " + (ok ? "text-emerald-600" : "text-red-500")}>{ok ? (zh ? "✓ 合理姿态" : "✓ plausible pose") : (zh ? "✗ 不可能的关节角" : "✗ impossible joint angle")}</div>
-        <Slider label={zh ? "先验权重" : "prior weight"} value={prior} min={0} max={1} step={0.02} onChange={setPrior} format={(v) => `${Math.round(v * 100)}%`} />
+        <Slider label={zh ? "先验权重" : "prior weight"} value={prior} min={0} max={1} step={0.02} onChange={setPrior} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "姿态先验的强度——把拟合从不可能的关节角拉向自然姿态。" : "How strongly the pose prior pulls the fit away from impossible joint angles toward natural ones."} />
       </div>
     </FigureFrame>
   );
@@ -207,7 +207,7 @@ export function MotionDiffusion3D() {
         {cur.map((p, i) => <Dot key={i} p={p} r={0.055} c={t > 0.5 ? "#6a5ef0" : "#a3a8ff"} />)}
         {tag("#6a5ef0", t < 0.15 ? (zh ? "噪声" : "noise") : t > 0.85 ? (zh ? "姿态 ✓" : "pose ✓") : (zh ? "去噪中…" : "denoising…"), [0, 2.7, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "去噪步数" : "denoising steps"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} /></div>
+      <div className="mt-3"><Slider label={zh ? "去噪步数" : "denoising steps"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "反向扩散的进度：从纯噪声（0%）逐步去噪到连贯姿态（100%）。" : "Progress of the reverse diffusion: from pure noise (0%) denoised to a coherent pose (100%)."} /></div>
     </FigureFrame>
   );
 }

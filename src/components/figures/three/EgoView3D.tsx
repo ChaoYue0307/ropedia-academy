@@ -112,8 +112,8 @@ export function EgoView3D() {
         <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "#0e9aa7" }} />{zh ? "头戴相机" : "head camera"}</span>
       </div>
       <div className="mt-2 space-y-2">
-        <Slider label={zh ? "转头（自我运动）" : "head turn (ego-motion)"} value={yaw} min={-40} max={40} onChange={setYaw} format={(v) => `${v}°`} />
-        <Slider label={zh ? "注视距离" : "gaze reach"} value={reach} min={1.4} max={2.6} step={0.05} onChange={setReach} format={(v) => v.toFixed(1)} />
+        <Slider label={zh ? "转头（自我运动）" : "head turn (ego-motion)"} value={yaw} min={-40} max={40} onChange={setYaw} format={(v) => `${v}°`} hint={zh ? "佩戴者转头的幅度——转得越多，世界在画面中扫过得越远（自我运动越大）。" : "How far the wearer turns their head — bigger turns sweep the world farther across the frame (more ego-motion)."} />
+        <Slider label={zh ? "注视距离" : "gaze reach"} value={reach} min={1.4} max={2.6} step={0.05} onChange={setReach} format={(v) => v.toFixed(1)} hint={zh ? "相机视锥向场景前方延伸的距离。" : "How far the camera's view frustum reaches forward into the scene."} />
       </div>
     </FigureFrame>
   );

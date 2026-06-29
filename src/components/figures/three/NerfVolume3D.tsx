@@ -92,7 +92,7 @@ export default function NerfVolume3D() {
         </Canvas>
       </div>
       <div className="mt-2">
-        <Slider label={zh ? "场密度" : "field density"} value={density} min={0.6} max={5} step={0.2} onChange={setDensity} format={(v) => v.toFixed(1)} />
+        <Slider label={zh ? "场密度" : "field density"} value={density} min={0.6} max={5} step={0.2} onChange={setDensity} format={(v) => v.toFixed(1)} hint={zh ? "体的光学密度——越高，每条射线吸收的光越多，物体看起来越实。" : "Optical density of the volume — higher absorbs more light along each ray, so the object looks more solid."} />
       </div>
     </FigureFrame>
   );

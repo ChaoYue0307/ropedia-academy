@@ -67,8 +67,8 @@ export function Pinhole3D() {
         <Dot p={pix} r={0.06} c="#6a5ef0" />{tag("#6a5ef0", zh ? "像素" : "pixel", [pix[0], pix[1] - 0.28, pix[2]])}
       </Frame>
       <div className="mt-3 space-y-2">
-        <Slider label={zh ? "P 的深度" : "depth of P"} value={depth} min={1.2} max={3.2} step={0.05} onChange={setDepth} format={(v) => v.toFixed(1)} />
-        <Slider label={zh ? "焦距 f" : "focal length f"} value={f} min={0.6} max={1.5} step={0.05} onChange={setF} format={(v) => v.toFixed(2)} />
+        <Slider label={zh ? "P 的深度" : "depth of P"} value={depth} min={1.2} max={3.2} step={0.05} onChange={setDepth} format={(v) => v.toFixed(1)} hint={zh ? "三维点沿射线的远近。改变它会移动 P，但它的像素位置不变——投影丢弃了深度。" : "How far the 3D point sits along the ray. Changing it moves P but not its pixel — projection discards depth."} />
+        <Slider label={zh ? "焦距 f" : "focal length f"} value={f} min={0.6} max={1.5} step={0.05} onChange={setF} format={(v) => v.toFixed(2)} hint={zh ? "相机焦距：针孔到像平面的距离。" : "Camera focal length: the distance from the pinhole to the image plane."} />
       </div>
     </FigureFrame>
   );
@@ -112,8 +112,8 @@ export function Triangulation3D() {
         <Dot p={P} r={0.11} c="#e0598b" />{tag("#e0598b", "P", [P[0], P[1] + 0.3, P[2]])}
       </Frame>
       <div className="mt-3 space-y-2">
-        <Slider label={zh ? "点深度" : "point depth"} value={pz} min={1.4} max={3.4} step={0.05} onChange={setPz} format={(v) => v.toFixed(1)} />
-        <Slider label={zh ? "基线宽度" : "baseline width"} value={base} min={0.4} max={1.6} step={0.05} onChange={setBase} format={(v) => v.toFixed(1)} />
+        <Slider label={zh ? "点深度" : "point depth"} value={pz} min={1.4} max={3.4} step={0.05} onChange={setPz} format={(v) => v.toFixed(1)} hint={zh ? "三维点到相机的距离（它的真实深度）。" : "How far the 3D point is from the cameras (its true depth)."} />
+        <Slider label={zh ? "基线宽度" : "baseline width"} value={base} min={0.4} max={1.6} step={0.05} onChange={setBase} format={(v) => v.toFixed(1)} hint={zh ? "两台相机之间的距离。基线越宽，相交角越锐，深度越精确。" : "Distance between the two cameras. A wider baseline sharpens the intersection angle and pins depth more precisely."} />
       </div>
     </FigureFrame>
   );
@@ -164,7 +164,7 @@ export function ReferenceFrames3D() {
         </Html>
       </Frame>
       <div className="mt-3">
-        <Slider label={zh ? "椅子朝向" : "chair orientation"} value={deg} min={0} max={360} onChange={setDeg} format={(v) => `${v}°`} />
+        <Slider label={zh ? "椅子朝向" : "chair orientation"} value={deg} min={0} max={360} onChange={setDeg} format={(v) => `${v}°`} hint={zh ? "椅子的朝向。「椅子的左/右」随转动翻转，而世界方向（东）保持不变。" : "Which way the chair faces. ‘Left/right of the chair’ flips as it turns, while the world direction (east) stays fixed."} />
       </div>
     </FigureFrame>
   );
@@ -204,7 +204,7 @@ export function RotationContinuity3D() {
           <b className="text-emerald-600">6D</b><div className="font-mono text-ink/70 dark:text-stone-300">[{Math.cos(yaw).toFixed(2)}, {Math.sin(yaw).toFixed(2)}] {zh ? "连续" : "continuous"} ✓</div>
         </div>
       </div>
-      <div className="mt-2"><Slider label={zh ? "旋转" : "rotation"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${(-170 + v * 360).toFixed(0)}°`} /></div>
+      <div className="mt-2"><Slider label={zh ? "旋转" : "rotation"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${(-170 + v * 360).toFixed(0)}°`} hint={zh ? "让物体的旋转越过 ±180°。注意欧拉角在此跳变，而 6D 表示始终平滑。" : "Sweeps the object's rotation past ±180°. Watch the Euler value jump there while the 6D representation stays smooth."} /></div>
     </FigureFrame>
   );
 }
@@ -236,7 +236,7 @@ export function SdfField3D() {
         {tag("#ef4444", zh ? "内部 (−)" : "inside (−)", [1.6, 1.0, 0])}
         {tag("#3b82f6", zh ? "外部 (+)" : "outside (+)", [1.6, 0.6, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "等值面水平 c" : "level set c"} value={iso} min={-0.5} max={1} step={0.05} onChange={setIso} format={(v) => v.toFixed(2)} /></div>
+      <div className="mt-3"><Slider label={zh ? "等值面水平 c" : "level set c"} value={iso} min={-0.5} max={1} step={0.05} onChange={setIso} format={(v) => v.toFixed(2)} hint={zh ? "等值水平：表面是 SDF = c 处。c = 0 是真实表面；增大它得到膨胀的偏移面。" : "The iso-value: the surface is where SDF = c. c = 0 is the true surface; raising it shows an inflated offset surface."} /></div>
     </FigureFrame>
   );
 }
@@ -277,7 +277,7 @@ export function TubeMasking3D() {
         {cubes}
         {tag("#6a5ef0", zh ? "时间 →" : "time →", [-2.1, 0.3, -1.5])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "掩码比例" : "mask ratio"} value={ratio} min={0} max={0.9} step={0.05} onChange={setRatio} format={(v) => `${Math.round(v * 100)}%`} /></div>
+      <div className="mt-3"><Slider label={zh ? "掩码比例" : "mask ratio"} value={ratio} min={0} max={0.9} step={0.05} onChange={setRatio} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "被遮挡的时空管比例。越高，自监督重建任务越难。" : "Fraction of spatio-temporal tubes hidden. Higher = a harder self-supervised reconstruction task."} /></div>
     </FigureFrame>
   );
 }
@@ -311,7 +311,7 @@ export function TsdfFusion3D() {
         {camDirs.slice(0, views).map((c, i) => { const L = Math.hypot(...c); const p: V = [c[0] / L * 2, c[1] / L * 2, c[2] / L * 2]; return <Dot key={i} p={p} r={0.09} c="#1d9e75" />; })}
         {tag("#1d9e75", zh ? "深度相机" : "depth cams", [0, 2.3, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "融合的视角数" : "views fused"} value={views} min={1} max={6} step={1} onChange={setViews} format={(v) => `${v}`} /></div>
+      <div className="mt-3"><Slider label={zh ? "融合的视角数" : "views fused"} value={views} min={1} max={6} step={1} onChange={setViews} format={(v) => `${v}`} hint={zh ? "融合的深度相机数量。每个相机只看到朝向它的表面；视角越多，外壳越完整。" : "Number of depth cameras fused. Each sees only the surface facing it; more views complete more of the shell."} /></div>
     </FigureFrame>
   );
 }

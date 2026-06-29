@@ -271,7 +271,7 @@ export function Pipeline() {
       </svg>
       <p className="mt-1 text-xs text-ink/65 dark:text-stone-300">{zh ? note[stage].zh : note[stage].en}</p>
       <div className="mt-3">
-        <Slider label={zh ? "阶段" : "stage"} value={stage} min={0} max={4} onChange={(v) => setStage(Math.round(v))} format={(v) => `${Math.round(v) + 1}/5`} />
+        <Slider label={zh ? "阶段" : "stage"} value={stage} min={0} max={4} onChange={(v) => setStage(Math.round(v))} format={(v) => `${Math.round(v) + 1}/5`} hint={zh ? "逐步走完整条流水线：带位姿的帧 → 几何 → 语义 → 结构 → 可查询的世界记忆。" : "Steps through the whole pipeline: posed frames → geometry → semantics → structure → a queryable world memory."} />
       </div>
     </FigureFrame>
   );

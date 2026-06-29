@@ -30,7 +30,7 @@ export function BundleAdjust3D() {
             <Dot p={q} r={0.07} c="#e0598b" />
           </group>); })}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "优化迭代" : "optimization"} value={iter} min={0} max={1} step={0.02} onChange={setIter} format={(v) => zh ? `误差 ${Math.round((1 - v) * 100)}` : `error ${Math.round((1 - v) * 100)}`} /></div>
+      <div className="mt-3"><Slider label={zh ? "优化迭代" : "optimization"} hint={zh ? "优化进度：联合细化所有相机位姿与三维点，减小总重投影误差。" : "Optimizer progress: jointly refines all camera poses and 3D points to shrink the total reprojection error."} value={iter} min={0} max={1} step={0.02} onChange={setIter} format={(v) => zh ? `误差 ${Math.round((1 - v) * 100)}` : `error ${Math.round((1 - v) * 100)}`} /></div>
     </FigureFrame>
   );
 }
@@ -59,7 +59,7 @@ export function Pnp3D() {
         <mesh position={trueCam}><boxGeometry args={[0.22, 0.18, 0.18]} /><meshStandardMaterial color="#1d9e75" transparent opacity={0.18} /></mesh>
         {tag(ok ? "#1d9e75" : "#d06a6a", ok ? (zh ? "已求解 ✓" : "solved ✓") : (zh ? `残差 ${err.toFixed(0)}°` : `residual ${err.toFixed(0)}°`), [estCam[0], estCam[1] + 0.3, estCam[2]])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "估计相机朝向" : "estimated pose"} value={yaw} min={-60} max={60} step={1} onChange={setYaw} format={(v) => `${v}°`} /></div>
+      <div className="mt-3"><Slider label={zh ? "估计相机朝向" : "estimated pose"} hint={zh ? "旋转估计的相机位姿。当反投影射线对齐真实视点时，残差归零。" : "Rotates the estimated camera pose. The residual hits zero when the back-projected rays match the true viewpoint."} value={yaw} min={-60} max={60} step={1} onChange={setYaw} format={(v) => `${v}°`} /></div>
     </FigureFrame>
   );
 }
@@ -89,7 +89,7 @@ export function HashGrid3D() {
         <Dot p={q} r={0.07} c="#e0598b" />
         {tag("#e0598b", zh ? "查询点" : "query", [q[0], q[1] + 0.25, q[2]])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "分辨率层级" : "resolution level"} value={level} min={0} max={2} step={1} onChange={(v) => setLevel(Math.round(v))} format={(v) => `${["粗", "中", "细"][Math.round(v)] && (zh ? ["粗", "中", "细"][Math.round(v)] : ["coarse", "medium", "fine"][Math.round(v)])} (${levels[Math.round(v)]}³)`} /></div>
+      <div className="mt-3"><Slider label={zh ? "分辨率层级" : "resolution level"} hint={zh ? "高亮哪一层网格分辨率——粗网格捕捉平滑结构，细网格补充细节。" : "Which grid resolution to highlight — coarse grids capture smooth structure, fine grids add detail."} value={level} min={0} max={2} step={1} onChange={(v) => setLevel(Math.round(v))} format={(v) => `${["粗", "中", "细"][Math.round(v)] && (zh ? ["粗", "中", "细"][Math.round(v)] : ["coarse", "medium", "fine"][Math.round(v)])} (${levels[Math.round(v)]}³)`} /></div>
     </FigureFrame>
   );
 }
@@ -111,7 +111,7 @@ export function Deform3D() {
         {xs.map((x, i) => <mesh key={`c${i}`} position={[x, 0, 0]}><boxGeometry args={[0.14, 0.14, 0.14]} /><meshStandardMaterial color="#94a3b8" transparent opacity={0.18} /></mesh>)}
         {xs.map((x, i) => { const y = bend * Math.sin(x * 2.2 + t * Math.PI * 2); const z = 0.35 * bend * Math.cos(x * 1.6 + t * Math.PI * 2); return <mesh key={`d${i}`} position={[x, y, z]}><boxGeometry args={[0.17, 0.17, 0.17]} /><meshStandardMaterial color="#6a5ef0" roughness={0.5} /></mesh>; })}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "时间" : "time"} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} /></div>
+      <div className="mt-3"><Slider label={zh ? "时间" : "time"} hint={zh ? "推进随时间扭曲标准形状的形变场（4D = 3D + 形变）。" : "Advances the deformation field that warps the canonical shape over time (4D = 3D + deformation)."} value={t} min={0} max={1} step={0.01} onChange={setT} format={(v) => `${Math.round(v * 100)}%`} /></div>
     </FigureFrame>
   );
 }
@@ -134,7 +134,7 @@ export function Floaters3D() {
         {floaters.map((p, i) => { const op = Math.max(0, (1 - reg * 1.3)) * 0.5; return op < 0.02 ? null : <mesh key={i} position={p}><sphereGeometry args={[0.07 + h(i) * 0.04, 12, 12]} /><meshStandardMaterial color="#e0598b" transparent opacity={op} /></mesh>; })}
         {tag("#6a5ef0", zh ? "真实物体" : "real object", [0, 1.1, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "正则强度" : "regularization"} value={reg} min={0} max={1} step={0.02} onChange={setReg} format={(v) => `${Math.round(v * 100)}%`} /></div>
+      <div className="mt-3"><Slider label={zh ? "正则强度" : "regularization"} hint={zh ? "去除真实表面之外杂散漂浮密度（floaters）的正则强度。" : "Strength of the regularizer that removes spurious floating density (floaters) off the real surface."} value={reg} min={0} max={1} step={0.02} onChange={setReg} format={(v) => `${Math.round(v * 100)}%`} /></div>
     </FigureFrame>
   );
 }
@@ -165,7 +165,7 @@ export function SlamLoop3D() {
         <Dot p={pts[0]} r={0.09} c="#1d9e75" /><Dot p={pts[N - 1]} r={0.09} c={ok ? "#1d9e75" : "#d06a6a"} />
         {tag(ok ? "#1d9e75" : "#d06a6a", ok ? (zh ? "已闭合 ✓" : "closed ✓") : (zh ? `漂移缺口 ${gap.toFixed(2)}` : `drift gap ${gap.toFixed(2)}`), [pts[N - 1][0], pts[N - 1][1] + 0.3, pts[N - 1][2]])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "回环闭合" : "loop closure"} value={close} min={0} max={1} step={0.02} onChange={setClose} format={(v) => `${Math.round(v * 100)}%`} /></div>
+      <div className="mt-3"><Slider label={zh ? "回环闭合" : "loop closure"} hint={zh ? "回环约束的强度——把漂移的轨迹拉回一致闭环。" : "How strongly the loop-closure constraint pulls the drifted trajectory back into a consistent loop."} value={close} min={0} max={1} step={0.02} onChange={setClose} format={(v) => `${Math.round(v * 100)}%`} /></div>
     </FigureFrame>
   );
 }
@@ -191,7 +191,7 @@ export function SemanticFusion3D() {
         {shown.map((o, i) => <mesh key={i} position={o.p}><boxGeometry args={[0.11, 0.11, 0.11]} /><meshStandardMaterial color={CLASSES[o.shownCls]} roughness={0.5} /></mesh>)}
         {tag("#1c1b22", `${zh ? "准确率" : "accuracy"} ${Math.round((correct / pts.length) * 100)}%`, [0, 1.3, 0])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "融合帧数" : "frames fused"} value={frames} min={1} max={8} step={1} onChange={(v) => setFrames(Math.round(v))} format={(v) => `${Math.round(v)}`} /></div>
+      <div className="mt-3"><Slider label={zh ? "融合帧数" : "frames fused"} hint={zh ? "融合进地图的帧数；帧越多越能平均掉单帧标签噪声，准确率上升。" : "Number of frames fused into the map; more frames average out per-frame label noise, so accuracy rises."} value={frames} min={1} max={8} step={1} onChange={(v) => setFrames(Math.round(v))} format={(v) => `${Math.round(v)}`} /></div>
     </FigureFrame>
   );
 }
@@ -227,7 +227,7 @@ export function WorldRollout3D() {
         {tag("#1c1b22", zh ? "起点" : "start", [start[0], start[1] + 0.3, start[2]])}
         {tag("#1d9e75", zh ? "目标" : "goal", [goal[0], goal[1] + 0.3, goal[2]])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "规划迭代" : "planning iterations"} value={iter} min={0} max={1} step={0.02} onChange={setIter} format={(v) => `${Math.round(v * 100)}%`} /></div>
+      <div className="mt-3"><Slider label={zh ? "规划迭代" : "planning iterations"} hint={zh ? "CEM 迭代步数：想象的轨迹云逐渐集中到能到达目标的最优路径。" : "CEM refinement steps: the cloud of imagined trajectories concentrates on the best path to the goal."} value={iter} min={0} max={1} step={0.02} onChange={setIter} format={(v) => `${Math.round(v * 100)}%`} /></div>
     </FigureFrame>
   );
 }
@@ -264,7 +264,7 @@ export function ActiveObject3D() {
         ))}
         <Dot p={hand} r={0.1} c="#e0598b" />{tag("#e0598b", zh ? "手" : "hand", [hand[0], hand[1] - 0.28, hand[2]])}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "手的位置" : "hand position"} value={hx} min={-0.8} max={0.8} step={0.02} onChange={setHx} format={() => contact ? (zh ? `活动：${OBJS3D[active].zh}` : `active: ${OBJS3D[active].en}`) : (zh ? "无接触" : "no contact")} /></div>
+      <div className="mt-3"><Slider label={zh ? "手的位置" : "hand position"} hint={zh ? "在桌面上滑动手；离手最近且接触的物体成为「活动物体」。" : "Slides the hand across the table; the closest in-contact object becomes the ‘active’ one."} value={hx} min={-0.8} max={0.8} step={0.02} onChange={setHx} format={() => contact ? (zh ? `活动：${OBJS3D[active].zh}` : `active: ${OBJS3D[active].en}`) : (zh ? "无接触" : "no contact")} /></div>
     </FigureFrame>
   );
 }
@@ -300,7 +300,7 @@ export function GazeScanpath3D() {
         {visited.length > 1 && <Line points={visited} color="#e0598b" lineWidth={2} dashed dashSize={0.08} gapSize={0.06} />}
         <Line points={[eye, cur.p]} color="#f59e0b" lineWidth={2.5} />
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "时间（注视序列）" : "time (fixation sequence)"} value={t} min={0} max={1} step={0.01} onChange={setT} format={() => zh ? `注视：${cur.zh}` : `looking at: ${cur.en}`} /></div>
+      <div className="mt-3"><Slider label={zh ? "时间（注视序列）" : "time (fixation sequence)"} hint={zh ? "拖动视线浏览其注视序列（眼睛下一步看向哪个物体）。" : "Scrubs the gaze through its sequence of fixations (which object the eye looks at next)."} value={t} min={0} max={1} step={0.01} onChange={setT} format={() => zh ? `注视：${cur.zh}` : `looking at: ${cur.en}`} /></div>
     </FigureFrame>
   );
 }
@@ -333,7 +333,7 @@ export function SceneGraph3D() {
             {on && tag("#6a5ef0", zh ? zhr : en, (([mx, my, mz]) => [mx + 0.28, my, mz] as V)(mid(SG[a].p, SG[b].p)))}
           </group>); })}
       </Frame>
-      <div className="mt-3"><Slider label={zh ? "聚焦节点" : "focus node"} value={focus} min={0} max={3} step={1} onChange={(v) => setFocus(Math.round(v))} format={(v) => zh ? SG[Math.round(v)].zh : SG[Math.round(v)].en} /></div>
+      <div className="mt-3"><Slider label={zh ? "聚焦节点" : "focus node"} hint={zh ? "选择一个物体；高亮它与其他物体的空间关系边（在…上/紧挨/上方）。" : "Selects an object; its spatial-relation edges to other objects (on / next-to / above) are highlighted."} value={focus} min={0} max={3} step={1} onChange={(v) => setFocus(Math.round(v))} format={(v) => zh ? SG[Math.round(v)].zh : SG[Math.round(v)].en} /></div>
     </FigureFrame>
   );
 }

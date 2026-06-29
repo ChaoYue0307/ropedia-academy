@@ -80,9 +80,9 @@ export default function GaussianSplat3D() {
         </Canvas>
       </div>
       <div className="mt-2 space-y-2">
-        <Slider label={zh ? "高斯数量" : "# splats"} value={count} min={300} max={4000} step={100} onChange={(v) => setCount(Math.round(v))} />
-        <Slider label={zh ? "泼溅大小" : "splat size"} value={size} min={0.05} max={0.22} step={0.01} onChange={setSize} format={(v) => v.toFixed(2)} />
-        <Slider label={zh ? "不透明度" : "opacity"} value={opacity} min={0.2} max={1} step={0.05} onChange={setOpacity} format={(v) => v.toFixed(2)} />
+        <Slider label={zh ? "高斯数量" : "# splats"} value={count} min={300} max={4000} step={100} onChange={(v) => setCount(Math.round(v))} hint={zh ? "组成场景的高斯数量——越多细节越精细，但越费算力。" : "How many Gaussians compose the scene — more splats = finer detail, but heavier to render."} />
+        <Slider label={zh ? "泼溅大小" : "splat size"} value={size} min={0.05} max={0.22} step={0.01} onChange={setSize} format={(v) => v.toFixed(2)} hint={zh ? "每个高斯的覆盖范围；过大变模糊，过小会留缝。" : "The footprint of each Gaussian; too large blurs, too small leaves gaps."} />
+        <Slider label={zh ? "不透明度" : "opacity"} value={opacity} min={0.2} max={1} step={0.05} onChange={setOpacity} format={(v) => v.toFixed(2)} hint={zh ? "每个高斯的不透明度（alpha），用于按深度排序的混合。" : "Per-splat opacity (alpha) used in the depth-ordered blend."} />
       </div>
     </FigureFrame>
   );

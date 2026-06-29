@@ -65,7 +65,7 @@ export function LongTail() {
         <text x={X0} y={150} fontSize="9" fill="#9ca3af">{zh ? "动作（按频率排序）" : "actions (by frequency)"}</text>
       </svg>
       <div className="mt-3 space-y-2">
-        <Slider label={zh ? "稀有阈值" : "rare threshold"} value={thr} min={2} max={40} onChange={setThr} />
+        <Slider label={zh ? "稀有阈值" : "rare threshold"} value={thr} min={2} max={40} onChange={setThr} hint={zh ? "低于此频率的动作算作「稀有」（琥珀色尾巴）。" : "The frequency cutoff below which an action counts as ‘rare’ (the amber tail)."} />
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-ink/60 dark:text-stone-400">{zh ? "划分" : "split"}</span>
           <button onClick={() => setByPart(true)} className={"rounded-md px-2.5 py-1 text-xs font-medium transition " + (byPart ? "bg-emerald-600 text-white" : "border border-stone-200 text-ink/60 dark:border-white/10 dark:text-stone-400")}>{zh ? "留出参与者" : "held-out participant"}</button>
@@ -103,8 +103,8 @@ export function HandPrior() {
         <text x={hx + bw / 2} y={hy + bh / 2 + 3} textAnchor="middle" fontSize="9" fill={own ? "#1d9e75" : "#ef4444"}>{side} · {own ? (zh ? "自己" : "own") : (zh ? "他人" : "other")}</text>
       </svg>
       <div className="mt-3 space-y-2">
-        <Slider label={zh ? "手框 x" : "box x"} value={hx} min={fx} max={fx + fw - bw} onChange={setHx} />
-        <Slider label={zh ? "手框 y" : "box y"} value={hy} min={fy} max={fy + fh - bh} onChange={setHy} />
+        <Slider label={zh ? "手框 x" : "box x"} value={hx} min={fx} max={fx + fw - bw} onChange={setHx} hint={zh ? "手框的水平位置——在画面中线的左侧还是右侧（决定左/右手）。" : "Horizontal position of the hand box — left vs right of the frame's centre (which decides the side)."} />
+        <Slider label={zh ? "手框 y" : "box y"} value={hy} min={fy} max={fy + fh - bh} onChange={setHy} hint={zh ? "手框的竖直位置——从底边进入意味着是佩戴者自己的手。" : "Vertical position of the hand box — entering from the bottom edge means it's the wearer's own hand."} />
       </div>
     </FigureFrame>
   );
@@ -245,7 +245,7 @@ export function BaselineMetric() {
         })}
       </svg>
       <div className="mt-3">
-        <Slider label={zh ? "信号强度" : "signal strength"} value={sig} min={0} max={1} step={0.02} onChange={setSig} format={(v) => `${Math.round(v * 100)}%`} />
+        <Slider label={zh ? "信号强度" : "signal strength"} value={sig} min={0} max={1} step={0.02} onChange={setSig} format={(v) => `${Math.round(v * 100)}%`} hint={zh ? "特征携带的真实信号量。无论如何，打乱对照都应停留在随机水平。" : "How much real signal the features carry. No matter what, the shuffle control must stay at chance."} />
       </div>
     </FigureFrame>
   );

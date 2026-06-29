@@ -79,8 +79,8 @@ export function NerfRay() {
         </text>
       </svg>
       <div className="mt-2 space-y-2">
-        <Slider label={zh ? "采样数 N" : "samples N"} value={n} min={8} max={96} onChange={(v) => setN(Math.round(v))} />
-        <Slider label={zh ? "前表面密度" : "front density"} value={frontDensity} min={0} max={14} onChange={setFrontDensity} format={(v) => v.toFixed(0)} />
+        <Slider label={zh ? "采样数 N" : "samples N"} value={n} min={8} max={96} onChange={(v) => setN(Math.round(v))} hint={zh ? "体渲染时每条射线上采样的点数——越多越平滑，但越费算力。" : "Points sampled along each ray for volume rendering — more = smoother, but costlier."} />
+        <Slider label={zh ? "前表面密度" : "front density"} value={frontDensity} min={0} max={14} onChange={setFrontDensity} format={(v) => v.toFixed(0)} hint={zh ? "前表面的密度；增大它会沿射线遮挡后方的内容（alpha 合成）。" : "Density of the front surface; raise it and it occludes what's behind along the ray (alpha compositing)."} />
       </div>
     </FigureFrame>
   );

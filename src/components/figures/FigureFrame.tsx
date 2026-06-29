@@ -1,7 +1,30 @@
-import { Children, cloneElement, isValidElement, type ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useState, type ReactNode } from "react";
 import type { Bilingual } from "../../lib/types";
 import { useStore } from "../../lib/store";
 import { pick } from "../../lib/i18n";
+
+// Small "ⓘ" that explains a parameter — shows on hover (desktop) and tap (touch/keyboard).
+function Hint({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        aria-label={text}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o); }}
+        onBlur={() => setOpen(false)}
+        className="grid h-3.5 w-3.5 place-items-center rounded-full border border-current text-[8px] font-bold leading-none text-ink/35 transition hover:text-brand-600 dark:text-stone-500 dark:hover:text-brand-300"
+      >
+        i
+      </button>
+      {open && (
+        <span role="tooltip" className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 w-52 max-w-[60vw] rounded-lg bg-ink px-2.5 py-1.5 text-[11px] font-normal leading-snug text-white shadow-lg dark:bg-stone-700">
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
 
 export function FigureFrame({
   title,
@@ -60,6 +83,7 @@ export function Slider({
   step = 1,
   onChange,
   format,
+  hint,
 }: {
   label: string;
   value: number;
@@ -68,12 +92,17 @@ export function Slider({
   step?: number;
   onChange: (v: number) => void;
   format?: (v: number) => string;
+  hint?: string;
 }) {
   return (
-    <label className="flex items-center gap-3 text-xs">
-      <span className="w-28 shrink-0 font-medium text-ink/70 dark:text-stone-300">{label}</span>
+    <div className="flex items-center gap-3 text-xs">
+      <span className="flex w-28 shrink-0 items-center gap-1 font-medium text-ink/70 dark:text-stone-300">
+        {label}
+        {hint && <Hint text={hint} />}
+      </span>
       <input
         type="range"
+        aria-label={label}
         min={min}
         max={max}
         step={step}
@@ -84,6 +113,6 @@ export function Slider({
       <span className="w-12 shrink-0 text-right font-mono text-brand-700 dark:text-brand-300">
         {format ? format(value) : value}
       </span>
-    </label>
+    </div>
   );
 }

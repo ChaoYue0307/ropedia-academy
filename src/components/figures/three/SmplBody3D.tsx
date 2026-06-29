@@ -119,10 +119,10 @@ export default function SmplBody3D() {
         </Canvas>
       </div>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Slider label={`β · ${zh ? "身高" : "height"}`} value={height} min={0.8} max={1.2} step={0.02} onChange={setHeight} format={(v) => v.toFixed(2)} />
-        <Slider label={`β · ${zh ? "体型" : "build"}`} value={build} min={0.7} max={1.4} step={0.02} onChange={setBuild} format={(v) => v.toFixed(2)} />
-        <Slider label={`θ · ${zh ? "臂摆" : "arm"}`} value={arm} min={-20} max={150} onChange={setArm} format={(v) => `${v}°`} />
-        <Slider label={`θ · ${zh ? "腿摆" : "leg"}`} value={leg} min={-30} max={60} onChange={setLeg} format={(v) => `${v}°`} />
+        <Slider label={`β · ${zh ? "身高" : "height"}`} value={height} min={0.8} max={1.2} step={0.02} onChange={setHeight} format={(v) => v.toFixed(2)} hint={zh ? "形状参数 β：身体的整体身高。" : "Shape parameter β: the body's overall height."} />
+        <Slider label={`β · ${zh ? "体型" : "build"}`} value={build} min={0.7} max={1.4} step={0.02} onChange={setBuild} format={(v) => v.toFixed(2)} hint={zh ? "形状参数 β：瘦 ↔ 壮 的体型。" : "Shape parameter β: slim ↔ broad build."} />
+        <Slider label={`θ · ${zh ? "臂摆" : "arm"}`} value={arm} min={-20} max={150} onChange={setArm} format={(v) => `${v}°`} hint={zh ? "姿态参数 θ：肩/臂的摆动角度。" : "Pose parameter θ: the shoulder/arm swing angle."} />
+        <Slider label={`θ · ${zh ? "腿摆" : "leg"}`} value={leg} min={-30} max={60} onChange={setLeg} format={(v) => `${v}°`} hint={zh ? "姿态参数 θ：髋/腿的摆动角度。" : "Pose parameter θ: the hip/leg swing angle."} />
       </div>
     </FigureFrame>
   );
