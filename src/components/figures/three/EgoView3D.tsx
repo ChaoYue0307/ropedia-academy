@@ -30,19 +30,32 @@ function Frustum({ reach }: { reach: number }) {
   );
 }
 
-function Hand({ from, to, color }: { from: V; to: V; color: string }) {
+// a capsule "bone" between two points (for limbs, torso, neck)
+function Bone({ from, to, r, color, rough = 0.6 }: { from: V; to: V; r: number; color: string; rough?: number }) {
   const { pos, quat, len } = useMemo(() => {
     const A = new THREE.Vector3(...from), B = new THREE.Vector3(...to);
-    const dir = B.clone().sub(A), len = Math.max(0.05, dir.length());
-    return { pos: A.clone().add(B).multiplyScalar(0.5), quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()), len };
+    const dir = B.clone().sub(A), len = Math.max(0.03, dir.length());
+    return {
+      pos: A.clone().add(B).multiplyScalar(0.5),
+      quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()),
+      len,
+    };
   }, [from, to]);
   return (
+    <mesh position={pos} quaternion={quat}>
+      <capsuleGeometry args={[r, len, 6, 12]} />
+      <meshStandardMaterial color={color} roughness={rough} />
+    </mesh>
+  );
+}
+
+// a pink arm (shoulder → elbow → wrist + hand) — the part the wearer actually sees in first person
+function Arm({ shoulder, elbow, wrist }: { shoulder: V; elbow: V; wrist: V }) {
+  return (
     <>
-      <mesh position={pos} quaternion={quat}>
-        <capsuleGeometry args={[0.05, len, 6, 12]} />
-        <meshStandardMaterial color={color} roughness={0.6} />
-      </mesh>
-      <mesh position={to}><sphereGeometry args={[0.075, 16, 16]} /><meshStandardMaterial color={color} roughness={0.5} /></mesh>
+      <Bone from={shoulder} to={elbow} r={0.055} color="#e0598b" />
+      <Bone from={elbow} to={wrist} r={0.05} color="#e0598b" />
+      <mesh position={wrist}><sphereGeometry args={[0.07, 16, 16]} /><meshStandardMaterial color="#e0598b" roughness={0.5} /></mesh>
     </>
   );
 }
@@ -57,6 +70,7 @@ function TableObject({ p, kind, color }: { p: V; kind: "plate" | "cup" | "knife"
 function Scene({ yaw, reach }: { yaw: number; reach: number }) {
   const zh = useStore((s) => s.lang) === "zh";
   const yr = (yaw * Math.PI) / 180;
+  const skin = "#f1c8a6", shirt = "#5b7088", pants = "#3c4555";
   return (
     <group>
       <ambientLight intensity={0.7} />
@@ -70,17 +84,34 @@ function Scene({ yaw, reach }: { yaw: number; reach: number }) {
       <TableObject p={[0.45, 0.84, 0.15]} kind="cup" color="#f59e0b" />
       <TableObject p={[0.05, 0.76, -0.25]} kind="knife" color="#cbd5e1" />
 
-      {/* the WEARER: head + head-mounted camera + frustum + own hands — rotates as a unit (ego-motion) */}
-      <group position={[0, 1.55, 1.95]} rotation={[0, yr, 0]}>
-        <mesh><sphereGeometry args={[0.17, 24, 24]} /><meshStandardMaterial color="#f1c8a6" roughness={0.6} /></mesh>
-        <mesh position={[0, 0.14, 0.08]}><boxGeometry args={[0.12, 0.07, 0.07]} /><meshStandardMaterial color="#0e9aa7" metalness={0.4} roughness={0.3} /></mesh>
-        <mesh position={[0, 0.14, 0.13]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.025, 0.025, 0.03, 16]} /><meshStandardMaterial color="#67e8f9" /></mesh>
-        <Frustum reach={reach} />
-        <Hand from={[-0.12, -0.18, -0.05]} to={[-0.28, -0.5 * reach, -0.8 * reach]} color="#e0598b" />
-        <Hand from={[0.12, -0.18, -0.05]} to={[0.3, -0.5 * reach, -0.8 * reach]} color="#e0598b" />
-        <Html position={[0, 0.34, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
-          <div style={{ background: "#0e9aa7", color: "#fff", padding: "1px 5px", borderRadius: 5, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap", boxShadow: "0 1px 3px rgba(0,0,0,.28)" }}>{zh ? "头戴相机" : "head-mounted camera"}</div>
-        </Html>
+      {/* the WEARER, standing behind the table. Body + arms stay put; only the head + camera turn. */}
+      <group position={[0, 0, 1.5]}>
+        {/* ── body (3rd-person context — you don't see this in first person) ── */}
+        {/* legs + feet */}
+        <Bone from={[-0.15, 0.9, 0]} to={[-0.16, 0.05, 0]} r={0.085} color={pants} />
+        <Bone from={[0.15, 0.9, 0]} to={[0.16, 0.05, 0]} r={0.085} color={pants} />
+        <mesh position={[-0.16, 0.03, 0.07]}><boxGeometry args={[0.13, 0.06, 0.26]} /><meshStandardMaterial color={pants} roughness={0.8} /></mesh>
+        <mesh position={[0.16, 0.03, 0.07]}><boxGeometry args={[0.13, 0.06, 0.26]} /><meshStandardMaterial color={pants} roughness={0.8} /></mesh>
+        {/* hips + torso + shoulders + neck */}
+        <Bone from={[-0.14, 0.92, 0]} to={[0.14, 0.92, 0]} r={0.13} color={pants} />
+        <Bone from={[0, 1.0, 0]} to={[0, 1.36, 0]} r={0.15} color={shirt} />
+        <Bone from={[-0.22, 1.4, 0]} to={[0.22, 1.4, 0]} r={0.08} color={shirt} />
+        <Bone from={[0, 1.4, 0]} to={[0, 1.5, 0]} r={0.055} color={skin} />
+
+        {/* ── own arms reaching to the table (pink = the part visible in first person) ── */}
+        <Arm shoulder={[-0.22, 1.4, 0]} elbow={[-0.34, 1.02, -0.55]} wrist={[-0.4, 0.8, -1.12]} />
+        <Arm shoulder={[0.22, 1.4, 0]} elbow={[0.37, 1.05, -0.52]} wrist={[0.46, 0.84, -1.05]} />
+
+        {/* ── head + head-mounted camera + frustum — rotates as a unit (ego-motion) ── */}
+        <group position={[0, 1.55, 0]} rotation={[0, yr, 0]}>
+          <mesh><sphereGeometry args={[0.17, 24, 24]} /><meshStandardMaterial color={skin} roughness={0.6} /></mesh>
+          <mesh position={[0, 0.14, 0.08]}><boxGeometry args={[0.12, 0.07, 0.07]} /><meshStandardMaterial color="#0e9aa7" metalness={0.4} roughness={0.3} /></mesh>
+          <mesh position={[0, 0.14, 0.13]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.025, 0.025, 0.03, 16]} /><meshStandardMaterial color="#67e8f9" /></mesh>
+          <Frustum reach={reach} />
+          <Html position={[0, 0.34, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+            <div style={{ background: "#0e9aa7", color: "#fff", padding: "1px 5px", borderRadius: 5, fontSize: 10, fontWeight: 600, whiteSpace: "nowrap", boxShadow: "0 1px 3px rgba(0,0,0,.28)" }}>{zh ? "头戴相机" : "head-mounted camera"}</div>
+          </Html>
+        </group>
       </group>
     </group>
   );
@@ -101,9 +132,9 @@ export function EgoView3D() {
       onReset={() => { setYaw(0); setReach(2.1); }}
     >
       <div className="h-72 w-full overflow-hidden rounded-xl bg-gradient-to-b from-sky-50 to-stone-100 dark:from-slate-800 dark:to-slate-900">
-        <Canvas camera={{ position: [3.4, 2.6, 4.2], fov: 42 }} dpr={[1, 2]}>
+        <Canvas camera={{ position: [3.8, 2.8, 4.7], fov: 42 }} dpr={[1, 2]}>
           <Scene yaw={yaw} reach={reach} />
-          <OrbitControls enablePan={false} minDistance={3} maxDistance={9} maxPolarAngle={Math.PI / 2.05} />
+          <OrbitControls enablePan={false} target={[0, 0.85, 0.4]} minDistance={3} maxDistance={9} maxPolarAngle={Math.PI / 2.05} />
         </Canvas>
       </div>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[11px]">
