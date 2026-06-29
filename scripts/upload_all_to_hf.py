@@ -17,7 +17,7 @@ Common options:
     --private         everything private
     --org NAME        upload under an org instead of your user
     --no-collection   don't create/update the collection
-    --prefix ropedia- repo name prefix
+    --prefix ""       optional repo name prefix (default: none)
 
 A bundle is a "placeholder" if it contains metrics.todo.json. A model card is
 generated only if the folder has no README.md (placeholders ship their own).
@@ -52,7 +52,7 @@ def ensure_card(folder: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--models-dir", default="models")
-    ap.add_argument("--prefix", default="ropedia-")
+    ap.add_argument("--prefix", default="")
     ap.add_argument("--org", default=None)
     ap.add_argument("--private", action="store_true")
     ap.add_argument("--private-todo", action="store_true", help="placeholders private, trained public")

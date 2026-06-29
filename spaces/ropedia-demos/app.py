@@ -17,7 +17,7 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 
 USER = "cy0307"
-def repo(slug): return f"{USER}/ropedia-{slug}"
+def repo(slug): return f"{USER}/{slug}"
 def dl(slug, fn): return hf_hub_download(repo(slug), fn)
 
 ERR = {}  # slug -> load error (for graceful messages)
@@ -471,7 +471,7 @@ HEADER = f"""<div id="hdr"><div style="display:flex;align-items:center;gap:15px;
     <h1>Ropedia Academy · Models</h1>
     <p>Interactive demos of models trained <b>from scratch</b> in
     <a href="https://chaoyue0307.github.io/ropedia-academy/" target="_blank">Ropedia Academy</a> —
-    loaded live from <a href="https://huggingface.co/cy0307" target="_blank">cy0307/ropedia-*</a>.
+    loaded live from <a href="https://huggingface.co/cy0307" target="_blank">cy0307</a>.
     Small educational models — the value is the method, not a leaderboard.</p>
   </div>
 </div></div>"""

@@ -10,12 +10,12 @@ license: mit
 short_description: Real-model demos for embodied & spatial AI
 models:
   - HuggingFaceTB/SmolLM2-360M-Instruct
-  - cy0307/ropedia-nanogpt-shakespeare
-  - cy0307/ropedia-c-simclr-pretrain
-  - cy0307/ropedia-b-mae-pretrain
-  - cy0307/ropedia-lm-distillation
-  - cy0307/ropedia-ag-reinforce-gridworld
-  - cy0307/ropedia-d-world-model
+  - cy0307/nanogpt-shakespeare
+  - cy0307/c-simclr-pretrain
+  - cy0307/b-mae-pretrain
+  - cy0307/lm-distillation
+  - cy0307/ag-reinforce-gridworld
+  - cy0307/d-world-model
 tags:
 - ropedia-academy
 - embodied-ai

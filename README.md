@@ -114,81 +114,81 @@ _19 trained · 26 documented placeholders · 45 repos total — one click trains
 
 | Model | Status | Headline result | Links |
 |---|---|---|---|
-| 2D pose estimation (heatmap regression) | ✅ trained | PCK 0.396 | [🤗](https://huggingface.co/cy0307/ropedia-a-pose-heatmap) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_pose_heatmap.ipynb) |
-| 4D-Humans (HMR 2.0) — mesh from video | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-a-4dhumans-mesh) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/A_4dhumans_mesh.ipynb) |
-| 6D vs Euler rotation regression | ✅ trained | geodesic err 0.0126 | [🤗](https://huggingface.co/cy0307/ropedia-a-rotation-6d) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_rotation_6d.ipynb) |
-| MDM — text-to-motion | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-a-mdm-text-to-motion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/A_mdm_text_to_motion.ipynb) |
-| Motion diffusion (DDPM) | ✅ trained | final loss 0.159 | [🤗](https://huggingface.co/cy0307/ropedia-a-motion-diffusion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_motion_diffusion.ipynb) |
-| SMPLify body fit | ✅ trained | reproj err 6.3e-05 | [🤗](https://huggingface.co/cy0307/ropedia-a-smplify-fit) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_smplify_fit.ipynb) |
+| 2D pose estimation (heatmap regression) | ✅ trained | PCK 0.396 | [🤗](https://huggingface.co/cy0307/a-pose-heatmap) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_pose_heatmap.ipynb) |
+| 4D-Humans (HMR 2.0) — mesh from video | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/a-4dhumans-mesh) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/A_4dhumans_mesh.ipynb) |
+| 6D vs Euler rotation regression | ✅ trained | geodesic err 0.0126 | [🤗](https://huggingface.co/cy0307/a-rotation-6d) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_rotation_6d.ipynb) |
+| MDM — text-to-motion | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/a-mdm-text-to-motion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/A_mdm_text_to_motion.ipynb) |
+| Motion diffusion (DDPM) | ✅ trained | final loss 0.159 | [🤗](https://huggingface.co/cy0307/a-motion-diffusion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_motion_diffusion.ipynb) |
+| SMPLify body fit | ✅ trained | reproj err 6.3e-05 | [🤗](https://huggingface.co/cy0307/a-smplify-fit) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/A_smplify_fit.ipynb) |
 
 
 **B · 3D / 4D & neural rendering**
 
 | Model | Status | Headline result | Links |
 |---|---|---|---|
-| 2D Gaussian Splatting | ✅ trained | PSNR 32.5 | [🤗](https://huggingface.co/cy0307/ropedia-b-gaussian-splatting-2d) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_gaussian_splatting_2d.ipynb) |
-| 3D Gaussian Splatting | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-b-gaussian-splatting-3d) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/B_gaussian_splatting_3d.ipynb) |
-| ICP point-cloud registration | ✅ trained | RMSE 0.0124 | [🤗](https://huggingface.co/cy0307/ropedia-b-icp-registration) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_icp_registration.ipynb) |
-| Masked Autoencoder (MAE) | ✅ trained | test MSE 0.136 | [🤗](https://huggingface.co/cy0307/ropedia-b-mae-pretrain) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_mae_pretrain.ipynb) |
-| Multiresolution hash grid (Instant-NGP) | ✅ trained | PSNR 64.2 | [🤗](https://huggingface.co/cy0307/ropedia-b-hashgrid-instngp) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_hashgrid_instngp.ipynb) |
-| NeRF from scratch (tiny_nerf) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-b-nerf-from-scratch) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_nerf_from_scratch.ipynb) |
-| Nerfstudio nerfacto | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-b-nerfstudio-nerfacto) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/B_nerfstudio_nerfacto.ipynb) |
-| Neural SDF (DeepSDF-style) | ✅ trained | L1 err 0.016 | [🤗](https://huggingface.co/cy0307/ropedia-b-deepsdf-shape) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_deepsdf_shape.ipynb) |
+| 2D Gaussian Splatting | ✅ trained | PSNR 32.5 | [🤗](https://huggingface.co/cy0307/b-gaussian-splatting-2d) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_gaussian_splatting_2d.ipynb) |
+| 3D Gaussian Splatting | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/b-gaussian-splatting-3d) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/B_gaussian_splatting_3d.ipynb) |
+| ICP point-cloud registration | ✅ trained | RMSE 0.0124 | [🤗](https://huggingface.co/cy0307/b-icp-registration) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_icp_registration.ipynb) |
+| Masked Autoencoder (MAE) | ✅ trained | test MSE 0.136 | [🤗](https://huggingface.co/cy0307/b-mae-pretrain) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_mae_pretrain.ipynb) |
+| Multiresolution hash grid (Instant-NGP) | ✅ trained | PSNR 64.2 | [🤗](https://huggingface.co/cy0307/b-hashgrid-instngp) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_hashgrid_instngp.ipynb) |
+| NeRF from scratch (tiny_nerf) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/b-nerf-from-scratch) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_nerf_from_scratch.ipynb) |
+| Nerfstudio nerfacto | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/b-nerfstudio-nerfacto) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/B_nerfstudio_nerfacto.ipynb) |
+| Neural SDF (DeepSDF-style) | ✅ trained | L1 err 0.016 | [🤗](https://huggingface.co/cy0307/b-deepsdf-shape) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/B_deepsdf_shape.ipynb) |
 
 
 **C · Egocentric vision**
 
 | Model | Status | Headline result | Links |
 |---|---|---|---|
-| Action anticipation (LSTM) | ✅ trained | top-1 0.529 | [🤗](https://huggingface.co/cy0307/ropedia-c-action-anticipation-lstm) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_action_anticipation_lstm.ipynb) |
-| CLIP: zero-shot vs. probe | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-cd-clip-zeroshot-probe) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/CD_clip_zeroshot_probe.ipynb) |
-| DINOv2 features + probe | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-dinov2-features-probe) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_dinov2_features_probe.ipynb) |
-| Fine-tune VideoMAE | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-videomae-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_videomae_finetune.ipynb) |
-| SAM 2 — video segmentation | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-sam2-video-segmentation) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_sam2_video_segmentation.ipynb) |
-| SimCLR self-supervised pretraining | ✅ trained | probe acc 0.683 | [🤗](https://huggingface.co/cy0307/ropedia-c-simclr-pretrain) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_simclr_pretrain.ipynb) |
-| VideoMAE — egocentric fine-tune | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-videomae-egocentric) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_videomae_egocentric.ipynb) |
-| Whisper — fine-tune ASR | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-c-whisper-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_whisper_finetune.ipynb) |
+| Action anticipation (LSTM) | ✅ trained | top-1 0.529 | [🤗](https://huggingface.co/cy0307/c-action-anticipation-lstm) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_action_anticipation_lstm.ipynb) |
+| CLIP: zero-shot vs. probe | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/cd-clip-zeroshot-probe) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/CD_clip_zeroshot_probe.ipynb) |
+| DINOv2 features + probe | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/c-dinov2-features-probe) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_dinov2_features_probe.ipynb) |
+| Fine-tune VideoMAE | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/c-videomae-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_videomae_finetune.ipynb) |
+| SAM 2 — video segmentation | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/c-sam2-video-segmentation) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_sam2_video_segmentation.ipynb) |
+| SimCLR self-supervised pretraining | ✅ trained | probe acc 0.683 | [🤗](https://huggingface.co/cy0307/c-simclr-pretrain) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/C_simclr_pretrain.ipynb) |
+| VideoMAE — egocentric fine-tune | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/c-videomae-egocentric) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_videomae_egocentric.ipynb) |
+| Whisper — fine-tune ASR | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/c-whisper-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/C_whisper_finetune.ipynb) |
 
 
 **D · Scene & world models**
 
 | Model | Status | Headline result | Links |
 |---|---|---|---|
-| Bayesian semantic mapping | ✅ trained | map acc 1 | [🤗](https://huggingface.co/cy0307/ropedia-d-semantic-mapping) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_semantic_mapping.ipynb) |
-| DreamerV3 — world-model RL | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-d-dreamerv3-world-model) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/D_dreamerv3_world_model.ipynb) |
-| SplaTAM — Gaussian-Splatting SLAM | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-d-splatam-slam) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/D_splatam_slam.ipynb) |
-| TSDF fusion → mesh | ✅ trained | mesh verts 27362 | [🤗](https://huggingface.co/cy0307/ropedia-d-tsdf-fusion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_tsdf_fusion.ipynb) |
-| World model + planning (CEM) | ✅ trained | dyn MSE 8.76e-08 | [🤗](https://huggingface.co/cy0307/ropedia-d-world-model) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_world_model.ipynb) |
+| Bayesian semantic mapping | ✅ trained | map acc 1 | [🤗](https://huggingface.co/cy0307/d-semantic-mapping) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_semantic_mapping.ipynb) |
+| DreamerV3 — world-model RL | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/d-dreamerv3-world-model) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/D_dreamerv3_world_model.ipynb) |
+| SplaTAM — Gaussian-Splatting SLAM | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/d-splatam-slam) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/D_splatam_slam.ipynb) |
+| TSDF fusion → mesh | ✅ trained | mesh verts 27362 | [🤗](https://huggingface.co/cy0307/d-tsdf-fusion) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_tsdf_fusion.ipynb) |
+| World model + planning (CEM) | ✅ trained | dyn MSE 8.76e-08 | [🤗](https://huggingface.co/cy0307/d-world-model) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/D_world_model.ipynb) |
 
 
 **LM · Language & multimodal**
 
 | Model | Status | Headline result | Links |
 |---|---|---|---|
-| ControlNet — conditional diffusion | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-controlnet) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_controlnet.ipynb) |
-| DPO — align an LLM | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-dpo-alignment) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_dpo_alignment.ipynb) |
-| Evaluate an LLM (lm-eval-harness) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-eval-harness) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_eval_harness.ipynb) |
-| Fine-tune a VLM (vision-language) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-vlm-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_vlm_finetune.ipynb) |
-| Knowledge distillation | ✅ trained | distilled acc 0.969 | [🤗](https://huggingface.co/cy0307/ropedia-lm-distillation) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_distillation.ipynb) |
-| QLoRA — fine-tune an LLM | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-qlora-finetune-llm) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_qlora_finetune_llm.ipynb) |
-| RAG — retrieval-augmented generation | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-rag-pipeline) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_rag_pipeline.ipynb) |
-| RLHF — PPO fine-tuning | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-rlhf-ppo) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_rlhf_ppo.ipynb) |
-| Serve an LLM (vLLM) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-vllm-serving) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_vllm_serving.ipynb) |
-| Stable Diffusion — LoRA / DreamBooth | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-stable-diffusion-lora) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_stable_diffusion_lora.ipynb) |
-| Unsloth — fast LLM fine-tune | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-unsloth-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_unsloth_finetune.ipynb) |
-| Video-LM (Qwen2-VL) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-lm-videolm-qwen2vl) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_videolm_qwen2vl.ipynb) |
-| nanoGPT — Tiny Shakespeare | ✅ trained | val loss 1.81 | [🤗](https://huggingface.co/cy0307/ropedia-nanogpt-shakespeare) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_nanogpt_pretrain.ipynb) |
+| ControlNet — conditional diffusion | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-controlnet) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_controlnet.ipynb) |
+| DPO — align an LLM | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-dpo-alignment) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_dpo_alignment.ipynb) |
+| Evaluate an LLM (lm-eval-harness) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-eval-harness) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_eval_harness.ipynb) |
+| Fine-tune a VLM (vision-language) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-vlm-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_vlm_finetune.ipynb) |
+| Knowledge distillation | ✅ trained | distilled acc 0.969 | [🤗](https://huggingface.co/cy0307/lm-distillation) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_distillation.ipynb) |
+| QLoRA — fine-tune an LLM | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-qlora-finetune-llm) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_qlora_finetune_llm.ipynb) |
+| RAG — retrieval-augmented generation | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-rag-pipeline) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_rag_pipeline.ipynb) |
+| RLHF — PPO fine-tuning | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-rlhf-ppo) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_rlhf_ppo.ipynb) |
+| Serve an LLM (vLLM) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-vllm-serving) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_vllm_serving.ipynb) |
+| Stable Diffusion — LoRA / DreamBooth | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-stable-diffusion-lora) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_stable_diffusion_lora.ipynb) |
+| Unsloth — fast LLM fine-tune | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-unsloth-finetune) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_unsloth_finetune.ipynb) |
+| Video-LM (Qwen2-VL) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/lm-videolm-qwen2vl) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/LM_videolm_qwen2vl.ipynb) |
+| nanoGPT — Tiny Shakespeare | ✅ trained | val loss 1.81 | [🤗](https://huggingface.co/cy0307/nanogpt-shakespeare) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/LM_nanogpt_pretrain.ipynb) |
 
 
 **AG · Agents & RL**
 
 | Model | Status | Headline result | Links |
 |---|---|---|---|
-| Agent + tool-use harness | ✅ trained | success 1 | [🤗](https://huggingface.co/cy0307/ropedia-ag-agent-harness) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_agent_harness.ipynb) |
-| Behavior cloning (imitation) | ✅ trained | rollout 1 | [🤗](https://huggingface.co/cy0307/ropedia-ag-behavior-cloning) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_behavior_cloning.ipynb) |
-| Habitat — embodied navigation | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-ag-habitat-navigation) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/AG_habitat_navigation.ipynb) |
-| LLM agent — tool use (ReAct) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ropedia-ag-llm-agent-tooluse) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/AG_llm_agent_tooluse.ipynb) |
-| REINFORCE / actor-critic (CartPole) | ✅ trained | greedy return 449 | [🤗](https://huggingface.co/cy0307/ropedia-ag-reinforce-gridworld) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_reinforce_gridworld.ipynb) |
+| Agent + tool-use harness | ✅ trained | success 1 | [🤗](https://huggingface.co/cy0307/ag-agent-harness) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_agent_harness.ipynb) |
+| Behavior cloning (imitation) | ✅ trained | rollout 1 | [🤗](https://huggingface.co/cy0307/ag-behavior-cloning) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_behavior_cloning.ipynb) |
+| Habitat — embodied navigation | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ag-habitat-navigation) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/AG_habitat_navigation.ipynb) |
+| LLM agent — tool use (ReAct) | 🚧 placeholder | _pending (GPU)_ | [🤗](https://huggingface.co/cy0307/ag-llm-agent-tooluse) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/advanced/AG_llm_agent_tooluse.ipynb) |
+| REINFORCE / actor-critic (CartPole) | ✅ trained | greedy return 449 | [🤗](https://huggingface.co/cy0307/ag-reinforce-gridworld) · [▶](https://colab.research.google.com/github/ChaoYue0307/ropedia-academy/blob/main/notebooks/training/AG_reinforce_gridworld.ipynb) |
 
 <!-- MODELS-INDEX:END -->
 

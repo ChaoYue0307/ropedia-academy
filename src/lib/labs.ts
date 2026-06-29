@@ -25,12 +25,12 @@ export const colabHref = (lab: Lab) =>
 export const githubDir = (dir: "training" | "advanced") =>
   `https://github.com/${REPO}/tree/main/notebooks/${dir}`;
 
-// Published Hugging Face model repos (cy0307/ropedia-<slug>); nanoGPT uses a nicer slug.
+// Published Hugging Face model repos (cy0307/<slug>); nanoGPT uses a nicer slug.
 export const HF_USER = "cy0307";
 export const hfSlug = (lab: Lab) =>
-  "ropedia-" + (lab.file === "LM_nanogpt_pretrain.ipynb"
+  lab.file === "LM_nanogpt_pretrain.ipynb"
     ? "nanogpt-shakespeare"
-    : lab.file.replace(/\.ipynb$/, "").toLowerCase().replace(/_/g, "-"));
+    : lab.file.replace(/\.ipynb$/, "").toLowerCase().replace(/_/g, "-");
 export const hfUrl = (lab: Lab) => `https://huggingface.co/${HF_USER}/${hfSlug(lab)}`;
 export const hfProfile = `https://huggingface.co/${HF_USER}`;
 export const hfSpace = `https://huggingface.co/spaces/${HF_USER}/ropedia-demos`;

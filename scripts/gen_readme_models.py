@@ -25,7 +25,7 @@ NICE = {"greedy_eval": "greedy return", "probe_simclr": "probe acc", "student_di
         "l1": "L1 err", "verts": "mesh verts"}
 
 
-def slug(folder): return "ropedia-" + folder.lower().replace("_", "-")
+def slug(folder): return folder.lower().replace("_", "-")
 
 
 def nb_url(folder):

@@ -55,12 +55,12 @@ def main(online=False):
         import urllib.request
         miss = []
         for f in folders:
-            url = f"https://huggingface.co/{HF_USER}/ropedia-{slug(f)}"
+            url = f"https://huggingface.co/{HF_USER}/{slug(f)}"
             try:
                 req = urllib.request.Request(url, method="HEAD")
                 urllib.request.urlopen(req, timeout=15)
             except Exception:
-                miss.append(f"ropedia-{slug(f)}")
+                miss.append(slug(f))
         if miss:
             problems.append(f"HF repos not reachable ({len(miss)}): {miss}")
         else:
