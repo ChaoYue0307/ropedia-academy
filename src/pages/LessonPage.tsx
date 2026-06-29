@@ -6,11 +6,16 @@ import { pick, t } from "../lib/i18n";
 import { readingMinutes } from "../lib/reading";
 import { BiText, BiInline } from "../components/BiText";
 import { CheckCard } from "../components/CheckCard";
+import { McqCard } from "../components/McqCard";
+import { lessonQuiz } from "../lib/curriculum/lessonQuiz";
 import { ReadingProgress } from "../components/ReadingProgress";
 import { lessonFigures } from "../components/figures/registry";
 import { lessonCode, colabUrl } from "../lib/curriculum/lessonCode";
 import { codeOutputs } from "../lib/curriculum/codeOutputs";
 import { lessonIntuition } from "../lib/curriculum/lessonIntuition";
+import { lessonObjectives } from "../lib/curriculum/lessonObjectives";
+import { lessonPrereqs } from "../lib/curriculum/lessonPrereqs";
+import { ideasForLesson, bigIdeaById } from "../lib/curriculum/bigIdeas";
 import { lessonPitfalls } from "../lib/curriculum/lessonPitfalls";
 import { CodeExample } from "../components/CodeExample";
 import { ResourceLinks } from "../components/ResourceLinks";
@@ -56,7 +61,10 @@ export function LessonPage() {
   const minutes = readingMinutes(lesson, mode);
   const levelKey =
     lesson.index <= 2 ? "levelFoundations" : lesson.index <= 6 ? "levelCore" : lesson.index <= 8 ? "levelAdvanced" : "levelCapstone";
-  const prereq = lesson.index > 1 ? track.lessons[lesson.index - 2] : null;
+  const prereqIds = lessonPrereqs[lesson.id] ?? (lesson.index > 1 ? [track.lessons[lesson.index - 2].id] : []);
+  const prereqs = prereqIds
+    .map((pid) => getLesson(pid))
+    .filter((x): x is NonNullable<typeof x> => !!x);
 
   return (
     <article className="space-y-7">
@@ -88,19 +96,39 @@ export function LessonPage() {
           {pick(lesson.title, mode)}
         </h1>
         <p className="mt-2 text-[15px] text-ink/55 dark:text-stone-400">{pick(lesson.summary, mode)}</p>
-        {prereq && (
+        {prereqs.length > 0 && (
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-ink/45 dark:text-stone-500">
             <span>{t("buildsOn", mode)}:</span>
-            <Link
-              to={`/lesson/${prereq.id}`}
-              className="inline-flex items-center gap-1 rounded-full border border-stone-200 px-2 py-0.5 font-medium text-ink/70 transition hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:text-stone-300 dark:hover:text-brand-200"
-            >
-              <span className="opacity-60">{prereq.index}</span>
-              {pick(prereq.title, mode)}
-            </Link>
+            {prereqs.map(({ lesson: p }) => (
+              <Link
+                key={p.id}
+                to={`/lesson/${p.id}`}
+                className="inline-flex items-center gap-1 rounded-full border border-stone-200 px-2 py-0.5 font-medium text-ink/70 transition hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:text-stone-300 dark:hover:text-brand-200"
+              >
+                <span className="opacity-60">{p.id}</span>
+                {pick(p.title, mode)}
+              </Link>
+            ))}
           </div>
         )}
       </header>
+
+      {lessonObjectives[lesson.id] && (
+        <section className="rounded-2xl border border-brand-200/60 bg-brand-50/40 p-4 dark:border-brand-400/20 dark:bg-brand-500/[0.06]">
+          <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-300">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            {t("objectives", mode)}
+          </h2>
+          <ul className="space-y-1.5">
+            {lessonObjectives[lesson.id].map((o, i) => (
+              <li key={i} className="flex gap-2 text-[15px] leading-relaxed text-ink/80 dark:text-stone-200">
+                <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400 dark:bg-brand-500" />
+                <BiInline value={o} mode={mode} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {lessonIntuition[lesson.id] && (
         <aside className="rounded-2xl border border-amber-300/50 bg-amber-50/60 p-4 dark:border-amber-400/20 dark:bg-amber-400/[0.06]">
@@ -162,6 +190,7 @@ export function LessonPage() {
       )}
 
       <section className="space-y-3">
+        {lessonQuiz[lesson.id] && <McqCard mcq={lessonQuiz[lesson.id]} mode={mode} />}
         {lesson.checks.map((c, i) => (
           <CheckCard key={c.id} check={c} mode={mode} index={i + 1} />
         ))}
@@ -179,15 +208,39 @@ export function LessonPage() {
         </aside>
       )}
 
-      <ResourceLinks lesson={lesson} />
-
-      {lesson.links && lesson.links.length > 0 && (
+      {ideasForLesson[lesson.id] && ideasForLesson[lesson.id].length > 0 && (
         <section>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/45 dark:text-stone-500">
-            {t("related", mode)}
+            {t("recurringIdeas", mode)}
           </h2>
           <div className="flex flex-wrap gap-2">
-            {lesson.links.map((lid) => {
+            {ideasForLesson[lesson.id].map((iid) => {
+              const idea = bigIdeaById[iid];
+              if (!idea) return null;
+              return (
+                <Link
+                  key={iid}
+                  to={`/ideas#${iid}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-200/70 bg-brand-50/40 px-3 py-1 text-xs font-medium text-brand-700 transition hover:border-brand-300 hover:bg-brand-50 dark:border-brand-400/20 dark:bg-brand-500/[0.08] dark:text-brand-300"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5"><path d={idea.icon} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  {pick(idea.name, mode)}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <ResourceLinks lesson={lesson} />
+
+      {lesson.links && lesson.links.filter((lid) => !prereqIds.includes(lid)).length > 0 && (
+        <section>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/45 dark:text-stone-500">
+            {t("leadsTo", mode)}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {lesson.links.filter((lid) => !prereqIds.includes(lid)).map((lid) => {
               const target = getLesson(lid);
               if (!target) return null;
               return (

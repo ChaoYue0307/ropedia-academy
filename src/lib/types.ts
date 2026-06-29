@@ -20,6 +20,14 @@ export interface CheckQuestion {
   hint?: Bilingual;
 }
 
+export interface McqItem {
+  id: string;
+  prompt: Bilingual;
+  options: Bilingual[];
+  correct: number; // index into options
+  explain: Bilingual;
+}
+
 export interface PaperRef {
   title: string;
   year?: number;

@@ -11,6 +11,7 @@ const NAV = [
   { to: "/labs", key: "navLabs", icon: "M9 3h6M10 3v6.5L5.5 18a2 2 0 001.8 3h9.4a2 2 0 001.8-3L14 9.5V3M8 14h8" },
   { to: "/review", key: "navReview", icon: "M4 4v6h6M20 20v-6h-6M20 9a8 8 0 00-15-3M4 15a8 8 0 0015 3" },
   { to: "/graph", key: "navGraph", icon: "M6 6a2 2 0 100-.01M18 6a2 2 0 100-.01M12 18a2 2 0 100-.01M7.5 7.5l3 8M16.5 7.5l-3 8" },
+  { to: "/ideas", key: "navIdeas", icon: "M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 3z" },
   { to: "/glossary", key: "navGlossary", icon: "M4 6h16M4 12h10M4 18h7" },
   { to: "/settings", key: "navSettings", icon: "M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 00-1.7-1L14.5 2h-5l-.4 2.9a7 7 0 00-1.7 1l-2.3-1-2 3.4L2.9 11a7 7 0 000 2l-2 1.6 2 3.4 2.3-1a7 7 0 001.7 1l.4 2.9h5l.4-2.9a7 7 0 001.7-1l2.3 1 2-3.4-2-1.6a7 7 0 00.1-1z" },
 ];

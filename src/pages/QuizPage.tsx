@@ -4,9 +4,13 @@ import { getTrack } from "../lib/curriculum";
 import { useStore } from "../lib/store";
 import { pick, t } from "../lib/i18n";
 import { BiText } from "../components/BiText";
-import type { CheckQuestion, Lesson } from "../lib/types";
+import { McqCard } from "../components/McqCard";
+import { lessonQuiz } from "../lib/curriculum/lessonQuiz";
+import type { CheckQuestion, Lesson, McqItem } from "../lib/types";
 
-interface QItem { check: CheckQuestion; lesson: Lesson }
+type QItem =
+  | { kind: "check"; check: CheckQuestion; lesson: Lesson }
+  | { kind: "mcq"; mcq: McqItem; lesson: Lesson };
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -26,12 +30,18 @@ export function QuizPage() {
   const [nonce, setNonce] = useState(0);
   const questions = useMemo<QItem[]>(() => {
     if (!track) return [];
-    return shuffle(track.lessons.flatMap((l) => l.checks.map((c) => ({ check: c, lesson: l }))));
+    return shuffle(
+      track.lessons.flatMap((l): QItem[] => [
+        ...(lessonQuiz[l.id] ? [{ kind: "mcq" as const, mcq: lessonQuiz[l.id], lesson: l }] : []),
+        ...l.checks.map((c) => ({ kind: "check" as const, check: c, lesson: l })),
+      ]),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track, nonce]);
 
   const [idx, setIdx] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [mcqAnswered, setMcqAnswered] = useState<boolean | null>(null);
   const [results, setResults] = useState<{ q: QItem; knew: boolean }[]>([]);
 
   if (!track) return <div className="text-ink/60">Track not found.</div>;
@@ -40,12 +50,14 @@ export function QuizPage() {
     setNonce((n) => n + 1);
     setIdx(0);
     setRevealed(false);
+    setMcqAnswered(null);
     setResults([]);
   };
 
   const answer = (knew: boolean) => {
     setResults((r) => [...r, { q: questions[idx], knew }]);
     setRevealed(false);
+    setMcqAnswered(null);
     setIdx((i) => i + 1);
   };
 
@@ -69,7 +81,7 @@ export function QuizPage() {
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {missed.length > 0 && (
               <button
-                onClick={() => missed.forEach((m) => addToReview(m.q.check.id))}
+                onClick={() => missed.forEach((m) => m.q.kind === "check" && addToReview(m.q.check.id))}
                 className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
               >
                 {t("addMissedToReview", mode)} ({missed.length})
@@ -113,33 +125,49 @@ export function QuizPage() {
         <div className="h-full rounded-full transition-all" style={{ width: `${(idx / questions.length) * 100}%`, backgroundColor: track.accent }} />
       </div>
 
-      <div className="rounded-2xl border border-stone-200/70 bg-white/80 p-6 shadow-card backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.04]">
-        <Link to={`/lesson/${cur.lesson.id}`} className="text-[11px] font-medium uppercase tracking-wide text-brand-500">
+      <div className="text-[11px] font-medium uppercase tracking-wide">
+        <Link to={`/lesson/${cur.lesson.id}`} className="text-brand-500">
           {cur.lesson.id} · {pick(cur.lesson.title, mode)}
         </Link>
-        <div className="mt-2 text-[15px] font-medium text-ink dark:text-stone-100">
-          <BiText value={cur.check.prompt} mode={mode} />
-        </div>
-        {revealed && (
-          <div className="mt-4 animate-fade-in rounded-xl border-l-2 border-brand-400 bg-brand-50/50 p-4 dark:border-brand-400/60 dark:bg-brand-500/[0.07]">
-            <BiText value={cur.check.answer} mode={mode} />
-          </div>
-        )}
       </div>
 
-      {!revealed ? (
-        <button onClick={() => setRevealed(true)} className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">
-          {t("reveal", mode)}
-        </button>
+      {cur.kind === "mcq" ? (
+        <>
+          <McqCard key={cur.mcq.id} mcq={cur.mcq} mode={mode} onAnswered={(c) => setMcqAnswered(c)} />
+          {mcqAnswered !== null && (
+            <button onClick={() => answer(mcqAnswered)} className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">
+              {t("nextQuestion", mode)}
+            </button>
+          )}
+        </>
       ) : (
-        <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => answer(false)} className="rounded-xl bg-red-500 py-3 text-sm font-semibold text-white transition hover:bg-red-600">
-            {t("missedIt", mode)}
-          </button>
-          <button onClick={() => answer(true)} className="rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
-            {t("knewIt", mode)}
-          </button>
-        </div>
+        <>
+          <div className="rounded-2xl border border-stone-200/70 bg-white/80 p-6 shadow-card backdrop-blur-sm dark:border-white/[0.07] dark:bg-white/[0.04]">
+            <div className="text-[15px] font-medium text-ink dark:text-stone-100">
+              <BiText value={cur.check.prompt} mode={mode} />
+            </div>
+            {revealed && (
+              <div className="mt-4 animate-fade-in rounded-xl border-l-2 border-brand-400 bg-brand-50/50 p-4 dark:border-brand-400/60 dark:bg-brand-500/[0.07]">
+                <BiText value={cur.check.answer} mode={mode} />
+              </div>
+            )}
+          </div>
+
+          {!revealed ? (
+            <button onClick={() => setRevealed(true)} className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">
+              {t("reveal", mode)}
+            </button>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => answer(false)} className="rounded-xl bg-red-500 py-3 text-sm font-semibold text-white transition hover:bg-red-600">
+                {t("missedIt", mode)}
+              </button>
+              <button onClick={() => answer(true)} className="rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                {t("knewIt", mode)}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

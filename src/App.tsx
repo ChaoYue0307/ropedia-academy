@@ -14,6 +14,7 @@ import { LessonPage } from "./pages/LessonPage";
 import { QuizPage } from "./pages/QuizPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import { GraphPage } from "./pages/GraphPage";
+import { BigIdeasPage } from "./pages/BigIdeasPage";
 import { GlossaryPage } from "./pages/GlossaryPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { CommandPalette } from "./components/CommandPalette";
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/lesson/:id" element={<LessonPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/graph" element={<GraphPage />} />
+          <Route path="/ideas" element={<BigIdeasPage />} />
           <Route path="/glossary" element={<GlossaryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />
